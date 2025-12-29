@@ -1,0 +1,7 @@
+{
+  "name": "Copy of MagicCidian TH",
+  "description": "Một ứng dụng web để tra cứu và học các quán dụng ngữ, thành ngữ, tiếng lóng và ngôn ngữ mạng tiếng Trung. Cung cấp giải thích chi tiết, nguồn gốc, ngữ cảnh sử dụng và ví dụ, được hỗ trợ bởi AI.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

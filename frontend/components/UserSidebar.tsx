@@ -11,6 +11,7 @@ import {
   InstagramIcon,
   PlusIcon,
   ListBulletIcon,
+  UserIcon,
 } from "./icons";
 
 interface UserSidebarProps {
@@ -63,28 +64,27 @@ const UserSidebar: React.FC<UserSidebarProps> = ({
 
         <div className="flex-1 overflow-y-auto p-6 space-y-8">
           {!isLoggedIn ? (
-            <button
-              onClick={onLogin}
-              className="w-full flex items-center justify-center space-x-3 py-4 border-2 border-slate-100 rounded-2xl hover:bg-slate-50 hover:border-slate-200 transition-all font-bold"
-            >
-              <GoogleIcon className="w-5 h-5" />
-              <span>Tiếp tục với Google</span>
-            </button>
+            <div className="space-y-3">
+              <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">
+                Tài khoản
+              </p>
+              <button
+                onClick={onLogin}
+                className="w-full flex items-center justify-center space-x-3 py-3 bg-red-700 text-white rounded-xl hover:bg-red-800 transition-all shadow-lg shadow-red-100 active:scale-[0.98]"
+              >
+                <UserIcon className="w-5 h-5" />
+                <span className="font-bold">Đăng nhập Admin</span>
+              </button>
+            </div>
           ) : (
-            <div className="flex items-center space-x-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
-              <div className="w-14 h-14 bg-red-700 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-inner shadow-black/10">
-                U
+            <div className="flex items-center space-x-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+              <div className="w-12 h-12 bg-red-700 rounded-xl flex items-center justify-center text-white font-bold shadow-lg">
+                A
               </div>
               <div>
-                <h3 className="font-bold text-slate-800">VIP User</h3>
-                <p
-                  className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full inline-block mt-1 ${
-                    isPremium
-                      ? "bg-amber-100 text-amber-700"
-                      : "bg-slate-200 text-slate-500"
-                  }`}
-                >
-                  {isPremium ? "Gói Premium ✨" : "Gói Miễn phí"}
+                <h3 className="font-bold text-slate-800">Administrator</h3>
+                <p className="text-[10px] text-red-600 font-bold uppercase tracking-tight">
+                  Quyền quản trị viên
                 </p>
               </div>
             </div>
@@ -132,38 +132,28 @@ const UserSidebar: React.FC<UserSidebarProps> = ({
             </button>
           </div>
 
-          <div className="space-y-2">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-3 mb-2">
-              Quản trị hệ thống (Admin)
-            </p>
-            <button
-              onClick={() => {
-                onViewChange("list");
-                onClose();
-              }}
-              className="w-full flex items-center justify-between p-3.5 hover:bg-slate-50 rounded-xl transition-all group"
-            >
-              <div className="flex items-center space-x-3 text-slate-600 font-bold group-hover:text-red-600">
-                <ListBulletIcon className="w-5 h-5" />{" "}
-                <span>Kho dữ liệu gốc</span>
-              </div>
-              <ChevronRightIcon className="w-4 h-4 text-slate-300" />
-            </button>
-            <button
-              onClick={() => {
-                onViewChange("insert");
-                onClose();
-              }}
-              className="w-full flex items-center justify-between p-3.5 bg-red-50 hover:bg-red-100 rounded-xl transition-all group border border-red-100"
-            >
-              <div className="flex items-center space-x-3 text-red-700 font-bold">
-                <PlusIcon className="w-5 h-5" /> <span>Thêm dữ liệu mới</span>
-              </div>
-              <ChevronRightIcon className="w-4 h-4 text-red-300" />
-            </button>
-          </div>
+          {isLoggedIn && (
+            <div className="space-y-2">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-3 mb-2">
+                Quản trị hệ thống (Admin)
+              </p>
+              <button
+                onClick={() => {
+                  onViewChange("list");
+                  onClose();
+                }}
+                className="w-full flex items-center justify-between p-3.5 hover:bg-slate-50 rounded-xl transition-all group"
+              >
+                <div className="flex items-center space-x-3 text-slate-600 font-bold group-hover:text-red-600">
+                  <ListBulletIcon className="w-5 h-5" />{" "}
+                  <span>Kho dữ liệu gốc</span>
+                </div>
+                <ChevronRightIcon className="w-4 h-4 text-slate-300" />
+              </button>
+            </div>
+          )}
 
-          <div className="pt-8 border-t flex justify-center space-x-6">
+          {/* <div className="pt-8 border-t flex justify-center space-x-6">
             <button className="text-slate-300 hover:text-[#1877F2] transition-colors">
               <FacebookIcon className="w-6 h-6" />
             </button>
@@ -173,7 +163,7 @@ const UserSidebar: React.FC<UserSidebarProps> = ({
             <button className="text-slate-300 hover:text-[#E4405F] transition-colors">
               <InstagramIcon className="w-6 h-6" />
             </button>
-          </div>
+          </div> */}
         </div>
 
         {isLoggedIn && (

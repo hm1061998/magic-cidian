@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { fetchIdiomDetails } from "../services/idiomService";
 import type { Idiom, SearchMode } from "../types";
 import IdiomDetail from "../components/IdiomDetail";
@@ -11,10 +11,11 @@ import {
   PencilIcon,
   SpinnerIcon,
   BrainIcon,
+  CloseIcon,
 } from "../components/icons";
 
 const Home: React.FC = () => {
-  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState<string>("");
   const [currentIdiom, setCurrentIdiom] = useState<
     (Idiom & { dataSource: string }) | null
@@ -24,8 +25,23 @@ const Home: React.FC = () => {
   const [searchMode, setSearchMode] = useState<SearchMode>("database");
   const [isHandwritingPadOpen, setIsHandwritingPadOpen] = useState(false);
 
+  const searchQuery = searchParams.get("query");
+
+  useEffect(() => {
+    if (searchQuery) {
+      setQuery(searchQuery);
+      handleSearch(searchQuery);
+    }
+  }, [searchQuery]);
+
   const handleSearch = async (searchTerm: string, forceMode?: SearchMode) => {
-    if (!searchTerm.trim()) return;
+    if (!searchTerm.trim()) {
+      setError(null);
+      setCurrentIdiom(null);
+      setSearchParams({});
+      return;
+    }
+    setSearchParams({ query: searchTerm });
     const modeToUse = forceMode || searchMode;
 
     setIsLoading(true);
@@ -42,12 +58,23 @@ const Home: React.FC = () => {
     }
   };
 
+  const handleActionClick = () => {
+    if (isLoading) return;
+    if (searchQuery) {
+      // Nếu có nội dung, nút đóng vai trò là CLEAR
+      setQuery("");
+      handleSearch("");
+    } else {
+      // Nếu không có nội dung, nút đóng vai trò là SEARCH (mặc dù disabled nếu empty)
+    }
+  };
+
   const isCenteredMode = !currentIdiom && !isLoading;
 
   return (
     <div
-      className={`flex flex-col flex-1 items-center ${
-        isCenteredMode ? "justify-center" : "pt-4"
+      className={`w-full h-full flex flex-col flex-1 items-center ${
+        isCenteredMode ? "justify-center -mt-16 h-svh" : "pt-4"
       }`}
     >
       <div
@@ -116,25 +143,29 @@ const Home: React.FC = () => {
               className="w-full py-4 px-6 text-lg outline-none text-slate-700 font-medium"
             />
             <div className="absolute right-2 flex items-center gap-1">
-              <button
+              {/* <button
                 type="button"
                 onClick={() => setIsHandwritingPadOpen(true)}
                 className="p-2 text-slate-400 hover:text-slate-600 transition-colors"
               >
                 <PencilIcon className="w-5 h-5" />
-              </button>
+              </button> */}
               <button
-                type="submit"
-                className={`p-2.5 rounded-full text-white shadow-md transition-transform active:scale-95 ${
-                  searchMode === "ai"
-                    ? "bg-purple-600 hover:bg-purple-700"
-                    : "bg-red-600 hover:bg-red-700"
+                type={searchQuery ? "button" : "submit"}
+                className={`absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-xl transition-all shadow-md active:scale-95 ${
+                  searchQuery && !isLoading
+                    ? "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                    : "bg-red-700 text-white hover:bg-red-800"
                 }`}
+                onClick={handleActionClick}
+                title={searchQuery ? "Xóa" : "Tìm kiếm"}
               >
                 {isLoading ? (
-                  <SpinnerIcon className="w-5 h-5" />
+                  <div className="w-6 h-6 border-2 border-white border-t-transparent animate-spin rounded-full" />
+                ) : searchQuery ? (
+                  <CloseIcon className="w-6 h-6" />
                 ) : (
-                  <SearchIcon className="w-5 h-5" />
+                  <SearchIcon className="w-6 h-6" />
                 )}
               </button>
             </div>
@@ -147,68 +178,65 @@ const Home: React.FC = () => {
           </p>
         )}
 
-        {isCenteredMode && (
+        {/* {isCenteredMode && (
           <FeaturedComments
             onSearch={(t) => {
               setQuery(t);
               handleSearch(t, "database");
             }}
           />
-        )}
+        )} */}
       </div>
 
-      <div className="w-full flex-1 max-w-6xl">
-        {isLoading && (
-          <div className="flex flex-col items-center mt-12 text-slate-400 animate-pulse">
-            <div
-              className={`w-12 h-12 border-4 rounded-full border-t-transparent animate-spin mb-4 ${
-                searchMode === "ai" ? "border-purple-600" : "border-red-600"
-              }`}
-            ></div>
-            <p className="font-bold text-sm tracking-wide uppercase">
-              {searchMode === "ai"
-                ? "AI đang tư duy..."
-                : "Đang lục lại thư viện..."}
-            </p>
-          </div>
-        )}
+      {isLoading && (
+        <div className="flex flex-col items-center mt-12 text-slate-400 animate-pulse">
+          <div
+            className={`w-12 h-12 border-4 rounded-full border-t-transparent animate-spin mb-4 ${
+              searchMode === "ai" ? "border-purple-600" : "border-red-600"
+            }`}
+          ></div>
+          <p className="font-bold text-sm tracking-wide uppercase">
+            {searchMode === "ai"
+              ? "AI đang tư duy..."
+              : "Đang lục lại thư viện..."}
+          </p>
+        </div>
+      )}
 
-        {error && (
-          <div className="max-w-md mx-auto mt-8 bg-red-50 border border-red-100 p-8 rounded-2xl text-center animate-shake">
-            <p className="text-red-600 mb-6 font-bold">{error}</p>
-            {searchMode === "database" && (
-              <button
-                onClick={() => setSearchMode("ai")}
-                className="px-8 py-3 bg-slate-800 text-white rounded-full text-xs font-bold hover:bg-black transition-all shadow-lg active:scale-95"
-              >
-                Tra cứu bằng AI ngay
-              </button>
-            )}
-          </div>
-        )}
-
-        {!isLoading && currentIdiom && (
-          <div className="relative mt-4 animate-pop">
-            <div
-              className={`absolute top-0 right-0 z-10 px-4 py-1.5 rounded-bl-2xl rounded-tr-2xl text-[10px] font-bold text-white shadow-lg ${
-                currentIdiom.dataSource === "ai"
-                  ? "bg-gradient-to-r from-purple-600 to-indigo-600"
-                  : "bg-slate-800"
-              }`}
+      {error && (
+        <div className="max-w-md mx-auto mt-8 bg-red-50 border border-red-100 p-8 rounded-2xl text-center animate-shake">
+          <p className="text-red-600 mb-6 font-bold">{error}</p>
+          {searchMode === "database" && (
+            <button
+              onClick={() => setSearchMode("ai")}
+              className="px-8 py-3 bg-slate-800 text-white rounded-full text-xs font-bold hover:bg-black transition-all shadow-lg active:scale-95"
             >
-              {currentIdiom.dataSource === "ai"
-                ? "✨ PHÂN TÍCH BỞI AI"
-                : "📚 DỮ LIỆU CHUẨN"}
-            </div>
-            <IdiomDetail
-              idiom={currentIdiom}
-              isLoggedIn={true}
-              isPremium={true}
-            />
-          </div>
-        )}
-      </div>
+              Tra cứu bằng AI ngay
+            </button>
+          )}
+        </div>
+      )}
 
+      {!isLoading && currentIdiom && (
+        <div className="relative mt-4 animate-pop">
+          <div
+            className={`absolute top-0 right-0 z-10 px-4 py-1.5 rounded-bl-2xl rounded-tr-2xl text-[10px] font-bold text-white shadow-lg ${
+              currentIdiom.dataSource === "ai"
+                ? "bg-gradient-to-r from-purple-600 to-indigo-600"
+                : "bg-slate-800"
+            }`}
+          >
+            {currentIdiom.dataSource === "ai"
+              ? "✨ PHÂN TÍCH BỞI AI"
+              : "📚 DỮ LIỆU CHUẨN"}
+          </div>
+          <IdiomDetail
+            idiom={currentIdiom}
+            isLoggedIn={true}
+            isPremium={true}
+          />
+        </div>
+      )}
       <HandwritingPad
         isOpen={isHandwritingPadOpen}
         onClose={() => setIsHandwritingPadOpen(false)}

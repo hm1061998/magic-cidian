@@ -15,6 +15,7 @@ import { UserModule } from './user/user.module';
 import { IdiomsModule } from './idioms/idioms.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { AuthModule } from './auth/auth.module';
 
 const isProd = process.env.NODE_ENV === 'production';
 @Module({
@@ -36,6 +37,7 @@ const isProd = process.env.NODE_ENV === 'production';
     }),
     IdiomsModule,
     UserModule,
+    AuthModule,
     ...(isProd
       ? [
           ServeStaticModule.forRoot({

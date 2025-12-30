@@ -6,9 +6,11 @@ import {
   ChevronRightIcon,
   PencilIcon,
   TrashIcon,
+  PlusIcon,
 } from "../components/icons";
 import { fetchStoredIdioms, deleteIdiom } from "../services/idiomService";
 import { Idiom } from "../types";
+import { useNavigate } from "react-router";
 
 interface VocabularyListProps {
   onBack: () => void;
@@ -21,6 +23,8 @@ const VocabularyList: React.FC<VocabularyListProps> = ({
   onSelect,
   onEdit,
 }) => {
+  const navigate = useNavigate();
+
   const [idioms, setIdioms] = useState<Idiom[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -90,30 +94,35 @@ const VocabularyList: React.FC<VocabularyListProps> = ({
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-4 md:p-8 animate-pop">
-      <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-        <div className="flex items-center w-full md:w-auto">
-          <button
-            onClick={onBack}
-            className="flex items-center space-x-2 text-slate-500 hover:text-red-600 transition-colors mr-4"
-          >
-            <ArrowLeftIcon className="w-5 h-5" />
-          </button>
+    <div className="max-w-6xl w-full mx-auto animate-pop">
+      <div className="flex flex-row justify-between items-center gap-4">
+        <div className="flex items-center w-auto">
           <h1 className="text-2xl font-hanzi font-bold text-slate-800">
             Kho từ vựng ({totalItems})
           </h1>
         </div>
 
-        <div className="relative w-full md:w-80">
-          <input
-            type="text"
-            placeholder="Tìm từ vựng..."
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-red-200"
-          />
-          <SearchIcon className="w-5 h-5 text-slate-400 absolute left-3 top-2.5" />
-        </div>
+        <button
+          onClick={() => {
+            navigate("/admin/insert");
+          }}
+          className="flex items-center justify-between p-3.5 bg-red-50 hover:bg-red-100 rounded-xl transition-all group border border-red-100"
+        >
+          <div className="flex items-center space-x-3 text-red-700 font-bold">
+            <PlusIcon className="w-5 h-5" /> <span>Thêm mới</span>
+          </div>
+        </button>
+      </div>
+
+      <div className="relative w-full md:w-80 my-5">
+        <input
+          type="text"
+          placeholder="Tìm từ vựng..."
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          className="w-full pl-10 pr-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-red-200"
+        />
+        <SearchIcon className="w-5 h-5 text-slate-400 absolute left-3 top-2.5" />
       </div>
 
       {loading ? (
@@ -132,7 +141,7 @@ const VocabularyList: React.FC<VocabularyListProps> = ({
             {idioms.map((item) => (
               <div
                 key={item.id}
-                onClick={() => onSelect(item.hanzi)}
+                onClick={() => onEdit(item.id)}
                 className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-red-200 cursor-pointer transition-all group relative overflow-hidden"
               >
                 <div className="flex justify-between items-start mb-2">
@@ -162,12 +171,12 @@ const VocabularyList: React.FC<VocabularyListProps> = ({
                 <p className="text-slate-600 text-sm line-clamp-2">
                   {item.vietnameseMeaning}
                 </p>
-                {item.level && (
+                {/* {item.level && (
                   <div className="mt-3 pt-3 border-t border-slate-50 flex justify-between items-center text-xs text-slate-400">
                     <span>{item.level}</span>
                     <span>{item.source}</span>
                   </div>
-                )}
+                )} */}
               </div>
             ))}
           </div>

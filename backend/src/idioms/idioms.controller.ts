@@ -8,9 +8,11 @@ import {
   Param,
   Put,
   Delete,
+  UseGuards
 } from '@nestjs/common';
 import { IdiomsService } from './idioms.service';
 import { CreateIdiomDto } from './dto/create-idiom.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 export type SearchMode = 'database' | 'ai';
 
@@ -37,11 +39,13 @@ export class IdiomsController {
     return this.idiomsService.findById(id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post()
   async create(@Body() createIdiomDto: CreateIdiomDto) {
     return this.idiomsService.create(createIdiomDto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Put(':id')
   async update(
     @Param('id') id: string,
@@ -50,11 +54,13 @@ export class IdiomsController {
     return this.idiomsService.update(id, updateIdiomDto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
   async remove(@Param('id') id: string) {
     return this.idiomsService.remove(id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('bulk')
   async bulkCreate(@Body() idioms: CreateIdiomDto[]) {
     return this.idiomsService.bulkCreate(idioms);

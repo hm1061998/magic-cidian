@@ -213,17 +213,9 @@ const AdminInsert: React.FC<AdminInsertProps> = ({ onBack, idiomId }) => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-4 md:p-8 animate-pop">
-      <div className="flex justify-between items-center mb-6">
-        <button
-          onClick={onBack}
-          className="flex items-center space-x-2 text-slate-500 hover:text-red-600 transition-colors"
-        >
-          <ArrowLeftIcon className="w-5 h-5" />
-          <span className="font-bold">Quay lại</span>
-        </button>
-
-        {!idiomId && (
+    <div className="max-w-4xl w-full mx-auto animate-pop">
+      {!idiomId && (
+        <div className="flex justify-end items-center mb-6">
           <div className="relative">
             <input
               type="file"
@@ -245,8 +237,8 @@ const AdminInsert: React.FC<AdminInsertProps> = ({ onBack, idiomId }) => {
               Import Excel
             </label>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
         <div className="bg-red-700 p-6 text-white">
@@ -317,7 +309,7 @@ const AdminInsert: React.FC<AdminInsertProps> = ({ onBack, idiomId }) => {
                 placeholder="VD: Làm ăn"
               />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
                   Phân loại
@@ -358,7 +350,7 @@ const AdminInsert: React.FC<AdminInsertProps> = ({ onBack, idiomId }) => {
                   placeholder="VD: Qiaoliang"
                 />
               </div>
-            </div>
+            </div> */}
           </div>
 
           {/* Section 2: Giải nghĩa chi tiết */}

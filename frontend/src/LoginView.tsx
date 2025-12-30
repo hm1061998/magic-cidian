@@ -1,0 +1,101 @@
+import React, { useState } from "react";
+import { ArrowLeftIcon, SpinnerIcon } from "../components/icons";
+import { loginAdmin } from "@/services/authService";
+
+interface LoginViewProps {
+  onLoginSuccess: () => void;
+  onBack: () => void;
+}
+
+const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess, onBack }) => {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+
+    try {
+      await loginAdmin(username, password);
+      onLoginSuccess();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex-1 flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden animate-pop">
+        <div className="bg-red-700 p-8 text-center">
+          <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center text-white text-3xl font-hanzi font-bold shadow-inner mx-auto mb-4 backdrop-blur-md">
+            词
+          </div>
+          <h2 className="text-2xl font-bold text-white">Chào mừng trở lại</h2>
+          <p className="text-red-100/80 text-sm mt-1">
+            Đăng nhập để quản lý kho từ vựng
+          </p>
+        </div>
+
+        <form onSubmit={handleLogin} className="p-8 space-y-6">
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-100 text-red-600 text-xs font-bold rounded-lg animate-shake">
+              {error}
+            </div>
+          )}
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
+                Tên đăng nhập
+              </label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all"
+                placeholder="Nhập tên đăng nhập"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
+                Mật khẩu
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all"
+                placeholder="••••••••"
+                required
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full py-4 bg-red-700 text-white rounded-xl font-bold shadow-lg shadow-red-100 hover:bg-red-800 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+          >
+            {isLoading ? <SpinnerIcon className="w-5 h-5" /> : "Đăng nhập"}
+          </button>
+
+          <button
+            type="button"
+            onClick={onBack}
+            className="w-full py-2 text-slate-400 text-sm hover:text-slate-600 transition-colors"
+          >
+            Quay lại trang chủ
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default LoginView;

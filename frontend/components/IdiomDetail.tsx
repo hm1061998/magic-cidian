@@ -83,7 +83,7 @@ const IdiomDetail: React.FC<IdiomDetailProps> = ({
               <h1 className="text-4xl md:text-6xl font-hanzi font-bold text-slate-800 tracking-tight">
                 {idiom.hanzi}
               </h1>
-              <div className="flex flex-wrap gap-2">
+              {/* <div className="flex flex-wrap gap-2">
                 <span className="text-[10px] px-2 py-0.5 rounded-full border border-red-200 bg-red-50 text-red-700 font-bold uppercase">
                   {idiom.type}
                 </span>
@@ -98,7 +98,7 @@ const IdiomDetail: React.FC<IdiomDetailProps> = ({
                     {idiom.level}
                   </span>
                 )}
-              </div>
+              </div> */}
             </div>
             <div className="flex items-center gap-3">
               <p className="text-xl md:text-2xl text-red-600 font-medium font-sans tracking-wide">
@@ -191,7 +191,7 @@ const IdiomDetail: React.FC<IdiomDetailProps> = ({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-3 space-y-6">
           {idiom.analysis && idiom.analysis.length > 0 && (
             <div className="bg-white p-6 md:p-10 rounded-2xl shadow-sm border border-slate-200">
               <Section title="Phân tích Hán tự">
@@ -268,7 +268,7 @@ const IdiomDetail: React.FC<IdiomDetailProps> = ({
           </div>
         </div>
 
-        <div className="space-y-6">
+        {/* <div className="space-y-6">
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 sticky top-24">
             <h3 className="font-bold text-slate-800 mb-6 flex items-center uppercase text-xs tracking-widest text-slate-400">
               Công cụ học tập
@@ -289,7 +289,7 @@ const IdiomDetail: React.FC<IdiomDetailProps> = ({
             isLoggedIn={isLoggedIn}
             isPremium={isPremium}
           />
-        </div>
+        </div> */}
       </div>
     </div>
   );

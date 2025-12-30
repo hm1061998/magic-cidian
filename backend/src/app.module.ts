@@ -16,6 +16,7 @@ import { IdiomsModule } from './idioms/idioms.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { AuthModule } from './auth/auth.module';
+import { HealthController } from './health.controller';
 
 const isProd = process.env.NODE_ENV === 'production';
 @Module({
@@ -47,7 +48,7 @@ const isProd = process.env.NODE_ENV === 'production';
         ]
       : []),
   ],
-  controllers: [AppController],
+  controllers: [AppController, HealthController],
   providers: [AppService],
 })
 export class AppModule {}

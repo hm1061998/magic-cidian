@@ -104,7 +104,6 @@ const AdminInsert: React.FC<AdminInsertProps> = ({ onBack, idiomId }) => {
 
         if (data.length === 0)
           throw new Error("File trống hoặc sai định dạng.");
-
         const mappedData = data
           .map((row) => {
             const hanzi = row["QUÁN DỤNG TỪ"] || row["CHỮ HÁN"] || row["hanzi"];
@@ -131,6 +130,8 @@ const AdminInsert: React.FC<AdminInsertProps> = ({ onBack, idiomId }) => {
                     },
                   ]
                 : [],
+              imageUrl: String(row["HÌNH ẢNH"] || "").trim(),
+              videoUrl: String(row["LINK BÁO/VIDEO"] || "").trim(),
             };
           })
           .filter(Boolean);
@@ -395,6 +396,17 @@ const AdminInsert: React.FC<AdminInsertProps> = ({ onBack, idiomId }) => {
                   className="w-full border rounded-lg p-2"
                 />
               </div>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
+                Ảnh minh họa
+              </label>
+              <input
+                value={form.imageUrl}
+                onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
+                className="w-full border rounded-lg p-2"
+                placeholder="Nhập đường dẫn ảnh, VD: https://anh.png"
+              />
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-500 uppercase mb-1">

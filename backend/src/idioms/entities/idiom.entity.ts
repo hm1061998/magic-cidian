@@ -53,6 +53,9 @@ export class IdiomEntity {
   @Column({ nullable: true })
   imageUrl: string;
 
+  @Column({ nullable: true })
+  videoUrl: string;
+
   @CreateDateColumn()
   createdAt: Date;
 

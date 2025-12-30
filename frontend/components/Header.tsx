@@ -44,7 +44,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
               词
             </div>
             <h1 className="text-lg font-bold text-slate-800 font-hanzi">
-              Magic词典
+              GYSpace
             </h1>
           </Link>
         </div>

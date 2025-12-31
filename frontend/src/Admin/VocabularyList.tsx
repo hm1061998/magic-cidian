@@ -19,6 +19,7 @@ import { Idiom } from "@/types";
 import { useNavigate } from "react-router";
 import { confirmService } from "@/services/ui/confirmService";
 import { toast } from "@/services/ui/toastService";
+import FormSelect from "@/components/FormSelect";
 
 interface VocabularyListProps {
   onBack: () => void;
@@ -47,6 +48,8 @@ const VocabularyList: React.FC<VocabularyListProps> = ({
   // Filter State
   const [filter, setFilter] = useState("");
   const [debouncedFilter, setDebouncedFilter] = useState("");
+  const [selectedLevel, setSelectedLevel] = useState("");
+  const [selectedType, setSelectedType] = useState("");
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -58,12 +61,18 @@ const VocabularyList: React.FC<VocabularyListProps> = ({
 
   useEffect(() => {
     loadIdioms();
-  }, [page, debouncedFilter]);
+  }, [page, debouncedFilter, selectedLevel, selectedType]);
 
   const loadIdioms = async () => {
     setLoading(true);
     try {
-      const response = await fetchStoredIdioms(page, 12, debouncedFilter);
+      const response = await fetchStoredIdioms(
+        page,
+        12,
+        debouncedFilter,
+        selectedLevel,
+        selectedType
+      );
       setIdioms(response.data);
       setTotalPages(response.meta.lastPage);
       setTotalItems(response.meta.total);
@@ -224,15 +233,45 @@ const VocabularyList: React.FC<VocabularyListProps> = ({
         </div>
       </div>
 
-      <div className="relative w-full md:w-80 mb-6">
-        <input
-          type="text"
-          placeholder="Tìm từ vựng..."
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-full focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400 transition-all"
+      <div className="flex flex-col md:flex-row gap-4 mb-6">
+        <div className="relative flex-1">
+          <input
+            type="text"
+            placeholder="Tìm theo hán tự, pinyin, ý nghĩa..."
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400 transition-all bg-white"
+          />
+          <SearchIcon className="w-5 h-5 text-slate-400 absolute left-3 top-2.5" />
+        </div>
+        <FormSelect
+          value={selectedLevel}
+          onChange={(e) => {
+            setSelectedLevel(e);
+            setPage(1);
+          }}
+          options={[
+            { value: "", label: "Tất cả cấp độ" },
+            { value: "Sơ cấp", label: "Sơ cấp" },
+            { value: "Trung cấp", label: "Trung cấp" },
+            { value: "Cao cấp", label: "Cao cấp" },
+          ]}
+          className="min-w-[140px] !py-2"
         />
-        <SearchIcon className="w-5 h-5 text-slate-400 absolute left-3 top-2.5" />
+        <FormSelect
+          value={selectedType}
+          onChange={(e) => {
+            setSelectedType(e);
+            setPage(1);
+          }}
+          options={[
+            { value: "", label: "Tất cả loại từ" },
+            { value: "Quán dụng ngữ", label: "Quán dụng ngữ" },
+            { value: "Thành ngữ (Chengyu)", label: "Thành ngữ" },
+            { value: "Tiếng lóng", label: "Tiếng lóng" },
+          ]}
+          className="min-w-[160px] !py-2"
+        />
       </div>
 
       {loading ? (

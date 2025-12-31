@@ -34,6 +34,8 @@ export class IdiomsController {
     @Query('filter') filter: string = '',
     @Query('sort') sort: string = 'createdAt',
     @Query('order') order: 'ASC' | 'DESC' = 'DESC',
+    @Query('level') level?: string,
+    @Query('type') type?: string,
   ) {
     return this.idiomsService.findAll(
       Number(page),
@@ -41,6 +43,8 @@ export class IdiomsController {
       filter,
       sort,
       order,
+      level,
+      type,
     );
   }
 

@@ -6,6 +6,7 @@ import {
   fetchIdiomById,
 } from "@/services/api/idiomService";
 import { toast } from "@/services/ui/toastService";
+import FormSelect from "@/components/FormSelect";
 import { useOutletContext } from "react-router";
 import { AdminOutletContext } from "@/layouts/AdminLayout";
 import { useForm, useFieldArray } from "react-hook-form";
@@ -251,32 +252,37 @@ const AdminInsert: React.FC<AdminInsertProps> = ({ onBack, idiomId }) => {
                   <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-1">
                     Phân loại
                   </label>
-                  <select
+                  <FormSelect
                     {...register("type", {
                       maxLength: { value: 50, message: "Tối đa 50 ký tự" },
                     })}
-                    className="w-full border border-slate-200 rounded-xl p-3 appearance-none bg-slate-50/50 outline-none focus:border-slate-400 transition-all"
-                  >
-                    <option>Quán dụng ngữ</option>
-                    <option>Thành ngữ (Chengyu)</option>
-                    <option>Tiếng lóng</option>
-                    <option>Ngôn ngữ mạng</option>
-                  </select>
+                    options={[
+                      { value: "Quán dụng ngữ", label: "Quán dụng ngữ" },
+                      {
+                        value: "Thành ngữ (Chengyu)",
+                        label: "Thành ngữ (Chengyu)",
+                      },
+                      { value: "Tiếng lóng", label: "Tiếng lóng" },
+                      { value: "Ngôn ngữ mạng", label: "Ngôn ngữ mạng" },
+                    ]}
+                    className="!bg-slate-50/50 !p-3"
+                  />
                 </div>
                 <div>
                   <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-1">
                     Cấp độ
                   </label>
-                  <select
+                  <FormSelect
                     {...register("level", {
                       maxLength: { value: 20, message: "Tối đa 20 ký tự" },
                     })}
-                    className="w-full border border-slate-200 rounded-xl p-3 appearance-none bg-slate-50/50 outline-none focus:border-slate-400 transition-all"
-                  >
-                    <option>Sơ cấp</option>
-                    <option>Trung cấp</option>
-                    <option>Cao cấp</option>
-                  </select>
+                    options={[
+                      { value: "Sơ cấp", label: "Sơ cấp" },
+                      { value: "Trung cấp", label: "Trung cấp" },
+                      { value: "Cao cấp", label: "Cao cấp" },
+                    ]}
+                    className="!bg-slate-50/50 !p-3"
+                  />
                 </div>
                 <div>
                   <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-1">

@@ -76,15 +76,23 @@ export class IdiomsService {
     filter: string = '',
     sort: string = 'createdAt',
     order: 'ASC' | 'DESC' = 'DESC',
+    level?: string,
+    type?: string,
   ) {
     const skip = (page - 1) * limit;
+
+    const query: any = {};
+
+    if (level) query.level = level;
+    if (type) query.type = type;
+
     const whereCondition = filter
       ? [
-          { hanzi: ILike(`%${filter}%`) },
-          { pinyin: ILike(`%${filter}%`) },
-          { vietnameseMeaning: ILike(`%${filter}%`) },
+          { ...query, hanzi: ILike(`%${filter}%`) },
+          { ...query, pinyin: ILike(`%${filter}%`) },
+          { ...query, vietnameseMeaning: ILike(`%${filter}%`) },
         ]
-      : {};
+      : query;
 
     try {
       const [data, total] = await this.idiomRepository.findAndCount({

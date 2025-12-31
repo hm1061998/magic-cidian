@@ -126,13 +126,19 @@ interface PaginatedResponse {
 export const fetchStoredIdioms = async (
   page = 1,
   limit = 12,
-  filter = ""
+  filter = "",
+  level = "",
+  type = ""
 ): Promise<PaginatedResponse> => {
   try {
     const response = await http.get<PaginatedResponse>("/idioms", {
       page,
       limit,
       filter,
+      level,
+      type,
+      sort: "createdAt",
+      order: "DESC",
     });
     return response.data;
   } catch (error) {

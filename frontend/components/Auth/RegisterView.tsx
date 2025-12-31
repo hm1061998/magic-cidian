@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ArrowLeftIcon, SpinnerIcon, UserIcon } from "../icons";
+import { ArrowLeftIcon, SpinnerIcon, UserIcon } from "@/components/icons";
 import { registerUser } from "@/services/authService";
 
 interface RegisterViewProps {

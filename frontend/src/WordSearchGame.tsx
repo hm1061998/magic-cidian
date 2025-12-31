@@ -3,9 +3,9 @@ import {
   ArrowLeftIcon,
   PuzzlePieceIcon,
   SpinnerIcon,
-} from "../components/icons";
-import { fetchStoredIdioms } from "../services/idiomService";
-import type { Idiom } from "../types";
+} from "@/components/icons";
+import { fetchStoredIdioms } from "@/services/idiomService";
+import type { Idiom } from "@/types";
 
 interface WordSearchGameProps {
   onBack: () => void;

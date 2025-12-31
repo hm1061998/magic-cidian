@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { ArrowLeftIcon, SpinnerIcon } from "../icons";
+import { ArrowLeftIcon, SpinnerIcon } from "@/components/icons";
 import { loginAdmin } from "@/services/authService";
 import { useDispatch } from "react-redux";
-import { setUser } from "../../redux/authSlice";
+import { setUser } from "@/redux/authSlice";
 
 interface LoginViewProps {
   onLoginSuccess: () => void;

@@ -15,12 +15,12 @@ import WordSearchGame from "./src/WordSearchGame";
 import HistoryList from "./src/HistoryList";
 import Dashboard from "./src/Admin/Dashboard";
 import { addToHistory } from "./services/idiomService";
-import { isAdmin, isAuthenticated } from "./services/authService";
 import Auth from "./src/Auth";
 import RequireAuth from "./context/RequireAuth";
 import AdminLayout from "./layouts/AdminLayout";
 import MainLayout from "./layouts/MainLayout";
 import ToastContainer from "./components/ToastContainer";
+import ConfirmModal from "./components/ConfirmModal";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "./redux/store";
 import { fetchCurrentUser } from "./redux/authSlice";
@@ -73,6 +73,7 @@ const App: React.FC = () => {
   return (
     <>
       <ToastContainer />
+      <ConfirmModal />
       <Routes>
         {/* User Routes - Sử dụng MainLayout chung */}
         <Route element={<MainLayout />}>

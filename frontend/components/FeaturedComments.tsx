@@ -1,6 +1,6 @@
 import React from "react";
 import { HeartIcon, ChatBubbleIcon } from "./icons";
-import type { Feedback } from "../types";
+import type { Feedback } from "@/types";
 
 interface FeaturedCommentsProps {
   onSearch: (term: string) => void;

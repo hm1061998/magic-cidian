@@ -5,11 +5,11 @@ import {
   useParams,
   useSearchParams,
 } from "react-router-dom";
-import { fetchIdiomDetails } from "../services/idiomService";
-import type { Idiom, SearchMode } from "../types";
-import IdiomDetail from "../components/IdiomDetail";
-import HandwritingPad from "../components/HandwritingPad";
-import FeaturedComments from "../components/FeaturedComments";
+import { fetchIdiomDetails } from "@/services/idiomService";
+import type { Idiom, SearchMode } from "@/types";
+import IdiomDetail from "@/components/IdiomDetail";
+import HandwritingPad from "@/components/HandwritingPad";
+import FeaturedComments from "@/components/FeaturedComments";
 import {
   SearchIcon,
   BrainIcon,
@@ -17,7 +17,7 @@ import {
   CardIcon,
   PuzzlePieceIcon,
   ArrowLeftIcon,
-} from "../components/icons";
+} from "@/components/icons";
 import { addToHistory } from "@/services/userDataService";
 
 const Home: React.FC = () => {

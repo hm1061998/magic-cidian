@@ -6,10 +6,11 @@ import {
   SearchIcon,
   ChevronRightIcon,
   SpinnerIcon,
-} from "../components/icons";
-import type { Idiom } from "../types";
-import { fetchHistory, clearAllHistory } from "../services/userDataService";
-import { toast } from "../services/toastService";
+} from "@/components/icons";
+import type { Idiom } from "@/types";
+import { fetchHistory, clearAllHistory } from "@/services/userDataService";
+import { confirmService } from "@/services/confirmService";
+import { toast } from "@/services/toastService";
 
 interface HistoryListProps {
   onBack: () => void;
@@ -45,15 +46,19 @@ const HistoryList: React.FC<HistoryListProps> = ({ onBack, onSelect }) => {
   };
 
   const handleClearAll = async () => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa toàn bộ lịch sử tra cứu?")) {
-      try {
+    confirmService.show({
+      title: "Xóa toàn bộ lịch sử?",
+      message:
+        "Bạn có chắc chắn muốn xóa toàn bộ lịch sử tra cứu? Hành động này không thể hoàn tác.",
+      type: "warning",
+      confirmText: "Xóa tất cả",
+      cancelText: "Hủy",
+      onConfirm: async () => {
         await clearAllHistory();
         setHistoryItems([]);
         toast.info("Đã xóa lịch sử.");
-      } catch (e) {
-        toast.error("Lỗi khi xóa lịch sử.");
-      }
-    }
+      },
+    });
   };
 
   const filteredItems = historyItems.filter(

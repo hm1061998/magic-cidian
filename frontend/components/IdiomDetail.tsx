@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import type { Idiom } from "../types";
+import type { Idiom } from "@/types";
 import WritingGrid from "./WritingGrid";
 import {
   BookmarkIcon,

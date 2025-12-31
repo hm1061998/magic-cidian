@@ -9,16 +9,16 @@ import {
   TrashIcon,
   PlusIcon,
   UploadIcon,
-} from "../../components/icons";
+} from "@/components/icons";
 import {
   fetchStoredIdioms,
   deleteIdiom,
   bulkCreateIdioms,
-} from "../../services/idiomService";
-import { Idiom } from "../../types";
+} from "@/services/idiomService";
+import { Idiom } from "@/types";
 import { useNavigate } from "react-router";
-import DeleteConfirmModal from "../../components/DeleteConfirmModal";
-import { toast } from "../../services/toastService";
+import { confirmService } from "@/services/confirmService";
+import { toast } from "@/services/toastService";
 
 interface VocabularyListProps {
   onBack: () => void;
@@ -43,17 +43,7 @@ const VocabularyList: React.FC<VocabularyListProps> = ({
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  // Modal State
-  const [deleteModal, setDeleteModal] = useState<{
-    isOpen: boolean;
-    id: string;
-    hanzi: string;
-  }>({
-    isOpen: false,
-    id: "",
-    hanzi: "",
-  });
-  const [isDeleting, setIsDeleting] = useState(false);
+
   // Filter State
   const [filter, setFilter] = useState("");
   const [debouncedFilter, setDebouncedFilter] = useState("");
@@ -159,21 +149,19 @@ const VocabularyList: React.FC<VocabularyListProps> = ({
     hanzi: string
   ) => {
     e.stopPropagation();
-    setDeleteModal({ isOpen: true, id, hanzi });
-  };
 
-  const confirmDelete = async () => {
-    setIsDeleting(true);
-    try {
-      await deleteIdiom(deleteModal.id);
-      setDeleteModal({ ...deleteModal, isOpen: false });
-      toast.success("Đã xóa thành công!");
-      loadIdioms();
-    } catch (err: any) {
-      toast.error("Lỗi khi xóa: " + err.message);
-    } finally {
-      setIsDeleting(false);
-    }
+    confirmService.show({
+      title: "Xác nhận xóa?",
+      message: `Bạn có chắc chắn muốn xóa từ "${hanzi}" không? Hành động này không thể hoàn tác.`,
+      type: "danger",
+      confirmText: "Xóa ngay",
+      cancelText: "Hủy",
+      onConfirm: async () => {
+        await deleteIdiom(id);
+        toast.success("Đã xóa thành công!");
+        loadIdioms();
+      },
+    });
   };
 
   const handleEdit = (e: React.MouseEvent, id: string) => {
@@ -191,15 +179,6 @@ const VocabularyList: React.FC<VocabularyListProps> = ({
 
   return (
     <div className="max-w-6xl w-full mx-auto animate-pop">
-      <DeleteConfirmModal
-        isOpen={deleteModal.isOpen}
-        idiomHanzi={deleteModal.hanzi}
-        isDeleting={isDeleting}
-        onClose={() =>
-          !isDeleting && setDeleteModal({ ...deleteModal, isOpen: false })
-        }
-        onConfirm={confirmDelete}
-      />
       <div className="flex flex-row justify-between items-center gap-4 mb-6">
         <div className="flex items-center w-auto">
           <h1 className="text-2xl font-hanzi font-bold text-slate-800">

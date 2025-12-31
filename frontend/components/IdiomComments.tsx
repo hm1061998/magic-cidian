@@ -6,7 +6,7 @@ import {
   UserIcon,
   FlagIcon,
 } from "./icons";
-import type { Feedback } from "../types";
+import type { Feedback } from "@/types";
 
 interface IdiomCommentsProps {
   idiomHanzi: string;

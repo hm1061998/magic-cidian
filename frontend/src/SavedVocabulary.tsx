@@ -7,8 +7,8 @@ import {
   SearchIcon,
   SpinnerIcon,
   ChevronRightIcon,
-} from "../components/icons";
-import type { Idiom } from "../types";
+} from "@/components/icons";
+import type { Idiom } from "@/types";
 import { fetchSavedIdioms } from "@/services/userDataService";
 import { toast } from "@/services/toastService";
 import { toggleSaveIdiom } from "@/services/userDataService";

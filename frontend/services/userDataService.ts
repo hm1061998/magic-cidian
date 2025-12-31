@@ -1,4 +1,4 @@
-import { Idiom } from "../types";
+import { Idiom } from "@/types";
 
 const API_BASE_URL = "/api/user-data";
 

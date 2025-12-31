@@ -1,9 +1,9 @@
-import { Idiom, SearchMode } from "../types";
+import { Idiom, SearchMode } from "@/types";
 import {
   TABLE_IDIOMS,
   TABLE_CHARACTER_ANALYSIS,
   TABLE_EXAMPLES,
-} from "../data/database";
+} from "@/data/database";
 // No authService import needed here for basic API calls as cookies are handled by browser.
 // If needed, we can import specific functions.
 

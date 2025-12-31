@@ -16,7 +16,7 @@ import {
   HistoryIcon,
 } from "./icons";
 import { useSelector } from "react-redux";
-import { RootState } from "../redux/store";
+import { RootState } from "@/redux/store";
 import { toast } from "@/services/toastService";
 
 interface UserSidebarProps {

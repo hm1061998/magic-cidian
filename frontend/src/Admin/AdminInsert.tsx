@@ -1,13 +1,13 @@
 import React, { useState, useRef, useEffect } from "react";
-import { PlusIcon, TrashIcon, SpinnerIcon } from "../../components/icons";
+import { PlusIcon, TrashIcon, SpinnerIcon } from "@/components/icons";
 import {
   createIdiom,
   updateIdiom,
   fetchIdiomById,
-} from "../../services/idiomService";
-import { toast } from "../../services/toastService";
+} from "@/services/idiomService";
+import { toast } from "@/services/toastService";
 import { useOutletContext } from "react-router";
-import { AdminOutletContext } from "../../layouts/AdminLayout";
+import { AdminOutletContext } from "@/layouts/AdminLayout";
 
 interface AdminInsertProps {
   onBack: () => void;

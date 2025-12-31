@@ -89,6 +89,35 @@ export class AuthService {
     return result;
   }
 
+  async getTokens(userId: string, username: string, isAdmin: boolean) {
+    const payload = {
+      username: username,
+      sub: userId,
+      isAdmin: isAdmin,
+    };
+
+    const [accessToken, refreshToken] = await Promise.all([
+      this.jwtService.signAsync(payload, {
+        expiresIn: '15m', // Access token expires in 15 minutes
+      }),
+      this.jwtService.signAsync(payload, {
+        expiresIn: '7d', // Refresh token expires in 7 days
+      }),
+    ]);
+
+    return {
+      accessToken,
+      refreshToken,
+    };
+  }
+
+  async updateRefreshToken(userId: string, refreshToken: string) {
+    const hashedRefreshToken = await hashPassword(refreshToken);
+    await this.userRepository.update(userId, {
+      refreshToken: hashedRefreshToken,
+    });
+  }
+
   async login(username: string, pass: string) {
     if (!username || username.length < 4 || !pass || pass.length < 6) {
       throw new UnauthorizedException('Thông tin đăng nhập không hợp lệ');
@@ -98,13 +127,11 @@ export class AuthService {
 
     // So sánh mật khẩu đã băm
     if (user && (await comparePasswords(pass, user.password))) {
-      const payload = {
-        username: user.username,
-        sub: user.id,
-        isAdmin: user.isAdmin,
-      };
+      const tokens = await this.getTokens(user.id, user.username, user.isAdmin);
+      await this.updateRefreshToken(user.id, tokens.refreshToken);
+
       return {
-        access_token: this.jwtService.sign(payload),
+        ...tokens,
         user: {
           id: user.id,
           username: user.username,
@@ -113,5 +140,35 @@ export class AuthService {
       };
     }
     throw new UnauthorizedException('Thông tin đăng nhập không hợp lệ');
+  }
+
+  async logout(userId: string) {
+    return this.userRepository.update(userId, { refreshToken: null });
+  }
+
+  async verifyRefreshToken(token: string) {
+    return this.jwtService.verifyAsync(token);
+  }
+
+  async refreshTokens(userId: string, refreshToken: string) {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      select: ['id', 'username', 'isAdmin', 'refreshToken'],
+    });
+
+    if (!user || !user.refreshToken)
+      throw new UnauthorizedException('Truy cập bị từ chối');
+
+    const refreshTokenMatches = await comparePasswords(
+      refreshToken,
+      user.refreshToken,
+    );
+
+    if (!refreshTokenMatches)
+      throw new UnauthorizedException('Truy cập bị từ chối');
+
+    const tokens = await this.getTokens(user.id, user.username, user.isAdmin);
+    await this.updateRefreshToken(user.id, tokens.refreshToken);
+    return tokens;
   }
 }

@@ -24,6 +24,9 @@ export class UserEntity {
   @Column({ default: false })
   isAdmin: boolean;
 
+  @Column({ type: 'varchar', nullable: true, select: false })
+  refreshToken: string | null;
+
   @CreateDateColumn()
   createdAt: Date;
 

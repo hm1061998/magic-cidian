@@ -30,6 +30,8 @@ class HttpService {
   private requestInterceptors: RequestInterceptor[] = [];
   private responseInterceptors: ResponseInterceptor[] = [];
   private errorInterceptors: ErrorInterceptor[] = [];
+  private isRefreshing = false;
+  private refreshPromise: Promise<any> | null = null;
 
   constructor() {
     // Setup default interceptors
@@ -72,13 +74,6 @@ class HttpService {
       // Handle network errors
       if (error instanceof TypeError && error.message === "Failed to fetch") {
         console.error("Network error: Unable to connect to server");
-        // You can dispatch a toast here if needed
-      }
-
-      // Handle authentication errors globally
-      if (error.status === 401) {
-        console.warn("Unauthorized request - user may need to login");
-        // You can redirect to login or dispatch an action here
       }
 
       // Re-throw the error for the caller to handle
@@ -223,6 +218,15 @@ class HttpService {
 
       // Check if response is ok
       if (!response.ok) {
+        // Handle 401 Unauthorized for token refresh
+        if (
+          response.status === 401 &&
+          !config.url.includes("/auth/refresh") &&
+          !config.url.includes("/auth/login")
+        ) {
+          return await this.handle401Error(config);
+        }
+
         const error: any = new Error(
           (data as any)?.message || response.statusText
         );
@@ -242,10 +246,50 @@ class HttpService {
 
       // Execute response interceptors
       return await this.executeResponseInterceptors(httpResponse);
-    } catch (error) {
+    } catch (error: any) {
+      // Handle potential 401 error that might be thrown (e.g. from fetch directly in some envs)
+      if (
+        error.status === 401 &&
+        !config.url.includes("/auth/refresh") &&
+        !config.url.includes("/auth/login")
+      ) {
+        return await this.handle401Error(config);
+      }
       // Execute error interceptors
       await this.executeErrorInterceptors(error);
       throw error; // Re-throw after interceptors
+    }
+  }
+
+  /**
+   * Handle 401 error by attempting to refresh token
+   */
+  private async handle401Error(config: RequestConfig): Promise<any> {
+    if (!this.isRefreshing) {
+      this.isRefreshing = true;
+      this.refreshPromise = this.post("/auth/refresh", {})
+        .then(() => {
+          this.isRefreshing = false;
+          this.refreshPromise = null;
+        })
+        .catch((err) => {
+          this.isRefreshing = false;
+          this.refreshPromise = null;
+
+          // Redirect to login if refresh fails
+          // We use dynamic imports to avoid circular dependencies
+          import("../../redux/authSlice").then(({ logout }) => {
+            import("../../redux/store").then(({ store }) => {
+              store.dispatch(logout());
+            });
+          });
+          throw err;
+        });
+    }
+
+    if (this.refreshPromise) {
+      await this.refreshPromise;
+      return this.request(config); // Retry original request
     }
   }
 

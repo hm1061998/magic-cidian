@@ -21,6 +21,9 @@ export class UserEntity {
   @Column()
   password: string;
 
+  @Column({ nullable: true })
+  displayName: string;
+
   @Column({ default: false })
   isAdmin: boolean;
 

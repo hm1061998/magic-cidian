@@ -89,11 +89,17 @@ export class AuthService {
     return result;
   }
 
-  async getTokens(userId: string, username: string, isAdmin: boolean) {
+  async getTokens(
+    userId: string,
+    username: string,
+    isAdmin: boolean,
+    displayName?: string,
+  ) {
     const payload = {
       username: username,
       sub: userId,
       isAdmin: isAdmin,
+      displayName: displayName,
     };
 
     const [accessToken, refreshToken] = await Promise.all([
@@ -127,7 +133,12 @@ export class AuthService {
 
     // So sánh mật khẩu đã băm
     if (user && (await comparePasswords(pass, user.password))) {
-      const tokens = await this.getTokens(user.id, user.username, user.isAdmin);
+      const tokens = await this.getTokens(
+        user.id,
+        user.username,
+        user.isAdmin,
+        user.displayName,
+      );
       await this.updateRefreshToken(user.id, tokens.refreshToken);
 
       return {
@@ -135,6 +146,7 @@ export class AuthService {
         user: {
           id: user.id,
           username: user.username,
+          displayName: user.displayName,
           isAdmin: user.isAdmin,
         },
       };
@@ -153,7 +165,7 @@ export class AuthService {
   async refreshTokens(userId: string, refreshToken: string) {
     const user = await this.userRepository.findOne({
       where: { id: userId },
-      select: ['id', 'username', 'isAdmin', 'refreshToken'],
+      select: ['id', 'username', 'isAdmin', 'refreshToken', 'displayName'],
     });
 
     if (!user || !user.refreshToken)
@@ -167,7 +179,12 @@ export class AuthService {
     if (!refreshTokenMatches)
       throw new UnauthorizedException('Truy cập bị từ chối');
 
-    const tokens = await this.getTokens(user.id, user.username, user.isAdmin);
+    const tokens = await this.getTokens(
+      user.id,
+      user.username,
+      user.isAdmin,
+      user.displayName,
+    );
     await this.updateRefreshToken(user.id, tokens.refreshToken);
     return tokens;
   }

@@ -55,6 +55,7 @@ const isProd = process.env.NODE_ENV === 'production';
     IdiomsModule,
     AuthModule,
     UserDataModule,
+    UserModule,
     ...(isProd
       ? [
           ServeStaticModule.forRoot({

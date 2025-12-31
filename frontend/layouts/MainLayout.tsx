@@ -43,6 +43,7 @@ const MainLayout: React.FC = () => {
           else if (view === "flashcards") navigate("/flashcards");
           else if (view === "word_search") navigate("/word_search");
           else if (view === "history") navigate("/history");
+          else if (view === "profile") navigate("/profile");
           else if (view === "admin" || view === "list") navigate("/admin");
           else navigate("/");
           setIsSidebarOpen(false); // Auto close sidebar on navigate

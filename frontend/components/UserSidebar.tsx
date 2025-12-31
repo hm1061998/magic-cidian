@@ -11,6 +11,7 @@ import {
   HistoryIcon,
   HomeIcon,
   BrainIcon,
+  SettingsIcon,
 } from "./icons";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
@@ -63,9 +64,10 @@ const UserSidebar: React.FC<UserSidebarProps> = ({
     return `linear-gradient(135deg, hsl(${hue}, 70%, 50%) 0%, hsl(${hue}, 80%, 30%) 100%)`;
   };
 
-  const username = reduxUser?.username || "Người dùng";
-  const avatarChar = username.charAt(0).toUpperCase();
-  const avatarBg = getAvatarColor(username);
+  const displayName =
+    reduxUser?.displayName || reduxUser?.username || "Người dùng";
+  const avatarChar = displayName.charAt(0).toUpperCase();
+  const avatarBg = getAvatarColor(displayName);
 
   const MenuButton: React.FC<{
     icon: React.ReactNode;
@@ -195,7 +197,7 @@ const UserSidebar: React.FC<UserSidebarProps> = ({
                 </div>
                 <div className="flex-1 overflow-hidden">
                   <h3 className="font-bold text-slate-800 text-base truncate group-hover:text-red-600 transition-colors">
-                    {username}
+                    {displayName}
                   </h3>
                   <div className="flex items-center gap-2 mt-0.5">
                     <span
@@ -209,8 +211,34 @@ const UserSidebar: React.FC<UserSidebarProps> = ({
                     </span>
                   </div>
                 </div>
+                <button
+                  onClick={() => {
+                    onViewChange("profile" as any);
+                    onClose();
+                  }}
+                  className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all shadow-sm border border-slate-100"
+                >
+                  <SettingsIcon className="w-4 h-4" />
+                </button>
               </div>
             )}
+          </div>
+
+          <div className="space-y-2">
+            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] ml-4 mb-3">
+              {" "}
+              Tài khoản & Bảo mật{" "}
+            </h4>
+            <MenuButton
+              icon={<UserIcon className="w-5 h-5" />}
+              label="Cài đặt tài khoản"
+              badge="Thông tin & Mật khẩu"
+              isActive={isPathActive("/profile")}
+              onClick={() => {
+                onViewChange("profile" as any);
+                onClose();
+              }}
+            />
           </div>
 
           {/* Navigation Links Group */}

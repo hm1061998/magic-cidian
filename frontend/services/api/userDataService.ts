@@ -82,3 +82,23 @@ export const clearAllHistory = async () => {
   const response = await http.delete(`${API_BASE_URL}/history`);
   return response.data;
 };
+
+// USER PROFILE MANAGEMENT
+export interface UpdateProfileData {
+  displayName: string;
+}
+
+export interface ChangePasswordData {
+  oldPass: string;
+  newPass: string;
+}
+
+export const updateProfile = async (data: UpdateProfileData) => {
+  const response = await http.put("/user/profile", data);
+  return response.data;
+};
+
+export const changePassword = async (data: ChangePasswordData) => {
+  const response = await http.put("/user/change-password", data);
+  return response.data;
+};

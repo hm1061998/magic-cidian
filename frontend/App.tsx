@@ -13,6 +13,7 @@ import SavedVocabulary from "./src/SavedVocabulary";
 import FlashcardReview from "./src/FlashcardReview";
 import WordSearchGame from "./src/WordSearchGame";
 import HistoryList from "./src/HistoryList";
+import Profile from "./src/Profile";
 import Dashboard from "./src/Admin/Dashboard";
 import { addToHistory } from "./services/api/idiomService";
 import Auth from "./src/Auth";
@@ -108,6 +109,7 @@ const App: React.FC = () => {
                 />
               }
             />
+            <Route path="/profile" element={<Profile />} />
           </Route>
 
           {/* Fallback cho các route không khớp trong User scope */}

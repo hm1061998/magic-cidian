@@ -301,7 +301,9 @@ const IdiomDetail: React.FC<IdiomDetailProps> = ({
               }`}
               title={isSaved ? "Bỏ lưu" : "Lưu từ"}
             >
-              <BookmarkIcon className="w-6 h-6" />
+              <BookmarkIcon
+                className={`w-6 h-6 ${isSaved ? "fill-current" : ""}`}
+              />
             </button>
           </div>
         </div>

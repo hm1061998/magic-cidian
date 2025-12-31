@@ -41,12 +41,6 @@ const SavedVocabulary: React.FC<SavedVocabularyProps> = ({ onBack }) => {
     <div className="max-w-6xl mx-auto w-full animate-pop">
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
         <div className="flex items-center w-full md:w-auto">
-          <button
-            onClick={onBack}
-            className="p-2 hover:bg-white rounded-full transition-colors mr-2"
-          >
-            <ArrowLeftIcon className="w-5 h-5 text-slate-500" />
-          </button>
           <h1 className="text-2xl font-hanzi font-bold text-slate-800 flex items-center gap-2">
             <BookmarkIconFilled className="w-6 h-6 text-red-600" />
             Từ vựng đã lưu ({savedItems.length})

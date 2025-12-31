@@ -9,6 +9,9 @@ import SavedVocabulary from "./src/SavedVocabulary";
 import FlashcardReview from "./src/FlashcardReview";
 import LoginView from "./src/LoginView";
 import { isAuthenticated, logoutAdmin } from "./services/authService";
+import WordSearchGame from "./src/WordSearchGame";
+import HistoryList from "./src/HistoryList";
+import { addToHistory } from "./services/idiomService";
 
 // Wrapper component cho trang Edit để trích xuất ID từ URL params
 const AdminInsertWrapper: React.FC<{ navigate: (path: string) => void }> = ({
@@ -27,7 +30,7 @@ const App: React.FC = () => {
   const handleLoginSuccess = () => {
     setIsLoggedIn(true);
     sessionStorage.setItem("isLoggedIn", "true");
-    navigate('/')
+    navigate("/");
   };
 
   // Xử lý đăng xuất
@@ -38,7 +41,7 @@ const App: React.FC = () => {
     setIsLoggedIn(false);
     // 3. Reset về trang chủ để đảm bảo an toàn
     setIsSidebarOpen(false);
-    navigate('/')
+    navigate("/");
   }, []);
 
   return (
@@ -77,6 +80,23 @@ const App: React.FC = () => {
             element={<FlashcardReview onBack={() => navigate("/")} />}
           />
           <Route
+            path="/word_search"
+            element={<WordSearchGame onBack={() => navigate("/")} />}
+          />
+          <Route
+            path="/history"
+            element={
+              <HistoryList
+                onBack={() => navigate("/")}
+                onSelect={(idiom) => {
+                  // Khi chọn từ lịch sử, ta update lại vị trí của nó lên đầu
+                  addToHistory(idiom);
+                  navigate(`/?query=${encodeURIComponent(idiom.hanzi)}`);
+                }}
+              />
+            }
+          />
+          <Route
             path="/login"
             element={
               <LoginView
@@ -100,6 +120,8 @@ const App: React.FC = () => {
           else if (view === "list") navigate("/admin");
           else if (view === "saved") navigate("/saved");
           else if (view === "flashcards") navigate("/flashcards");
+          else if (view === "word_search") navigate("/word_search");
+          else if (view === "history") navigate("/history");
           else navigate("/");
         }}
         onLogin={() => {

@@ -20,11 +20,11 @@ const getEnv = (key: string) => {
 
 const getHeaders = (isJson = true) => {
   const headers: any = {};
-  if (isJson) headers['Content-Type'] = 'application/json';
-  
+  if (isJson) headers["Content-Type"] = "application/json";
+
   const token = getAuthToken();
   if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+    headers["Authorization"] = `Bearer ${token}`;
   }
   return headers;
 };
@@ -282,5 +282,28 @@ export const fetchStoredIdioms = async (
     } catch {
       return { data: [], meta: { total: 0, page: 1, lastPage: 1, limit } };
     }
+  }
+};
+
+// Logic lưu lịch sử
+export const addToHistory = (idiom: Idiom) => {
+  try {
+    const stored = localStorage.getItem("search_history");
+    let historyItems: Idiom[] = stored ? JSON.parse(stored) : [];
+
+    // Xóa nếu đã tồn tại để đưa lên đầu
+    historyItems = historyItems.filter((item) => item.hanzi !== idiom.hanzi);
+
+    // Thêm vào đầu danh sách
+    historyItems.unshift(idiom);
+
+    // Giới hạn 50 mục gần nhất
+    if (historyItems.length > 50) {
+      historyItems = historyItems.slice(0, 50);
+    }
+
+    localStorage.setItem("search_history", JSON.stringify(historyItems));
+  } catch (e) {
+    console.error("Error saving history", e);
   }
 };

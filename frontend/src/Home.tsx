@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { fetchIdiomDetails } from "../services/idiomService";
+import { addToHistory, fetchIdiomDetails } from "../services/idiomService";
 import type { Idiom, SearchMode } from "../types";
 import IdiomDetail from "../components/IdiomDetail";
 import HandwritingPad from "../components/HandwritingPad";
@@ -34,6 +34,8 @@ const Home: React.FC = () => {
     }
   }, [searchQuery]);
 
+
+
   const handleSearch = async (searchTerm: string, forceMode?: SearchMode) => {
     if (!searchTerm.trim()) {
       setError(null);
@@ -51,6 +53,7 @@ const Home: React.FC = () => {
     try {
       const result = await fetchIdiomDetails(searchTerm, modeToUse);
       setCurrentIdiom(result);
+      addToHistory(result);
     } catch (err: any) {
       setError(err.message);
     } finally {

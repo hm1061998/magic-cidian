@@ -410,6 +410,17 @@ const AdminInsert: React.FC<AdminInsertProps> = ({ onBack, idiomId }) => {
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
+                Link Video
+              </label>
+              <input
+                value={form.videoUrl}
+                onChange={(e) => setForm({ ...form, videoUrl: e.target.value })}
+                className="w-full border rounded-lg p-2"
+                placeholder="Nhập đường dẫn video, VD: https://video.mp4"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
                 Giải thích tiếng Trung (Sách/Từ điển)
               </label>
               <textarea

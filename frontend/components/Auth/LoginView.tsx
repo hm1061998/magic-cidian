@@ -54,7 +54,7 @@ const LoginView: React.FC<LoginViewProps> = ({
             GY
           </div>
           <h2 className="text-2xl font-bold text-white relative z-10">
-            Đăng nhập GYSpace
+            Đăng nhập {__APP_NAME__}
           </h2>
           <p className="text-red-100/80 text-sm mt-1 relative z-10">
             Học tập hiệu quả với hệ thống thông minh

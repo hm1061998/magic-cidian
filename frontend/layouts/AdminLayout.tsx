@@ -103,12 +103,12 @@ const AdminLayout: React.FC = () => {
           <div className="flex items-center gap-3">
             <img
               src={"/assets/app_icon.png"}
-              alt="GYSpace"
+              alt={__APP_NAME__}
               className="w-8 h-8 rounded-lg shadow-lg shadow-red-900/50"
             />
             <div>
               <h1 className="text-lg font-bold font-hanzi text-white tracking-wide">
-                GYSpace
+                {__APP_NAME__}
               </h1>
               <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest block">
                 Admin Portal

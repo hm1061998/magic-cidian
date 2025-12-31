@@ -62,17 +62,14 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
             <div className="w-9 h-9 md:w-10 md:h-10 bg-white rounded-xl shadow-md border border-slate-50 flex items-center justify-center group-hover:rotate-6 group-hover:scale-110 transition-all duration-500 overflow-hidden">
               <img
                 src={"/assets/app_icon.png"}
-                alt="GYSpace"
+                alt={__APP_NAME__}
                 className="w-full h-full object-cover"
               />
             </div>
             <div className="flex flex-col">
               <h1 className="text-base md:text-lg font-black text-slate-800 font-hanzi tracking-tight leading-none group-hover:text-red-600 transition-colors">
-                GYSpace
+                {__APP_NAME__}
               </h1>
-              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
-                Cidian
-              </span>
             </div>
           </Link>
         </div>

@@ -57,7 +57,7 @@ const RegisterView: React.FC<RegisterViewProps> = ({
             Tạo tài khoản mới
           </h2>
           <p className="text-slate-300 text-sm mt-1 relative z-10">
-            Bắt đầu hành trình học tập cùng GYSpace
+            Bắt đầu hành trình học tập cùng {__APP_NAME__}
           </p>
         </div>
 

@@ -65,6 +65,7 @@ const App: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
 
   React.useEffect(() => {
+    document.title = `${__APP_NAME__} - Học Quán Dụng Ngữ Thông Minh`;
     const hasHint = localStorage.getItem("auth_hint") === "true";
     if (hasHint) {
       dispatch(fetchCurrentUser());

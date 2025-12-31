@@ -1,37 +1,18 @@
+import { http } from "./httpService";
 import { Idiom, SearchMode } from "@/types";
 import {
   TABLE_IDIOMS,
   TABLE_CHARACTER_ANALYSIS,
   TABLE_EXAMPLES,
 } from "@/data/database";
-// No authService import needed here for basic API calls as cookies are handled by browser.
-// If needed, we can import specific functions.
 
-const getEnv = (key: string) => {
-  if ((import.meta as any).env && (import.meta as any).env[key]) {
-    return (import.meta as any).env[key];
-  }
-  if (typeof process !== "undefined" && process.env && process.env[key]) {
-    return process.env[key];
-  }
-  return null;
-};
+// --- Local Fallback Helpers ---
 
-const getHeaders = (isJson = true) => {
-  const headers: any = {};
-  if (isJson) headers["Content-Type"] = "application/json";
-  return headers;
-};
-
-const API_BASE_URL = "/api";
-
-// Hàm hỗ trợ lưu LocalStorage (Dùng cho Fallback và Offline Mode)
 const saveLocalIdiom = (data: any) => {
   try {
     const stored = localStorage.getItem("custom_idioms");
     const customIdioms = stored ? JSON.parse(stored) : [];
 
-    // Kiểm tra trùng lặp
     if (customIdioms.some((i: any) => i.hanzi === data.hanzi)) {
       throw new Error(`Từ "${data.hanzi}" đã tồn tại trong bộ nhớ máy.`);
     }
@@ -44,7 +25,6 @@ const saveLocalIdiom = (data: any) => {
 
     customIdioms.push(newIdiom);
     localStorage.setItem("custom_idioms", JSON.stringify(customIdioms));
-
     return newIdiom;
   } catch (localError: any) {
     throw new Error(localError.message || "Không thể lưu dữ liệu.");
@@ -53,8 +33,6 @@ const saveLocalIdiom = (data: any) => {
 
 const searchLocalDatabase = (query: string) => {
   const normalizedQuery = query.toLowerCase().trim();
-
-  // 1. Tìm trong dữ liệu tĩnh (Static Database)
   let result: any = null;
   const staticIdiom = TABLE_IDIOMS.find(
     (i) =>
@@ -77,140 +55,62 @@ const searchLocalDatabase = (query: string) => {
   return result;
 };
 
+// --- API Services ---
+
 export const fetchAdminStats = async () => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/idioms/admin/stats`, {
-      headers: getHeaders(),
-      credentials: "include",
-    });
-    if (!response.ok) throw new Error("Không thể tải thống kê.");
-    return await response.json();
-  } catch (error) {
-    console.error("Stats error:", error);
-    throw error;
-  }
+  const response = await http.get("/idioms/admin/stats");
+  return response.data;
 };
+
 export const fetchIdiomDetails = async (
   query: string,
   mode: SearchMode = "database"
 ): Promise<Idiom & { dataSource: string }> => {
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 2000);
-
-    const response = await fetch(
-      `${API_BASE_URL}/idioms/search?query=${encodeURIComponent(
-        query
-      )}&mode=${mode}`,
-      {
-        signal: controller.signal,
-        credentials: "include",
-      }
+    const response = await http.get<Idiom & { dataSource: string }>(
+      "/idioms/search",
+      { query, mode }
     );
-    clearTimeout(timeoutId);
-
-    const contentType = response.headers.get("content-type");
-    if (contentType && contentType.includes("application/json")) {
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Lỗi server.");
-      }
-      return await response.json();
-    } else {
-      throw new Error("Backend not available");
-    }
+    return response.data;
   } catch (error: any) {
     console.warn(
       "Kết nối Backend thất bại, chuyển sang chế độ Client-side Fallback:",
       error.message
     );
     const localResult = searchLocalDatabase(query);
-    if (localResult) {
-      return localResult;
-    }
-    throw new Error(error);
+    if (localResult) return localResult;
+    throw error;
   }
 };
 
 export const fetchIdiomById = async (id: string): Promise<Idiom> => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/idioms/${id}`, {
-      credentials: "include",
-    });
-    if (!response.ok) throw new Error("Không thể tải thông tin từ vựng.");
-    return await response.json();
-  } catch (error: any) {
-    console.error("Fetch ID error:", error);
-    throw error;
-  }
+  const response = await http.get<Idiom>(`/idioms/${id}`);
+  return response.data;
 };
+
 export const createIdiom = async (data: any) => {
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000);
-
-    const response = await fetch(`${API_BASE_URL}/idioms`, {
-      method: "POST",
-      headers: getHeaders(),
-      body: JSON.stringify(data),
-      signal: controller.signal,
-      credentials: "include",
-    });
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || "Lỗi backend.");
-    }
-
-    return await response.json();
+    const response = await http.post("/idioms", data);
+    return response.data;
   } catch (error: any) {
-    console.warn(
-      "Backend create failed or timeout, saving to LocalStorage.",
-      error
-    );
+    console.warn("Backend create failed, saving to LocalStorage.", error);
     return saveLocalIdiom(data);
   }
 };
 
-export const bulkCreateIdioms = async (data: any[]) => {
-  const response = await fetch(`${API_BASE_URL}/idioms/bulk`, {
-    method: "POST",
-    headers: getHeaders(),
-    body: JSON.stringify(data),
-    credentials: "include",
-  });
-  if (!response.ok) throw new Error("Lỗi khi import hàng loạt.");
-  return await response.json();
+export const bulkCreateIdioms = async (idioms: any[]) => {
+  const response = await http.post("/idioms/bulk", { idioms });
+  return response.data;
 };
 
 export const updateIdiom = async (id: string, data: any) => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/idioms/${id}`, {
-      method: "PUT",
-      headers: getHeaders(),
-      body: JSON.stringify(data),
-      credentials: "include",
-    });
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || "Lỗi khi cập nhật.");
-    }
-    return await response.json();
-  } catch (error: any) {
-    console.error("Update error:", error);
-    throw error;
-  }
+  const response = await http.put(`/idioms/${id}`, data);
+  return response.data;
 };
 
 export const deleteIdiom = async (id: string) => {
-  const response = await fetch(`${API_BASE_URL}/idioms/${id}`, {
-    method: "DELETE",
-    headers: getHeaders(false),
-    credentials: "include",
-  });
-  if (!response.ok) throw new Error("Lỗi khi xóa từ vựng.");
-  return await response.json();
+  const response = await http.delete(`/idioms/${id}`);
+  return response.data;
 };
 
 interface PaginatedResponse {
@@ -229,21 +129,14 @@ export const fetchStoredIdioms = async (
   filter = ""
 ): Promise<PaginatedResponse> => {
   try {
-    const query = new URLSearchParams({
-      page: page.toString(),
-      limit: limit.toString(),
-      filter: filter,
-    }).toString();
-
-    const response = await fetch(`${API_BASE_URL}/idioms?${query}`, {
-      credentials: "include",
+    const response = await http.get<PaginatedResponse>("/idioms", {
+      page,
+      limit,
+      filter,
     });
-    if (!response.ok) throw new Error("Không thể lấy danh sách từ.");
-    return await response.json();
+    return response.data;
   } catch (error) {
-    console.warn(
-      "Backend fetchAll failed, using LocalStorage fallback (No pagination)."
-    );
+    console.warn("Backend fetchAll failed, using LocalStorage fallback.");
     try {
       const stored = localStorage.getItem("custom_idioms");
       const data = stored ? JSON.parse(stored) : [];
@@ -271,9 +164,7 @@ export const addToHistory = (idiom: Idiom) => {
     let historyItems: Idiom[] = stored ? JSON.parse(stored) : [];
     historyItems = historyItems.filter((item) => item.hanzi !== idiom.hanzi);
     historyItems.unshift(idiom);
-    if (historyItems.length > 50) {
-      historyItems = historyItems.slice(0, 50);
-    }
+    if (historyItems.length > 50) historyItems = historyItems.slice(0, 50);
     localStorage.setItem("search_history", JSON.stringify(historyItems));
   } catch (e) {
     console.error("Error saving history", e);

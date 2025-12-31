@@ -1,4 +1,4 @@
-import React, { ReactNode } from "react";
+import React, { ReactNode, useState, useEffect } from "react";
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import {
   HomeIcon,
@@ -6,6 +6,9 @@ import {
   PlusIcon,
   LogoutIcon,
   UserIcon,
+  ArrowLeftIcon,
+  MenuIcon,
+  CloseIcon,
 } from "../components/icons";
 
 interface NavItemProps {
@@ -13,13 +16,15 @@ interface NavItemProps {
   end?: boolean;
   icon: React.ReactNode;
   label: string;
+  onClick?: () => void;
 }
 
-const NavItem: React.FC<NavItemProps> = ({ to, end, icon, label }) => {
+const NavItem: React.FC<NavItemProps> = ({ to, end, icon, label, onClick }) => {
   return (
     <NavLink
       to={to}
       end={end}
+      onClick={onClick}
       className={({ isActive }) =>
         `flex items-center space-x-3 px-4 py-3 rounded-xl transition-all font-medium ${
           isActive
@@ -34,11 +39,33 @@ const NavItem: React.FC<NavItemProps> = ({ to, end, icon, label }) => {
   );
 };
 
+export type AdminOutletContext = {
+  setPageHeader: (title: string | null, onBack?: () => void) => void;
+};
+
 const AdminLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const [headerState, setHeaderState] = useState<{
+    title: string | null;
+    onBack?: () => void;
+  }>({ title: null });
+
+  // Reset header state and close sidebar on location change
+  useEffect(() => {
+    setHeaderState({ title: null, onBack: undefined });
+    setIsSidebarOpen(false);
+  }, [location.pathname]);
+
+  const setPageHeader = (title: string | null, onBack?: () => void) => {
+    setHeaderState({ title, onBack });
+  };
 
   const getPageTitle = () => {
+    if (headerState.title) return headerState.title;
+
     if (location.pathname === "/admin") return "Tổng quan";
     if (location.pathname.startsWith("/admin/idiom/list")) return "Kho từ vựng";
     if (location.pathname.startsWith("/admin/idiom/insert"))
@@ -50,9 +77,21 @@ const AdminLayout: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
-      {/* Sidebar - Fixed Left */}
-      <aside className="w-64 bg-slate-900 text-white flex flex-col shadow-2xl z-20">
-        <div className="p-6 border-b border-slate-800">
+      {/* Mobile Backdrop Overlay */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-slate-900/50 backdrop-blur-sm md:hidden transition-opacity"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar - Responsive */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-40 w-64 bg-slate-900 text-white flex flex-col shadow-2xl transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="p-6 border-b border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-red-600 rounded-lg flex items-center justify-center font-hanzi font-bold shadow-lg shadow-red-900/50">
               GY
@@ -66,6 +105,13 @@ const AdminLayout: React.FC = () => {
               </span>
             </div>
           </div>
+          {/* Mobile Close Button */}
+          <button
+            onClick={() => setIsSidebarOpen(false)}
+            className="md:hidden text-slate-400 hover:text-white transition-colors"
+          >
+            <CloseIcon className="w-6 h-6" />
+          </button>
         </div>
 
         <div className="p-6">
@@ -104,11 +150,28 @@ const AdminLayout: React.FC = () => {
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 transition-all duration-300">
         {/* Top Header */}
-        <header className="bg-white h-16 border-b border-slate-200 flex items-center justify-between px-8 shadow-sm z-10">
-          <div>
-            <h2 className="text-xl font-bold text-slate-800">
+        <header className="bg-white h-16 border-b border-slate-200 flex items-center justify-between px-4 md:px-8 shadow-sm z-10 transition-all">
+          <div className="flex items-center gap-4">
+            {/* Mobile Menu Button - Show only on mobile */}
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="md:hidden p-2 -ml-2 text-slate-500 hover:bg-slate-100 rounded-lg transition-colors"
+            >
+              <MenuIcon className="w-6 h-6" />
+            </button>
+
+            {headerState.onBack && (
+              <button
+                onClick={headerState.onBack}
+                className="p-2 -ml-2 text-slate-500 hover:bg-slate-100 hover:text-red-700 rounded-full transition-colors"
+                title="Quay lại"
+              >
+                <ArrowLeftIcon className="w-5 h-5" />
+              </button>
+            )}
+            <h2 className="text-lg md:text-xl font-bold text-slate-800 animate-in fade-in slide-in-from-left-2 duration-300 truncate max-w-[200px] md:max-w-none">
               {getPageTitle()}
             </h2>
           </div>
@@ -117,7 +180,7 @@ const AdminLayout: React.FC = () => {
               <div className="w-8 h-8 bg-slate-200 rounded-full flex items-center justify-center text-slate-500">
                 <UserIcon className="w-4 h-4" />
               </div>
-              <span className="text-sm font-bold text-slate-600 pr-2">
+              <span className="text-sm font-bold text-slate-600 pr-2 hidden md:block">
                 Administrator
               </span>
             </div>
@@ -126,7 +189,7 @@ const AdminLayout: React.FC = () => {
 
         {/* Scrollable Content */}
         <main className="flex-1 overflow-y-auto p-4 md:p-8 relative">
-          <Outlet />
+          <Outlet context={{ setPageHeader } satisfies AdminOutletContext} />
         </main>
       </div>
     </div>

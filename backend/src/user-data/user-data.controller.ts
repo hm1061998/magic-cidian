@@ -19,12 +19,12 @@ export class UserDataController {
 
   @Post('saved/toggle')
   toggleSave(@Request() req, @Body('idiomId') idiomId: string) {
-    return this.userDataService.toggleSaveIdiom(req.user.userId, idiomId);
+    return this.userDataService.toggleSaveIdiom(req.user.id, idiomId);
   }
 
   @Get('saved/check/:idiomId')
   checkSaved(@Request() req, @Param('idiomId') idiomId: string) {
-    return this.userDataService.isSaved(req.user.userId, idiomId);
+    return this.userDataService.isSaved(req.user.id, idiomId);
   }
 
   @Get('saved')
@@ -34,7 +34,7 @@ export class UserDataController {
     @Query('limit') limit: number = 12,
   ) {
     return this.userDataService.getSavedIdioms(
-      req.user.userId,
+      req.user.id,
       Number(page),
       Number(limit),
     );
@@ -42,7 +42,7 @@ export class UserDataController {
 
   @Post('srs')
   updateSRS(@Request() req, @Body() body: any) {
-    return this.userDataService.updateSRS(req.user.userId, body.idiomId, body);
+    return this.userDataService.updateSRS(req.user.id, body.idiomId, body);
   }
 
   @Get('srs')
@@ -52,7 +52,7 @@ export class UserDataController {
     @Query('limit') limit: number = 50,
   ) {
     return this.userDataService.getSRSData(
-      req.user.userId,
+      req.user.id,
       Number(page),
       Number(limit),
     );
@@ -60,7 +60,7 @@ export class UserDataController {
 
   @Post('history')
   addHistory(@Request() req, @Body('idiomId') idiomId: string) {
-    return this.userDataService.addToHistory(req.user.userId, idiomId);
+    return this.userDataService.addToHistory(req.user.id, idiomId);
   }
 
   @Get('history')
@@ -70,7 +70,7 @@ export class UserDataController {
     @Query('limit') limit: number = 20,
   ) {
     return this.userDataService.getHistory(
-      req.user.userId,
+      req.user.id,
       Number(page),
       Number(limit),
     );
@@ -78,6 +78,6 @@ export class UserDataController {
 
   @Delete('history')
   clearHistory(@Request() req) {
-    return this.userDataService.clearHistory(req.user.userId);
+    return this.userDataService.clearHistory(req.user.id);
   }
 }

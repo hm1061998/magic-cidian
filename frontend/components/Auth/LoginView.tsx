@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { ArrowLeftIcon, SpinnerIcon } from "../icons";
 import { loginAdmin } from "@/services/authService";
+import { useDispatch } from "react-redux";
+import { setUser } from "../../redux/authSlice";
 
 interface LoginViewProps {
   onLoginSuccess: () => void;
@@ -17,14 +19,21 @@ const LoginView: React.FC<LoginViewProps> = ({
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const dispatch = useDispatch();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (username.length < 4 || password.length < 6) {
+      setError("Tên đăng nhập (≥4) và mật khẩu (≥6) không hợp lệ.");
+      return;
+    }
+
     setIsLoading(true);
     setError("");
 
     try {
-      await loginAdmin(username, password);
+      const data = await loginAdmin(username, password);
+      dispatch(setUser(data.user));
       onLoginSuccess();
     } catch (err: any) {
       setError(err.message || "Tên đăng nhập hoặc mật khẩu không đúng.");

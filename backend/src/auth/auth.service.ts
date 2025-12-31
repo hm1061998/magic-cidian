@@ -2,6 +2,7 @@ import {
   Injectable,
   UnauthorizedException,
   ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -64,6 +65,13 @@ export class AuthService {
   }
 
   async register(username: string, pass: string) {
+    if (!username || username.length < 4) {
+      throw new BadRequestException('Tên đăng nhập phải có ít nhất 4 ký tự');
+    }
+    if (!pass || pass.length < 6) {
+      throw new BadRequestException('Mật khẩu phải có ít nhất 6 ký tự');
+    }
+
     const existing = await this.userRepository.findOne({ where: { username } });
     if (existing) throw new ConflictException('Tên đăng nhập đã tồn tại');
 
@@ -82,6 +90,10 @@ export class AuthService {
   }
 
   async login(username: string, pass: string) {
+    if (!username || username.length < 4 || !pass || pass.length < 6) {
+      throw new UnauthorizedException('Thông tin đăng nhập không hợp lệ');
+    }
+
     const user = await this.userRepository.findOne({ where: { username } });
 
     // So sánh mật khẩu đã băm

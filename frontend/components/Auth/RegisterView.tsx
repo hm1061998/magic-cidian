@@ -21,6 +21,14 @@ const RegisterView: React.FC<RegisterViewProps> = ({
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (username.length < 4) {
+      setError("Tên đăng nhập phải có ít nhất 4 ký tự.");
+      return;
+    }
+    if (password.length < 6) {
+      setError("Mật khẩu phải có ít nhất 6 ký tự.");
+      return;
+    }
     if (password !== confirmPassword) {
       setError("Mật khẩu xác nhận không khớp");
       return;

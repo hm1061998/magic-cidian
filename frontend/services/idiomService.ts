@@ -4,7 +4,8 @@ import {
   TABLE_CHARACTER_ANALYSIS,
   TABLE_EXAMPLES,
 } from "../data/database";
-import { getAuthToken } from "./authService";
+// No authService import needed here for basic API calls as cookies are handled by browser.
+// If needed, we can import specific functions.
 
 const getEnv = (key: string) => {
   if ((import.meta as any).env && (import.meta as any).env[key]) {
@@ -19,11 +20,6 @@ const getEnv = (key: string) => {
 const getHeaders = (isJson = true) => {
   const headers: any = {};
   if (isJson) headers["Content-Type"] = "application/json";
-
-  const token = getAuthToken();
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
   return headers;
 };
 
@@ -82,12 +78,10 @@ const searchLocalDatabase = (query: string) => {
 };
 
 export const fetchAdminStats = async () => {
-  // Nếu chưa login, trả về object rỗng thay vì gọi API
-  if (!getAuthToken()) return {};
-
   try {
     const response = await fetch(`${API_BASE_URL}/idioms/admin/stats`, {
       headers: getHeaders(),
+      credentials: "include",
     });
     if (!response.ok) throw new Error("Không thể tải thống kê.");
     return await response.json();
@@ -96,7 +90,6 @@ export const fetchAdminStats = async () => {
     throw error;
   }
 };
-
 export const fetchIdiomDetails = async (
   query: string,
   mode: SearchMode = "database"
@@ -111,6 +104,7 @@ export const fetchIdiomDetails = async (
       )}&mode=${mode}`,
       {
         signal: controller.signal,
+        credentials: "include",
       }
     );
     clearTimeout(timeoutId);
@@ -140,7 +134,9 @@ export const fetchIdiomDetails = async (
 
 export const fetchIdiomById = async (id: string): Promise<Idiom> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/idioms/${id}`);
+    const response = await fetch(`${API_BASE_URL}/idioms/${id}`, {
+      credentials: "include",
+    });
     if (!response.ok) throw new Error("Không thể tải thông tin từ vựng.");
     return await response.json();
   } catch (error: any) {
@@ -148,14 +144,7 @@ export const fetchIdiomById = async (id: string): Promise<Idiom> => {
     throw error;
   }
 };
-
 export const createIdiom = async (data: any) => {
-  // Nếu chưa login, lưu trực tiếp vào LocalStorage (Offline mode)
-  if (!getAuthToken()) {
-    console.warn("No token, saving to LocalStorage directly.");
-    return saveLocalIdiom(data);
-  }
-
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 3000);
@@ -165,6 +154,7 @@ export const createIdiom = async (data: any) => {
       headers: getHeaders(),
       body: JSON.stringify(data),
       signal: controller.signal,
+      credentials: "include",
     });
     clearTimeout(timeoutId);
 
@@ -184,23 +174,23 @@ export const createIdiom = async (data: any) => {
 };
 
 export const bulkCreateIdioms = async (data: any[]) => {
-  if (!getAuthToken()) return {}; // Silent return
   const response = await fetch(`${API_BASE_URL}/idioms/bulk`, {
     method: "POST",
     headers: getHeaders(),
     body: JSON.stringify(data),
+    credentials: "include",
   });
   if (!response.ok) throw new Error("Lỗi khi import hàng loạt.");
   return await response.json();
 };
 
 export const updateIdiom = async (id: string, data: any) => {
-  if (!getAuthToken()) return {}; // Silent return
   try {
     const response = await fetch(`${API_BASE_URL}/idioms/${id}`, {
       method: "PUT",
       headers: getHeaders(),
       body: JSON.stringify(data),
+      credentials: "include",
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -214,10 +204,10 @@ export const updateIdiom = async (id: string, data: any) => {
 };
 
 export const deleteIdiom = async (id: string) => {
-  if (!getAuthToken()) return {}; // Silent return
   const response = await fetch(`${API_BASE_URL}/idioms/${id}`, {
     method: "DELETE",
     headers: getHeaders(false),
+    credentials: "include",
   });
   if (!response.ok) throw new Error("Lỗi khi xóa từ vựng.");
   return await response.json();
@@ -245,7 +235,9 @@ export const fetchStoredIdioms = async (
       filter: filter,
     }).toString();
 
-    const response = await fetch(`${API_BASE_URL}/idioms?${query}`);
+    const response = await fetch(`${API_BASE_URL}/idioms?${query}`, {
+      credentials: "include",
+    });
     if (!response.ok) throw new Error("Không thể lấy danh sách từ.");
     return await response.json();
   } catch (error) {

@@ -15,7 +15,8 @@ import {
   PuzzlePieceIcon,
   HistoryIcon,
 } from "./icons";
-import { getCurrentUser } from "@/services/authService";
+import { useSelector } from "react-redux";
+import { RootState } from "../redux/store";
 
 interface UserSidebarProps {
   isOpen: boolean;
@@ -41,6 +42,8 @@ const UserSidebar: React.FC<UserSidebarProps> = ({
   onTogglePremium,
   isAdmin,
 }) => {
+  const { user: reduxUser } = useSelector((state: RootState) => state.auth);
+
   const getAvatarColor = (name: string) => {
     if (!name) return "hsl(0, 70%, 60%)"; // Default Red
     const firstChar = name.charAt(0).toUpperCase();
@@ -50,7 +53,7 @@ const UserSidebar: React.FC<UserSidebarProps> = ({
     return `hsl(${hue}, 70%, 40%)`; // Darker Pastel for text readability or use with white text
   };
 
-  const username = getCurrentUser()?.username || "";
+  const username = reduxUser?.username || "";
   const avatarChar = username?.charAt(0)?.toUpperCase();
   const avatarBg = getAvatarColor(username);
 
@@ -102,9 +105,7 @@ const UserSidebar: React.FC<UserSidebarProps> = ({
                 {avatarChar}
               </div>
               <div>
-                <h3 className="font-bold text-slate-800">
-                  {getCurrentUser().username}
-                </h3>
+                <h3 className="font-bold text-slate-800">{username}</h3>
                 <p className="text-[10px] text-red-600 font-bold uppercase tracking-tight">
                   {isAdmin ? "Quản trị viên" : "Người dùng"}
                 </p>

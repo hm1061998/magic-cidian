@@ -5,6 +5,7 @@ export const registerUser = async (username: string, pass: string) => {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ username, pass }),
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -19,6 +20,7 @@ export const loginAdmin = async (username: string, pass: string) => {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ username, pass }),
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -27,30 +29,39 @@ export const loginAdmin = async (username: string, pass: string) => {
   }
 
   const data = await response.json();
-  localStorage.setItem("admin_token", data.access_token);
-  localStorage.setItem("admin_user", JSON.stringify(data.user));
+  // Chỉ lưu một "dấu hiệu" nhỏ để Frontend biết cần fetch user, không lưu info nhạy cảm
+  localStorage.setItem("auth_hint", "true");
   return data;
 };
 
-export const logoutAdmin = () => {
-  localStorage.removeItem("admin_token");
-  localStorage.removeItem("admin_user");
+export const logoutAdmin = async () => {
+  try {
+    await fetch(`${API_BASE_URL}/auth/logout`, {
+      method: "POST",
+      credentials: "include",
+    });
+  } catch (e) {
+    console.warn("Logout API call failed", e);
+  } finally {
+    // Clean up everything
+    localStorage.removeItem("admin_token");
+    localStorage.removeItem("admin_user");
+    localStorage.removeItem("auth_hint");
+  }
 };
 
 export const getAuthToken = () => {
-  return localStorage.getItem("admin_token");
+  return null; // Token is now in cookie
 };
 
 export const getCurrentUser = () => {
-  const user = localStorage.getItem("admin_user");
-  return user ? JSON.parse(user) : null;
+  return null; // Should use Redux instead
 };
 
 export const isAuthenticated = () => {
-  return !!localStorage.getItem("admin_token");
+  return false; // Should check Redux in components
 };
 
 export const isAdmin = () => {
-  const user = getCurrentUser();
-  return user?.isAdmin || false;
+  return false; // Should check Redux in components
 };

@@ -21,6 +21,9 @@ import RequireAuth from "./context/RequireAuth";
 import AdminLayout from "./layouts/AdminLayout";
 import MainLayout from "./layouts/MainLayout";
 import ToastContainer from "./components/ToastContainer";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "./redux/store";
+import { fetchCurrentUser } from "./redux/authSlice";
 
 // Wrapper component cho trang Edit để trích xuất ID từ URL params và xử lý Back
 const AdminInsertWrapper: React.FC<{ navigate: (path: string) => void }> = ({
@@ -36,23 +39,20 @@ const AdminInsertWrapper: React.FC<{ navigate: (path: string) => void }> = ({
   );
 };
 
-// Wrapper để kết nối Auth component với Context của MainLayout
+// Wrapper để kết nối Auth component với Redux state
 const AuthWrapper: React.FC = () => {
   const navigate = useNavigate();
-  const context = useOutletContext<{
-    setIsLoggedIn: (v: boolean) => void;
-    setIsUserAdmin: (v: boolean) => void;
-  }>();
+  const { isAuthenticated: isAuth } = useSelector(
+    (state: RootState) => state.auth
+  );
 
   React.useEffect(() => {
-    if (isAuthenticated()) {
+    if (isAuth) {
       navigate("/", { replace: true });
     }
-  }, [navigate]);
+  }, [isAuth, navigate]);
 
   const handleSuccess = () => {
-    context.setIsLoggedIn(true);
-    context.setIsUserAdmin(isAdmin());
     navigate("/");
   };
 
@@ -61,6 +61,14 @@ const AuthWrapper: React.FC = () => {
 
 const App: React.FC = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
+
+  React.useEffect(() => {
+    const hasHint = localStorage.getItem("auth_hint") === "true";
+    if (hasHint) {
+      dispatch(fetchCurrentUser());
+    }
+  }, [dispatch]);
 
   return (
     <>

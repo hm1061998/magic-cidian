@@ -5,6 +5,7 @@ import {
   updateIdiom,
   fetchIdiomById,
 } from "../../services/idiomService";
+import { toast } from "../../services/toastService";
 
 interface AdminInsertProps {
   onBack: () => void;
@@ -14,8 +15,6 @@ interface AdminInsertProps {
 const AdminInsert: React.FC<AdminInsertProps> = ({ onBack, idiomId }) => {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
-  const [success, setSuccess] = useState("");
-  const [error, setError] = useState("");
   const topRef = useRef<HTMLDivElement>(null); // Ref để cuộn lên đầu trang
 
   const [form, setForm] = useState({
@@ -72,7 +71,7 @@ const AdminInsert: React.FC<AdminInsertProps> = ({ onBack, idiomId }) => {
       if (data.examples && data.examples.length > 0) setExamples(data.examples);
       else setExamples([{ chinese: "", pinyin: "", vietnamese: "" }]);
     } catch (err: any) {
-      setError("Không thể tải dữ liệu để sửa.");
+      toast.error("Không thể tải dữ liệu để sửa.");
     } finally {
       setFetching(false);
     }
@@ -85,8 +84,6 @@ const AdminInsert: React.FC<AdminInsertProps> = ({ onBack, idiomId }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
-    setSuccess("");
     try {
       const payload = {
         ...form,
@@ -96,10 +93,10 @@ const AdminInsert: React.FC<AdminInsertProps> = ({ onBack, idiomId }) => {
 
       if (idiomId) {
         await updateIdiom(idiomId, payload);
-        setSuccess("Đã cập nhật từ vựng thành công!");
+        toast.success("Đã cập nhật từ vựng thành công!");
       } else {
         await createIdiom(payload);
-        setSuccess("Đã thêm từ mới thành công!");
+        toast.success("Đã thêm từ mới thành công!");
         setForm({
           hanzi: "",
           pinyin: "",
@@ -121,7 +118,7 @@ const AdminInsert: React.FC<AdminInsertProps> = ({ onBack, idiomId }) => {
 
       scrollToTop();
     } catch (err: any) {
-      setError(err.message || "Có lỗi xảy ra.");
+      toast.error(err.message || "Có lỗi xảy ra.");
     } finally {
       setLoading(false);
     }
@@ -147,7 +144,7 @@ const AdminInsert: React.FC<AdminInsertProps> = ({ onBack, idiomId }) => {
 
   return (
     <div ref={topRef} className="max-w-4xl w-full mx-auto animate-pop">
-      <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-xl border border-slate-200 relative">
         <div className="bg-red-700 p-6 text-white">
           <h2 className="text-2xl font-hanzi font-bold">
             {idiomId ? "Sửa dữ liệu" : "Thêm dữ liệu"}
@@ -158,18 +155,6 @@ const AdminInsert: React.FC<AdminInsertProps> = ({ onBack, idiomId }) => {
               : "Nhập thông tin từ vựng mới"}
           </p>
         </div>
-
-        {success && (
-          <div className="p-4 bg-emerald-50 text-emerald-700 border-b border-emerald-100 text-center font-bold">
-            {success}
-          </div>
-        )}
-        {error && (
-          <div className="p-4 bg-red-50 text-red-700 border-b border-red-100 text-center font-bold">
-            {error}
-          </div>
-        )}
-
         <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-8">
           {/* Section 1: Thông tin cơ bản */}
           <div className="space-y-4">
@@ -504,7 +489,7 @@ const AdminInsert: React.FC<AdminInsertProps> = ({ onBack, idiomId }) => {
             ))}
           </div>
 
-          <div className="pt-6 border-t flex justify-end">
+          <div className="sticky bottom-0 z-10 bg-white border-t border-slate-100 p-4 -mx-6 -mb-6 md:-mx-8 md:-mb-8 flex justify-end rounded-b-2xl shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
             <button
               type="submit"
               disabled={loading}

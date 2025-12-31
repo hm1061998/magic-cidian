@@ -6,6 +6,8 @@ import {
   fetchIdiomById,
 } from "../../services/idiomService";
 import { toast } from "../../services/toastService";
+import { useOutletContext } from "react-router";
+import { AdminOutletContext } from "../../layouts/AdminLayout";
 
 interface AdminInsertProps {
   onBack: () => void;
@@ -16,6 +18,7 @@ const AdminInsert: React.FC<AdminInsertProps> = ({ onBack, idiomId }) => {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
   const topRef = useRef<HTMLDivElement>(null); // Ref để cuộn lên đầu trang
+  const { setPageHeader } = useOutletContext<AdminOutletContext>();
 
   const [form, setForm] = useState({
     hanzi: "",
@@ -65,6 +68,8 @@ const AdminInsert: React.FC<AdminInsertProps> = ({ onBack, idiomId }) => {
         imageUrl: data.imageUrl || "",
         usageContext: data.usageContext || "",
       });
+
+      setPageHeader(null, undefined, data);
       if (data.analysis && data.analysis.length > 0) setAnalysis(data.analysis);
       else setAnalysis([{ character: "", pinyin: "", meaning: "" }]);
 
@@ -145,16 +150,6 @@ const AdminInsert: React.FC<AdminInsertProps> = ({ onBack, idiomId }) => {
   return (
     <div ref={topRef} className="max-w-4xl w-full mx-auto animate-pop">
       <div className="bg-white rounded-2xl shadow-xl border border-slate-200 relative">
-        <div className="bg-red-700 p-6 text-white">
-          <h2 className="text-2xl font-hanzi font-bold">
-            {idiomId ? "Sửa dữ liệu" : "Thêm dữ liệu"}
-          </h2>
-          <p className="text-red-100 text-sm mt-1">
-            {idiomId
-              ? `Đang chỉnh sửa từ: ${form.hanzi}`
-              : "Nhập thông tin từ vựng mới"}
-          </p>
-        </div>
         <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-8">
           {/* Section 1: Thông tin cơ bản */}
           <div className="space-y-4">

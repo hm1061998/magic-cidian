@@ -40,7 +40,11 @@ const NavItem: React.FC<NavItemProps> = ({ to, end, icon, label, onClick }) => {
 };
 
 export type AdminOutletContext = {
-  setPageHeader: (title: string | null, onBack?: () => void) => void;
+  setPageHeader: (
+    title: string | null,
+    onBack?: () => void,
+    data?: any
+  ) => void;
 };
 
 const AdminLayout: React.FC = () => {
@@ -51,6 +55,7 @@ const AdminLayout: React.FC = () => {
   const [headerState, setHeaderState] = useState<{
     title: string | null;
     onBack?: () => void;
+    data?: any;
   }>({ title: null });
 
   // Reset header state and close sidebar on location change
@@ -59,8 +64,12 @@ const AdminLayout: React.FC = () => {
     setIsSidebarOpen(false);
   }, [location.pathname]);
 
-  const setPageHeader = (title: string | null, onBack?: () => void) => {
-    setHeaderState({ title, onBack });
+  const setPageHeader = (
+    title: string | null,
+    onBack?: () => void,
+    data?: any
+  ) => {
+    setHeaderState({ title, onBack, data });
   };
 
   const getPageTitle = () => {
@@ -71,7 +80,7 @@ const AdminLayout: React.FC = () => {
     if (location.pathname.startsWith("/admin/idiom/insert"))
       return "Thêm từ mới";
     if (location.pathname.startsWith("/admin/idiom/detail"))
-      return "Chi tiết từ vựng";
+      return `Chi tiết từ vựng ${headerState.data?.hanzi}`;
     return "Admin Portal";
   };
 

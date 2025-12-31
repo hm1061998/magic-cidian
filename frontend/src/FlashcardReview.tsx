@@ -247,7 +247,7 @@ const FlashcardReview: React.FC<FlashcardReviewProps> = ({ onBack }) => {
   return (
     <div className="max-w-2xl mx-auto w-full flex flex-col h-full animate-pop">
       <div className="flex justify-between items-center mb-6">
-        <div className="px-4 py-1.5"/>
+        <div className="px-4 py-1.5" />
 
         {/* Toggle Source */}
         <div className="flex bg-white p-1 rounded-full border shadow-sm">
@@ -343,8 +343,8 @@ const FlashcardReview: React.FC<FlashcardReviewProps> = ({ onBack }) => {
           >
             <div
               className={`relative w-full h-full transition-transform transform-style-3d ${
-                isTransitioning ? "duration-0" : "duration-500"
-              } ${isFlipped ? "rotate-y-180" : ""}`}
+                isFlipped ? "rotate-y-180" : ""
+              }`}
             >
               {/* Mặt trước */}
               <div className="absolute inset-0 backface-hidden bg-white rounded-3xl shadow-2xl border-2 border-slate-100 flex flex-col items-center justify-center p-8">
@@ -363,26 +363,32 @@ const FlashcardReview: React.FC<FlashcardReviewProps> = ({ onBack }) => {
               </div>
 
               {/* Mặt sau */}
-              <div className="absolute inset-0 backface-hidden rotate-y-180 bg-slate-800 rounded-3xl shadow-2xl flex flex-col items-center justify-center p-8 text-white text-center overflow-y-auto">
-                <p className="text-2xl md:text-3xl font-medium mb-2 text-red-400">
-                  {currentCard.pinyin}
-                </p>
-                <div className="h-px w-20 bg-white/20 my-4" />
-                <h2 className="text-2xl md:text-3xl font-bold mb-4 leading-relaxed">
-                  {currentCard.vietnameseMeaning}
-                </h2>
-                <p className="text-slate-300 text-sm italic leading-relaxed px-2 mb-4">
-                  {currentCard.figurativeMeaning}
-                </p>
-                {currentCard.examples && currentCard.examples[0] && (
-                  <div className="mt-auto p-4 bg-white/5 rounded-2xl border border-white/10 w-full text-left">
-                    <p className="text-[10px] font-bold uppercase text-white/40 mb-1">
-                      Ví dụ
+              <div
+                className={`absolute inset-0 backface-hidden rotate-y-180 bg-slate-800 rounded-3xl shadow-2xl flex flex-col items-center justify-center p-8 text-white text-center overflow-y-auto`}
+              >
+                {!isTransitioning && (
+                  <React.Fragment>
+                    <p className="text-2xl md:text-3xl font-medium mb-2 text-red-400">
+                      {currentCard.pinyin}
                     </p>
-                    <p className="font-hanzi text-sm md:text-base text-slate-200">
-                      {currentCard.examples[0].chinese}
+                    <div className="h-px w-20 bg-white/20 my-4" />
+                    <h2 className="text-2xl md:text-3xl font-bold mb-4 leading-relaxed">
+                      {currentCard.vietnameseMeaning}
+                    </h2>
+                    <p className="text-slate-300 text-sm italic leading-relaxed px-2 mb-4">
+                      {currentCard.figurativeMeaning}
                     </p>
-                  </div>
+                    {currentCard.examples && currentCard.examples[0] && (
+                      <div className="mt-auto p-4 bg-white/5 rounded-2xl border border-white/10 w-full text-left">
+                        <p className="text-[10px] font-bold uppercase text-white/40 mb-1">
+                          Ví dụ
+                        </p>
+                        <p className="font-hanzi text-sm md:text-base text-slate-200">
+                          {currentCard.examples[0].chinese}
+                        </p>
+                      </div>
+                    )}
+                  </React.Fragment>
                 )}
               </div>
             </div>

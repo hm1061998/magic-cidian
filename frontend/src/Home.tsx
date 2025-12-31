@@ -14,6 +14,7 @@ import {
   CloseIcon,
   CardIcon,
   PuzzlePieceIcon,
+  ArrowLeftIcon,
 } from "../components/icons";
 
 const Home: React.FC = () => {
@@ -79,6 +80,48 @@ const Home: React.FC = () => {
   };
 
   const isCenteredMode = !currentIdiom && !isLoading;
+
+  if (currentIdiom) {
+    const onBack = () => {
+      setQuery("");
+      handleSearch("");
+    };
+
+    return (
+      <div className={`w-full h-full flex flex-col flex-1 items-center`}>
+        <div className="flex-1 flex justify-start w-full max-w-4xl">
+          <button
+            onClick={onBack}
+            className="flex items-center space-x-2 text-slate-600 hover:text-red-600 transition-colors group px-3 py-2 rounded-lg hover:bg-slate-100/50"
+            aria-label="Quay lại trang chủ"
+          >
+            <ArrowLeftIcon className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+            <span className="text-sm font-medium hidden sm:inline">
+              Quay lại
+            </span>
+          </button>
+        </div>
+        <div className="relative mt-4 animate-pop">
+          <div
+            className={`absolute top-0 right-0 z-10 px-4 py-1.5 rounded-bl-2xl rounded-tr-2xl text-[10px] font-bold text-white shadow-lg ${
+              currentIdiom.dataSource === "ai"
+                ? "bg-gradient-to-r from-purple-600 to-indigo-600"
+                : "bg-slate-800"
+            }`}
+          >
+            {currentIdiom.dataSource === "ai"
+              ? "✨ PHÂN TÍCH BỞI AI"
+              : "📚 DỮ LIỆU CHUẨN"}
+          </div>
+          <IdiomDetail
+            idiom={currentIdiom}
+            isLoggedIn={true}
+            isPremium={true}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -205,6 +248,56 @@ const Home: React.FC = () => {
         )} */}
       </div>
 
+      {isLoading && (
+        <div className="flex flex-col items-center mt-12 text-slate-400 animate-pulse">
+          <div
+            className={`w-12 h-12 border-4 rounded-full border-t-transparent animate-spin mb-4 ${
+              searchMode === "ai" ? "border-purple-600" : "border-red-600"
+            }`}
+          ></div>
+          <p className="font-bold text-sm tracking-wide uppercase">
+            {searchMode === "ai"
+              ? "AI đang tư duy..."
+              : "Đang lục lại thư viện..."}
+          </p>
+        </div>
+      )}
+
+      {error && (
+        <div className="max-w-md mx-auto mt-8 bg-red-50 border border-red-100 p-8 rounded-2xl text-center animate-shake">
+          <p className="text-red-600 mb-6 font-bold">{error}</p>
+          {searchMode === "database" && (
+            <button
+              onClick={() => setSearchMode("ai")}
+              className="px-8 py-3 bg-slate-800 text-white rounded-full text-xs font-bold hover:bg-black transition-all shadow-lg active:scale-95"
+            >
+              Tra cứu bằng AI ngay
+            </button>
+          )}
+        </div>
+      )}
+
+      {!isLoading && currentIdiom && (
+        <div className="relative mt-4 animate-pop">
+          <div
+            className={`absolute top-0 right-0 z-10 px-4 py-1.5 rounded-bl-2xl rounded-tr-2xl text-[10px] font-bold text-white shadow-lg ${
+              currentIdiom.dataSource === "ai"
+                ? "bg-gradient-to-r from-purple-600 to-indigo-600"
+                : "bg-slate-800"
+            }`}
+          >
+            {currentIdiom.dataSource === "ai"
+              ? "✨ PHÂN TÍCH BỞI AI"
+              : "📚 DỮ LIỆU CHUẨN"}
+          </div>
+          <IdiomDetail
+            idiom={currentIdiom}
+            isLoggedIn={true}
+            isPremium={true}
+          />
+        </div>
+      )}
+
       {isCenteredMode && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full max-w-2xl px-4 animate-pop delay-100 mt-10">
           <button
@@ -253,55 +346,6 @@ const Home: React.FC = () => {
               </div>
             </div>
           </button>
-        </div>
-      )}
-      {isLoading && (
-        <div className="flex flex-col items-center mt-12 text-slate-400 animate-pulse">
-          <div
-            className={`w-12 h-12 border-4 rounded-full border-t-transparent animate-spin mb-4 ${
-              searchMode === "ai" ? "border-purple-600" : "border-red-600"
-            }`}
-          ></div>
-          <p className="font-bold text-sm tracking-wide uppercase">
-            {searchMode === "ai"
-              ? "AI đang tư duy..."
-              : "Đang lục lại thư viện..."}
-          </p>
-        </div>
-      )}
-
-      {error && (
-        <div className="max-w-md mx-auto mt-8 bg-red-50 border border-red-100 p-8 rounded-2xl text-center animate-shake">
-          <p className="text-red-600 mb-6 font-bold">{error}</p>
-          {searchMode === "database" && (
-            <button
-              onClick={() => setSearchMode("ai")}
-              className="px-8 py-3 bg-slate-800 text-white rounded-full text-xs font-bold hover:bg-black transition-all shadow-lg active:scale-95"
-            >
-              Tra cứu bằng AI ngay
-            </button>
-          )}
-        </div>
-      )}
-
-      {!isLoading && currentIdiom && (
-        <div className="relative mt-4 animate-pop">
-          <div
-            className={`absolute top-0 right-0 z-10 px-4 py-1.5 rounded-bl-2xl rounded-tr-2xl text-[10px] font-bold text-white shadow-lg ${
-              currentIdiom.dataSource === "ai"
-                ? "bg-gradient-to-r from-purple-600 to-indigo-600"
-                : "bg-slate-800"
-            }`}
-          >
-            {currentIdiom.dataSource === "ai"
-              ? "✨ PHÂN TÍCH BỞI AI"
-              : "📚 DỮ LIỆU CHUẨN"}
-          </div>
-          <IdiomDetail
-            idiom={currentIdiom}
-            isLoggedIn={true}
-            isPremium={true}
-          />
         </div>
       )}
       <HandwritingPad

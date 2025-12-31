@@ -40,6 +40,7 @@ const AdminInsert: React.FC<AdminInsertProps> = ({ onBack, idiomId }) => {
     origin: "",
     grammar: "",
     imageUrl: "",
+    usageContext: "",
   });
 
   const [analysis, setAnalysis] = useState([
@@ -72,6 +73,7 @@ const AdminInsert: React.FC<AdminInsertProps> = ({ onBack, idiomId }) => {
         origin: data.origin || "",
         grammar: data.grammar || "",
         imageUrl: data.imageUrl || "",
+        usageContext: data.usageContext || "",
       });
       if (data.analysis && data.analysis.length > 0) setAnalysis(data.analysis);
       else setAnalysis([{ character: "", pinyin: "", meaning: "" }]);
@@ -120,7 +122,8 @@ const AdminInsert: React.FC<AdminInsertProps> = ({ onBack, idiomId }) => {
               level: String(row["CẤP ĐỘ"] || "Trung cấp").trim(),
               origin: String(row["NGUỒN GỐC (NẾU CÓ)"] || "").trim(),
               type: "Quán dụng ngữ",
-              figurativeMeaning: String(row["NGHĨA TIẾNG VIỆT"] || "").trim(),
+              figurativeMeaning: "",
+              literalMeaning: "",
               examples: row["VÍ DỤ"]
                 ? [
                     {
@@ -132,6 +135,7 @@ const AdminInsert: React.FC<AdminInsertProps> = ({ onBack, idiomId }) => {
                 : [],
               imageUrl: String(row["HÌNH ẢNH"] || "").trim(),
               videoUrl: String(row["LINK BÁO/VIDEO"] || "").trim(),
+              usageContext: "",
             };
           })
           .filter(Boolean);
@@ -191,6 +195,7 @@ const AdminInsert: React.FC<AdminInsertProps> = ({ onBack, idiomId }) => {
           literalMeaning: "",
           figurativeMeaning: "",
           chineseDefinition: "",
+          usageContext: "",
           origin: "",
           grammar: "",
           imageUrl: "",
@@ -322,7 +327,7 @@ const AdminInsert: React.FC<AdminInsertProps> = ({ onBack, idiomId }) => {
                 placeholder="VD: Làm ăn"
               />
             </div>
-            {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
                   Phân loại
@@ -363,7 +368,7 @@ const AdminInsert: React.FC<AdminInsertProps> = ({ onBack, idiomId }) => {
                   placeholder="VD: Qiaoliang"
                 />
               </div>
-            </div> */}
+            </div>
           </div>
 
           {/* Section 2: Giải nghĩa chi tiết */}
@@ -427,6 +432,18 @@ const AdminInsert: React.FC<AdminInsertProps> = ({ onBack, idiomId }) => {
                 value={form.chineseDefinition}
                 onChange={(e) =>
                   setForm({ ...form, chineseDefinition: e.target.value })
+                }
+                className="w-full border rounded-lg p-2 h-20"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
+                Ngữ cảnh
+              </label>
+              <textarea
+                value={form.usageContext}
+                onChange={(e) =>
+                  setForm({ ...form, usageContext: e.target.value })
                 }
                 className="w-full border rounded-lg p-2 h-20"
               />

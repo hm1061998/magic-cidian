@@ -267,13 +267,13 @@ const IdiomDetail: React.FC<IdiomDetailProps> = ({
               <h1 className="text-4xl md:text-5xl font-hanzi font-bold text-slate-800 tracking-wide">
                 {idiom.hanzi}
               </h1>
-              <span
+              {/* <span
                 className={`text-xs px-2 py-1 rounded-full border ${getTypeColor(
                   idiom.type
                 )}`}
               >
                 {idiom.type}
-              </span>
+              </span> */}
             </div>
             {/* Main Pinyin Display & Speak Button */}
             <div className="flex items-center gap-2">
@@ -308,24 +308,26 @@ const IdiomDetail: React.FC<IdiomDetailProps> = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <h3 className="text-slate-500 text-sm uppercase tracking-wider mb-1 font-semibold">
-              Nghĩa đen
-            </h3>
-            <p className="text-slate-800 font-medium text-lg">
-              {idiom.literalMeaning}
-            </p>
+        {(idiom.literalMeaning || idiom.figurativeMeaning) && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h3 className="text-slate-500 text-sm uppercase tracking-wider mb-1 font-semibold">
+                Nghĩa đen
+              </h3>
+              <p className="text-slate-800 font-medium text-lg">
+                {idiom.literalMeaning}
+              </p>
+            </div>
+            <div>
+              <h3 className="text-slate-500 text-sm uppercase tracking-wider mb-1 font-semibold">
+                Nghĩa bóng / Thực tế
+              </h3>
+              <p className="text-slate-800 font-medium text-lg">
+                {idiom.figurativeMeaning}
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-slate-500 text-sm uppercase tracking-wider mb-1 font-semibold">
-              Nghĩa bóng / Thực tế
-            </h3>
-            <p className="text-slate-800 font-medium text-lg">
-              {idiom.figurativeMeaning}
-            </p>
-          </div>
-        </div>
+        )}
 
         {/* Usage Context Badge if available */}
         {idiom.usageContext && (
@@ -348,8 +350,15 @@ const IdiomDetail: React.FC<IdiomDetailProps> = ({
             {idiom.vietnameseMeaning}
           </span>
         </div>
+        <div className="mt-3">
+          <span className="text-sm text-slate-500 mr-2 font-semibold">
+            Nghĩa tiếng Trung:
+          </span>
+          <span className="text-lg font-bold text-slate-800">
+            {idiom.chineseDefinition}
+          </span>
+        </div>
 
-        {/* AI Generated Illustration */}
         {idiom.imageUrl && (
           <div className="mt-6 w-full rounded-xl overflow-hidden border border-slate-100 shadow-sm relative group">
             <img
@@ -359,7 +368,7 @@ const IdiomDetail: React.FC<IdiomDetailProps> = ({
             />
             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity">
               <p className="text-white text-xs text-center">
-                Hình ảnh minh họa bởi AI
+                Hình ảnh minh họa
               </p>
             </div>
           </div>
@@ -371,24 +380,29 @@ const IdiomDetail: React.FC<IdiomDetailProps> = ({
         {/* Left Column: Analysis & Origin */}
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-slate-200">
-            <Section title="Phân tích chi tiết">
-              <div className="flex flex-wrap gap-4 justify-center md:justify-start">
-                {idiom.analysis.map((char, index) => (
-                  <div key={index} className="flex flex-col items-center group">
-                    <WritingGrid character={char.character} />
-                    <div className="mt-2 text-center">
-                      {/* Character Pinyin: font-sans for better tone mark rendering, wide tracking */}
-                      <p className="text-red-600 font-semibold text-base font-sans tracking-wide">
-                        {char.pinyin}
-                      </p>
-                      <p className="text-slate-600 text-xs mt-0.5 max-w-[80px] truncate">
-                        {char.meaning}
-                      </p>
+            {idiom.analysis?.length > 0 && (
+              <Section title="Phân tích chi tiết">
+                <div className="flex flex-wrap gap-4 justify-center md:justify-start">
+                  {idiom.analysis.map((char, index) => (
+                    <div
+                      key={index}
+                      className="flex flex-col items-center group"
+                    >
+                      <WritingGrid character={char.character} />
+                      <div className="mt-2 text-center">
+                        {/* Character Pinyin: font-sans for better tone mark rendering, wide tracking */}
+                        <p className="text-red-600 font-semibold text-base font-sans tracking-wide">
+                          {char.pinyin}
+                        </p>
+                        <p className="text-slate-600 text-xs mt-0.5 max-w-[80px] truncate">
+                          {char.meaning}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </Section>
+                  ))}
+                </div>
+              </Section>
+            )}
 
             <Section title="Nguồn gốc & Điển tích">
               <p>{idiom.origin}</p>
@@ -427,7 +441,7 @@ const IdiomDetail: React.FC<IdiomDetailProps> = ({
         {/* Right Column: Actions & Comments */}
         <div className="space-y-6">
           {/* Action Cards */}
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 sticky top-24">
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
             <h3 className="font-bold text-slate-800 mb-4 flex items-center">
               <VideoIcon className="w-5 h-5 mr-2 text-amber-500" />
               Góc học tập
@@ -450,14 +464,28 @@ const IdiomDetail: React.FC<IdiomDetailProps> = ({
                 <span>Học lại</span>
               </button>
 
-              <button className="w-full py-3 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors text-sm">
-                Xem video giải thích (Sắp có)
+              <button
+                disabled={!idiom.videoUrl}
+                className={`w-full py-3 bg-slate-100 text-slate-600 rounded-lg transition-colors text-sm ${
+                  !idiom.videoUrl
+                    ? "opacity-50 cursor-not-allowed disabled"
+                    : "hover:bg-slate-200"
+                }`}
+              >
+                <a
+                  href={idiom.videoUrl ? idiom.videoUrl : undefined}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`w-full h-full`}
+                >
+                  {`Xem video giải thích ${idiom.videoUrl ? "" : "(Sắp có)"}`}
+                </a>
               </button>
             </div>
           </div>
 
           {/* Personal Notes Section */}
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+          {/* <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
             <h3 className="font-bold text-slate-800 mb-4 flex items-center">
               <PencilIcon className="w-5 h-5 mr-2 text-blue-500" />
               Ghi chú của bạn
@@ -488,14 +516,14 @@ const IdiomDetail: React.FC<IdiomDetailProps> = ({
                 </div>
               </div>
             )}
-          </div>
+          </div> */}
 
           {/* Comments Section */}
-          <IdiomComments
+          {/* <IdiomComments
             idiomHanzi={idiom.hanzi}
             isLoggedIn={isLoggedIn}
             isPremium={isPremium}
-          />
+          /> */}
         </div>
       </div>
     </div>

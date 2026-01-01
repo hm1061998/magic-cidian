@@ -160,11 +160,12 @@ const Home: React.FC = () => {
         {isCenteredMode && (
           <div className="text-center mb-5 md:mb-8 animate-pop">
             <div className="relative inline-block mb-4 md:mb-6">
-              <div className="w-16 h-16 md:w-24 md:h-24 bg-gradient-to-br from-red-600 to-red-800 rounded-[1.5rem] md:rounded-[2rem] flex items-center justify-center text-white text-3xl md:text-5xl font-hanzi font-bold shadow-2xl rotate-3 transform transition-transform hover:rotate-0">
-                GY
-                <span className="absolute -bottom-1 -right-1 bg-white text-red-700 text-[10px] px-1.5 py-0.5 rounded-md border border-red-100 shadow-sm font-sans uppercase tracking-tighter">
-                  Space
-                </span>
+              <div className="w-20 h-20 md:w-28 md:h-28 rounded-[2rem] shadow-2xl rotate-3 transform transition-transform hover:rotate-0 overflow-hidden bg-white border border-slate-100">
+                <img
+                  src="/assets/app_icon.png"
+                  alt="GYSpace Logo"
+                  className="w-full h-full object-cover"
+                />
               </div>
             </div>
             <h2 className="text-3xl md:text-6xl font-hanzi font-bold text-slate-800 mb-2 md:mb-4 tracking-tight">

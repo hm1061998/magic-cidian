@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
+import { http } from "@/services/api/httpService";
 
 interface User {
   id: string;
@@ -29,13 +30,10 @@ export const fetchCurrentUser = createAsyncThunk(
   "auth/fetchCurrentUser",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await fetch("/api/auth/me", { credentials: "include" });
-      if (!response.ok) {
-        throw new Error("Failed to fetch user");
-      }
-      return await response.json();
+      const response = await http.get("/auth/me");
+      return response.data;
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(error.message || "Failed to fetch user");
     }
   }
 );

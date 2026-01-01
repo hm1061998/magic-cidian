@@ -40,7 +40,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
 
   return (
     <header
-      className={`py-3 px-4 md:px-6 sticky top-0 z-[60] transition-all duration-300 ${
+      className={`py-2 px-3 md:py-3 md:px-6 sticky top-0 z-[60] transition-all duration-300 ${
         isHome
           ? "bg-transparent border-transparent"
           : "bg-white/80 backdrop-blur-xl border-b border-slate-100 shadow-sm"
@@ -67,7 +67,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
               />
             </div>
             <div className="flex flex-col">
-              <h1 className="text-base md:text-lg font-black text-slate-800 font-hanzi tracking-tight leading-none group-hover:text-red-600 transition-colors">
+              <h1 className="text-sm md:text-lg font-black text-slate-800 font-hanzi tracking-tight leading-none group-hover:text-red-600 transition-colors hidden sm:block">
                 {__APP_NAME__}
               </h1>
             </div>

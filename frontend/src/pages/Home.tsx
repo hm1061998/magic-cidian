@@ -5,6 +5,7 @@ import {
   useParams,
   useSearchParams,
 } from "react-router-dom";
+import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { fetchIdiomDetails } from "@/services/api/idiomService";
 import type { Idiom, SearchMode } from "@/types";
 import IdiomDetail from "@/components/idiom/IdiomDetail";
@@ -17,6 +18,7 @@ import {
   CardIcon,
   PuzzlePieceIcon,
   ArrowLeftIcon,
+  MicrophoneIcon,
 } from "@/components/common/icons";
 import { addToHistory } from "@/services/api/userDataService";
 
@@ -31,9 +33,24 @@ const Home: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchMode, setSearchMode] = useState<SearchMode>("database");
   const [isHandwritingPadOpen, setIsHandwritingPadOpen] = useState(false);
+  const [voiceLang, setVoiceLang] = useState<"vi-VN" | "zh-CN">("vi-VN");
   const { isLoggedIn } = useOutletContext<{ isLoggedIn: boolean }>();
 
   const searchQuery = searchParams.get("query");
+
+  const {
+    isListening,
+    startListening,
+    stopListening,
+    abortListening,
+    isSupported,
+  } = useSpeechRecognition({
+    lang: voiceLang,
+    onResult: (text) => {
+      setQuery(text);
+      handleSearch(text);
+    },
+  });
 
   useEffect(() => {
     if (searchQuery) {
@@ -142,15 +159,15 @@ const Home: React.FC = () => {
       >
         {isCenteredMode && (
           <div className="text-center mb-5 md:mb-8 animate-pop">
-            <div className="relative inline-block mb-6">
-              <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-red-600 to-red-800 rounded-[2rem] flex items-center justify-center text-white text-4xl md:text-5xl font-hanzi font-bold shadow-2xl rotate-3 transform transition-transform hover:rotate-0">
+            <div className="relative inline-block mb-4 md:mb-6">
+              <div className="w-16 h-16 md:w-24 md:h-24 bg-gradient-to-br from-red-600 to-red-800 rounded-[1.5rem] md:rounded-[2rem] flex items-center justify-center text-white text-3xl md:text-5xl font-hanzi font-bold shadow-2xl rotate-3 transform transition-transform hover:rotate-0">
                 GY
                 <span className="absolute -bottom-1 -right-1 bg-white text-red-700 text-[10px] px-1.5 py-0.5 rounded-md border border-red-100 shadow-sm font-sans uppercase tracking-tighter">
                   Space
                 </span>
               </div>
             </div>
-            <h2 className="text-4xl md:text-6xl font-hanzi font-bold text-slate-800 mb-4 tracking-tight">
+            <h2 className="text-3xl md:text-6xl font-hanzi font-bold text-slate-800 mb-2 md:mb-4 tracking-tight">
               GYSpace
             </h2>
             <p className="text-slate-500 font-medium text-sm md:text-lg px-4 max-w-md mx-auto leading-relaxed">
@@ -206,9 +223,61 @@ const Home: React.FC = () => {
                   ? "Nhập Hán tự, Pinyin, nghĩa tiếng Việt..."
                   : "Hỏi AI bất cứ từ nào..."
               }
-              className="w-full py-4 px-6 text-lg outline-none text-slate-700 font-medium"
+              className="w-full py-3 md:py-4 pl-4 md:pl-6 pr-32 text-base md:text-lg outline-none text-slate-700 font-medium bg-transparent"
             />
-            <div className="absolute right-2 flex items-center gap-1">
+
+            {isListening && (
+              <div className="absolute inset-0 bg-white z-10 flex items-center justify-between px-6 animate-fadeIn">
+                <div className="flex items-center gap-3">
+                  <div className="flex gap-1 h-4 items-end">
+                    <span className="w-1 h-2 bg-red-600 rounded-full animate-[bounce_1s_infinite_100ms]"></span>
+                    <span className="w-1 h-3 bg-red-600 rounded-full animate-[bounce_1s_infinite_200ms]"></span>
+                    <span className="w-1 h-4 bg-red-600 rounded-full animate-[bounce_1s_infinite_300ms]"></span>
+                    <span className="w-1 h-2 bg-red-600 rounded-full animate-[bounce_1s_infinite_400ms]"></span>
+                  </div>
+                  <span className="text-slate-500 font-medium text-sm">
+                    Đang nghe...
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={abortListening}
+                  className="text-xs font-bold text-slate-400 hover:text-red-500 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100 hover:bg-white transition-all"
+                >
+                  Hủy bỏ
+                </button>
+              </div>
+            )}
+
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+              {isSupported && (
+                <div className="flex items-center gap-1 bg-slate-50 rounded-full p-1 border border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setVoiceLang((prev) =>
+                        prev === "vi-VN" ? "zh-CN" : "vi-VN"
+                      )
+                    }
+                    className="w-8 h-8 flex items-center justify-center rounded-full text-[10px] font-bold text-slate-500 hover:bg-white hover:shadow-sm hover:text-red-500 transition-all font-mono"
+                    title={voiceLang === "vi-VN" ? "Tiếng Việt" : "Tiếng Trung"}
+                  >
+                    {voiceLang === "vi-VN" ? "VI" : "CN"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={isListening ? stopListening : startListening}
+                    className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${
+                      isListening
+                        ? "text-red-600 bg-red-100 opacity-0 pointer-events-none"
+                        : "text-slate-400 hover:text-red-500 hover:bg-white hover:shadow-sm"
+                    }`}
+                    title="Nhập bằng giọng nói"
+                  >
+                    <MicrophoneIcon className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
               {/* <button
                 type="button"
                 onClick={() => setIsHandwritingPadOpen(true)}
@@ -218,7 +287,7 @@ const Home: React.FC = () => {
               </button> */}
               <button
                 type={searchQuery ? "button" : "submit"}
-                className={`absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-xl transition-all shadow-md active:scale-95 ${
+                className={`p-3 rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center ${
                   searchQuery && !isLoading
                     ? "bg-slate-100 text-slate-500 hover:bg-slate-200"
                     : "bg-red-700 text-white hover:bg-red-800"

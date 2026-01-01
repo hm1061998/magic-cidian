@@ -57,7 +57,7 @@ const FlashcardReview: React.FC<FlashcardReviewProps> = ({ onBack }) => {
     }
     const timer = setTimeout(() => {
       setIsTransitioning(false);
-    }, 100);
+    }, 500);
     return () => clearTimeout(timer);
   }, [reviewQueue]);
 

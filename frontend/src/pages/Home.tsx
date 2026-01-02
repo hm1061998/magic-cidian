@@ -14,6 +14,7 @@ import type { Idiom, SearchMode } from "@/types";
 import IdiomDetail from "@/components/idiom/IdiomDetail";
 import HandwritingPad from "@/components/game/HandwritingPad";
 import FeaturedComments from "@/components/idiom/FeaturedComments";
+import DailySuggestions from "@/components/idiom/DailySuggestions";
 import {
   SearchIcon,
   BrainIcon,
@@ -66,13 +67,35 @@ const Home: React.FC = () => {
     },
   });
 
+  const executeSearch = async (searchTerm: string, modeToUse: SearchMode) => {
+    setIsLoading(true);
+    setError(null);
+    setCurrentIdiom(null);
+
+    try {
+      const result = await fetchIdiomDetails(searchTerm, modeToUse);
+      setCurrentIdiom(result);
+      if (result?.id && isLoggedIn) {
+        addToHistory(result.id);
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (searchQuery) {
       setQuery(searchQuery);
-      handleSearch(searchQuery);
+      executeSearch(searchQuery, searchMode);
       setShowSuggestions(false);
+    } else {
+      // Clear state when query is removed from URL
+      setCurrentIdiom(null);
+      setError(null);
     }
-  }, [searchQuery]);
+  }, [searchQuery, searchMode]); // Re-run if query or mode changes
 
   // Handle Suggestions Fetching
   useEffect(() => {
@@ -125,32 +148,14 @@ const Home: React.FC = () => {
     }
   }, [selectedIndex]);
 
-  const handleSearch = async (searchTerm: string, forceMode?: SearchMode) => {
+  const handleSearch = (searchTerm: string) => {
     setShowSuggestions(false);
     if (!searchTerm.trim()) {
-      setError(null);
-      setCurrentIdiom(null);
       setSearchParams({});
       return;
     }
+    // Update URL, which will trigger the effect
     setSearchParams({ query: searchTerm });
-    const modeToUse = forceMode || searchMode;
-
-    setIsLoading(true);
-    setError(null);
-    setCurrentIdiom(null);
-
-    try {
-      const result = await fetchIdiomDetails(searchTerm, modeToUse);
-      setCurrentIdiom(result);
-      if (result?.id && isLoggedIn) {
-        addToHistory(result.id);
-      }
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   const handleActionClick = () => {
@@ -220,60 +225,17 @@ const Home: React.FC = () => {
 
   return (
     <div
-      className={`w-full min-h-full flex flex-col items-center transition-all duration-700 ${
-        isCenteredMode ? "justify-center pb-20" : "justify-start pt-4"
+      className={`w-full flex flex-col items-center transition-all duration-700 ${
+        isCenteredMode
+          ? "pt-5 justify-center overflow-hidden pb-10"
+          : "min-h-full justify-start pt-4"
       }`}
     >
       <div
-        className={`w-full max-w-3xl transition-all duration-700 z-[1]${
-          isCenteredMode ? "scale-105" : "mb-8"
+        className={`w-full max-w-3xl transition-all duration-700 z-[1] ${
+          isCenteredMode ? "scale-100" : "mb-8 scale-100"
         }`}
       >
-        {isCenteredMode && (
-          <div className="text-center mb-5 md:mb-8 animate-pop">
-            <div className="relative inline-block mb-4 md:mb-6">
-              <div className="w-20 h-20 md:w-28 md:h-28 rounded-[2rem] shadow-2xl rotate-3 transform transition-transform hover:rotate-0 overflow-hidden bg-white border border-slate-100">
-                <img
-                  src="/assets/app_icon.png"
-                  alt="GYSpace Logo"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            </div>
-            <h2 className="text-3xl md:text-6xl font-hanzi font-bold text-slate-800 mb-2 md:mb-4 tracking-tight">
-              GYSpace
-            </h2>
-            <p className="text-slate-500 font-medium text-sm md:text-lg px-4 max-w-md mx-auto leading-relaxed">
-              Từ điển Tra cứu & Học tập Quán dụng ngữ
-            </p>
-          </div>
-        )}
-
-        {/* <div className="flex justify-center mb-6">
-          <div className="bg-white p-1 rounded-full border border-slate-200 shadow-sm flex items-center">
-            <button
-              onClick={() => handleChangeMode("database")}
-              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-2 ${
-                searchMode === "database"
-                  ? "bg-slate-800 text-white shadow-md"
-                  : "text-slate-500 hover:text-slate-700"
-              }`}
-            >
-              <HistoryIcon className="w-3.5 h-3.5" /> Thư viện chuẩn
-            </button>
-            <button
-              onClick={() => handleChangeMode("ai")}
-              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-2 ${
-                searchMode === "ai"
-                  ? "bg-gradient-to-r from-purple-600 to-red-600 text-white shadow-md"
-                  : "text-slate-500 hover:text-slate-700"
-              }`}
-            >
-              <BrainIcon className="w-3.5 h-3.5" /> Sức mạnh AI
-            </button>
-          </div>
-        </div> */}
-
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -510,6 +472,17 @@ const Home: React.FC = () => {
           </p>
         )}
 
+        {isCenteredMode && (
+          <div className="mt-8">
+            <DailySuggestions
+              onSelect={(text) => {
+                setQuery(text);
+                handleSearch(text);
+              }}
+            />
+          </div>
+        )}
+
         {/* {isCenteredMode && (
           <FeaturedComments
             onSearch={(t) => {
@@ -546,7 +519,7 @@ const Home: React.FC = () => {
           )} */}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full max-w-2xl px-4 animate-pop delay-100 mt-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full max-w-2xl px-4 animate-pop delay-100 mt-3">
           <button
             onClick={() => navigate("flashcards")}
             className="group relative bg-gradient-to-br from-red-600 to-red-800 p-8 rounded-[2.5rem] text-left overflow-hidden shadow-2xl hover:shadow-red-200 hover:-translate-y-1.5 transition-all duration-300"

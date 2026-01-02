@@ -208,6 +208,70 @@ export class IdiomsService {
     };
   }
 
+  async getDailySuggestions() {
+    try {
+      // 1. Get popular successful searches
+      const trends = await this.searchLogRepository
+        .createQueryBuilder('log')
+        .select('log.query', 'hanzi')
+        .addSelect('COUNT(log.id)', 'count')
+        .where('log.found = :found', { found: true })
+        .groupBy('log.query')
+        .orderBy('count', 'DESC')
+        .limit(10)
+        .getRawMany();
+
+      const trendHanzi = trends.map((t) => t.hanzi);
+
+      let dailyIdioms: IdiomEntity[] = [];
+
+      if (trendHanzi.length > 0) {
+        dailyIdioms = await this.idiomRepository.find({
+          where: trendHanzi.map((h) => ({ hanzi: h })),
+          take: 4,
+        });
+      }
+
+      // 2. Fill with random if not enough
+      if (dailyIdioms.length < 4) {
+        const needed = 4 - dailyIdioms.length;
+        const currentIds = dailyIdioms.map((i) => i.id);
+
+        let query = this.idiomRepository.createQueryBuilder('idiom');
+        if (currentIds.length > 0) {
+          query = query.where('idiom.id NOT IN (:...ids)', { ids: currentIds });
+        }
+
+        const randoms = await query.orderBy('RANDOM()').take(needed).getMany();
+        dailyIdioms = [...dailyIdioms, ...randoms];
+      }
+
+      // Filter distinct just in case
+      const seen = new Set();
+      const distinct = dailyIdioms.filter((i) => {
+        const duplicate = seen.has(i.hanzi);
+        seen.add(i.hanzi);
+        return !duplicate;
+      });
+
+      return distinct.slice(0, 4).map((i) => ({
+        id: i.id,
+        hanzi: i.hanzi,
+        pinyin: i.pinyin,
+        vietnameseMeaning: i.vietnameseMeaning,
+      }));
+    } catch (error) {
+      this.logger.error('Failed to get daily suggestions', error);
+      // Fallback
+      return (await this.idiomRepository.find({ take: 4 })).map((i) => ({
+        id: i.id,
+        hanzi: i.hanzi,
+        pinyin: i.pinyin,
+        vietnameseMeaning: i.vietnameseMeaning,
+      }));
+    }
+  }
+
   async search(query: string, mode: SearchMode) {
     if (mode === 'ai') {
       return this.callGeminiAI(query);

@@ -74,6 +74,11 @@ export const fetchSuggestions = async (
   return response.data;
 };
 
+export const fetchDailySuggestions = async (): Promise<Idiom[]> => {
+  const response = await http.get<Idiom[]>("/idioms/daily");
+  return response.data;
+};
+
 export const fetchIdiomDetails = async (
   query: string,
   mode: SearchMode = "database"

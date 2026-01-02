@@ -59,6 +59,11 @@ export class IdiomsController {
     return this.idiomsService.fetchSuggestions(query, page, limit);
   }
 
+  @Get('daily')
+  async getDailySuggestions() {
+    return this.idiomsService.getDailySuggestions();
+  }
+
   @Get('search')
   async search(@Query('query') query: string, @Query('mode') mode: SearchMode) {
     return this.idiomsService.search(query, mode);

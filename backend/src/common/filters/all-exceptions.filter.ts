@@ -18,15 +18,14 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const request = ctx.getRequest<Request>();
     const requestId = request['requestId'] || 'N/A';
 
-    const status =
-      exception instanceof HttpException
-        ? exception.getStatus()
-        : HttpStatus.INTERNAL_SERVER_ERROR;
+    const isHttpException = exception instanceof HttpException;
+    const status = isHttpException
+      ? exception.getStatus()
+      : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    const message =
-      exception instanceof HttpException
-        ? exception.getResponse()
-        : (exception as Error).message || 'Internal server error';
+    const message = isHttpException
+      ? exception.getResponse()
+      : (exception as Error).message || 'Internal server error';
 
     const logContext = {
       statusCode: status,
@@ -42,11 +41,23 @@ export class AllExceptionsFilter implements ExceptionFilter {
       stack: exception instanceof Error ? exception.stack : null,
     };
 
-    // Log the error with full context
-    this.logger.error(
-      `[${requestId}] ${request.method} ${request.url} ${status}`,
-      JSON.stringify(logContext, null, 2),
-    );
+    // PHÂN BIỆT LỖI:
+    // 1. Lỗi hệ thống (System Error): Các lỗi crash code (không phải HttpException) hoặc lỗi 500+
+    // 2. Lỗi nghiệp vụ (Business Error): Các lỗi 4xx (Sai pass, thiếu dữ liệu...)
+    const isSystemError =
+      !isHttpException || status >= HttpStatus.INTERNAL_SERVER_ERROR;
+
+    if (isSystemError) {
+      this.logger.error(
+        `[SYSTEM_ERROR][${requestId}] ${request.method} ${request.url} ${status}`,
+        JSON.stringify(logContext, null, 2),
+      );
+    } else {
+      // Log lỗi nghiệp vụ ở mức độ WARN để không làm loãng log ERROR
+      this.logger.warn(
+        `[BUSINESS_ERROR][${requestId}] ${request.method} ${request.url} ${status} - ${JSON.stringify(message)}`,
+      );
+    }
 
     response.status(status).json({
       statusCode: status,

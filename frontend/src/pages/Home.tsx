@@ -535,15 +535,15 @@ const Home: React.FC = () => {
         </div>
       ) : error ? (
         <div className="max-w-md mx-auto mt-8 bg-red-50 border border-red-100 p-8 rounded-2xl text-center animate-shake">
-          <p className="text-red-600 mb-6 font-bold">{error}</p>
-          {searchMode === "database" && (
+          <p className="text-red-600 font-bold">{error}</p>
+          {/* {searchMode === "database" && (
             <button
               onClick={() => setSearchMode("ai")}
-              className="px-8 py-3 bg-slate-800 text-white rounded-full text-xs font-bold hover:bg-black transition-all shadow-lg active:scale-95"
+              className="mt-6 px-8 py-3 bg-slate-800 text-white rounded-full text-xs font-bold hover:bg-black transition-all shadow-lg active:scale-95"
             >
               Tra cứu bằng AI ngay
             </button>
-          )}
+          )} */}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full max-w-2xl px-4 animate-pop delay-100 mt-10">

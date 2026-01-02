@@ -279,7 +279,7 @@ const Home: React.FC = () => {
             e.preventDefault();
             handleSearch(query);
           }}
-          className="relative group"
+          className="relative group transition-all duration-300"
           ref={searchContainerRef}
         >
           <div
@@ -287,8 +287,11 @@ const Home: React.FC = () => {
               searchMode === "ai" ? "bg-purple-600" : "bg-red-600"
             }`}
           ></div>
-          <div className="relative flex items-center bg-white rounded-full shadow-xl border border-slate-100">
-            <div className="relative flex-1 flex items-center overflow-hidden rounded-l-full">
+          <div className="relative flex items-center bg-white/90 backdrop-blur-xl rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-white transition-all duration-300 group-focus-within:shadow-[0_20px_60px_rgba(239,68,68,0.15)] group-focus-within:border-red-100 group-focus-within:-translate-y-1">
+            <div className="relative flex-1 flex items-center overflow-hidden rounded-l-[2rem]">
+              <div className="pl-6 text-slate-400 group-focus-within:text-red-500 transition-colors">
+                <SearchIcon className="w-5 h-5 md:w-6 md:h-6" />
+              </div>
               <input
                 type="text"
                 value={query}
@@ -320,10 +323,10 @@ const Home: React.FC = () => {
                 }}
                 placeholder={
                   searchMode === "database"
-                    ? "Nhập Hán tự, Pinyin, nghĩa tiếng Việt..."
+                    ? "Hán tự, Pinyin, nghĩa Việt..."
                     : "Hỏi AI bất cứ từ nào..."
                 }
-                className="w-full py-3 md:py-4 pl-4 md:pl-6 pr-4 text-base md:text-lg outline-none text-slate-700 font-medium bg-transparent"
+                className="w-full py-4 md:py-6 pl-4 md:pl-5 pr-4 text-base md:text-xl outline-none text-slate-800 font-semibold bg-transparent placeholder:text-slate-300 placeholder:font-medium"
               />
 
               {isListening && (
@@ -350,9 +353,21 @@ const Home: React.FC = () => {
               )}
             </div>
 
-            <div className="flex items-center gap-1 pr-2">
+            <div className="flex items-center gap-2 pr-3">
+              {query && !isLoading && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQuery("");
+                    handleSearch("");
+                  }}
+                  className="p-2 text-slate-300 hover:text-slate-500 transition-colors"
+                >
+                  <CloseIcon className="w-5 h-5" />
+                </button>
+              )}
               {isSupported && (
-                <div className="flex items-center gap-1 bg-slate-50 rounded-full p-1 border border-slate-100">
+                <div className="hidden sm:flex items-center gap-1 bg-slate-50/50 backdrop-blur-sm rounded-2xl p-1 border border-slate-100">
                   <button
                     type="button"
                     onClick={() =>
@@ -360,7 +375,7 @@ const Home: React.FC = () => {
                         prev === "vi-VN" ? "zh-CN" : "vi-VN"
                       )
                     }
-                    className="w-8 h-8 flex items-center justify-center rounded-full text-[10px] font-bold text-slate-500 hover:bg-white hover:shadow-sm hover:text-red-500 transition-all font-mono"
+                    className="w-9 h-9 flex items-center justify-center rounded-xl text-[10px] font-black text-slate-500 hover:bg-white hover:shadow-sm hover:text-red-500 transition-all font-mono"
                     title={voiceLang === "vi-VN" ? "Tiếng Việt" : "Tiếng Trung"}
                   >
                     {voiceLang === "vi-VN" ? "VI" : "CN"}
@@ -368,9 +383,9 @@ const Home: React.FC = () => {
                   <button
                     type="button"
                     onClick={isListening ? stopListening : startListening}
-                    className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${
+                    className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all ${
                       isListening
-                        ? "text-red-600 bg-red-100 opacity-0 pointer-events-none"
+                        ? "text-red-600 bg-red-100 scale-110"
                         : "text-slate-400 hover:text-red-500 hover:bg-white hover:shadow-sm"
                     }`}
                     title="Nhập bằng giọng nói"
@@ -380,21 +395,21 @@ const Home: React.FC = () => {
                 </div>
               )}
               <button
-                type={searchQuery ? "button" : "submit"}
-                className={`p-3 rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center ${
-                  searchQuery && !isLoading
-                    ? "bg-slate-100 text-slate-500 hover:bg-slate-200"
-                    : "bg-red-700 text-white hover:bg-red-800"
+                type="submit"
+                disabled={isLoading}
+                className={`ml-1 px-6 md:px-8 py-3 md:py-4 rounded-[1.5rem] transition-all shadow-[0_10px_20px_rgba(239,68,68,0.2)] active:scale-95 flex items-center justify-center gap-2 font-bold text-sm md:text-base ${
+                  searchMode === "ai"
+                    ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:shadow-purple-200"
+                    : "bg-red-600 text-white hover:bg-red-700 hover:shadow-red-200"
                 }`}
-                onClick={handleActionClick}
-                title={searchQuery ? "Xóa" : "Tìm kiếm"}
               >
                 {isLoading ? (
-                  <div className="w-6 h-6 border-2 border-white border-t-transparent animate-spin rounded-full" />
-                ) : searchQuery ? (
-                  <CloseIcon className="w-6 h-6" />
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent animate-spin rounded-full" />
                 ) : (
-                  <SearchIcon className="w-6 h-6" />
+                  <>
+                    <span>{searchMode === "ai" ? "Hỏi AI" : "Tra cứu"}</span>
+                    <ArrowLeftIcon className="w-4 h-4 rotate-180" />
+                  </>
                 )}
               </button>
             </div>
@@ -402,10 +417,10 @@ const Home: React.FC = () => {
 
           {/* Suggestions Dropdown */}
           {showSuggestions && (
-            <div className="absolute top-full left-0 right-0 mt-3 bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-4 duration-300 z-[20]">
+            <div className="absolute top-full left-0 right-0 mt-4 bg-white/95 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_30px_70px_rgba(0,0,0,0.15)] border border-white overflow-hidden z-50 animate-in fade-in slide-in-from-top-4 duration-500">
               <div
                 ref={suggestionsListRef}
-                className="p-2 space-y-1 max-h-[40vh] overflow-y-auto"
+                className="p-3 space-y-1.5 max-h-[40vh] overflow-y-auto scrollbar-hide"
               >
                 {suggestions.map((item, index) => (
                   <button
@@ -415,47 +430,73 @@ const Home: React.FC = () => {
                       setQuery(item.hanzi);
                       handleSearch(item.hanzi);
                     }}
-                    className={`w-full flex items-center justify-between p-3 rounded-2xl transition-all text-left ${
+                    className={`w-full flex items-center justify-between p-4 rounded-3xl transition-all duration-200 group/item ${
                       selectedIndex === index
-                        ? "bg-slate-50 border-slate-100"
-                        : "hover:bg-slate-50 border-transparent"
-                    } border`}
+                        ? "bg-red-50 scale-[1.02] shadow-sm"
+                        : "hover:bg-slate-50/80"
+                    }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center font-hanzi font-bold text-slate-400">
+                    <div className="flex items-center gap-4">
+                      <div
+                        className={`w-12 h-12 rounded-2xl flex items-center justify-center font-hanzi font-bold text-xl transition-all duration-300 ${
+                          selectedIndex === index
+                            ? "bg-red-600 text-white rotate-6 shadow-lg shadow-red-200"
+                            : "bg-slate-100 text-slate-400 group-hover/item:bg-white group-hover/item:text-slate-600"
+                        }`}
+                      >
                         {item.hanzi.charAt(0)}
                       </div>
                       <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-hanzi font-bold text-slate-800">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="font-hanzi font-black text-slate-800 text-lg">
                             {item.hanzi}
                           </span>
-                          <span className="text-[10px] text-red-500 font-bold uppercase tracking-wider">
+                          <span
+                            className={`px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider ${
+                              selectedIndex === index
+                                ? "bg-red-100 text-red-600"
+                                : "bg-slate-100 text-slate-500"
+                            }`}
+                          >
                             {item.pinyin}
                           </span>
                         </div>
-                        <p className="text-xs text-slate-400 line-clamp-1">
+                        <p className="text-sm text-slate-400 font-medium line-clamp-1 group-hover/item:text-slate-500 transition-colors">
                           {item.vietnameseMeaning}
                         </p>
                       </div>
                     </div>
-                    <ChevronRightIcon className="w-4 h-4 text-slate-300" />
+                    <div
+                      className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
+                        selectedIndex === index
+                          ? "bg-white text-red-600 shadow-sm translate-x-1"
+                          : "text-slate-200 group-hover/item:text-slate-400"
+                      }`}
+                    >
+                      <ChevronRightIcon className="w-5 h-5" />
+                    </div>
                   </button>
                 ))}
               </div>
-              <div className="bg-slate-50 px-5 py-2 flex items-center justify-between">
-                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                  Gợi ý thông minh
-                </span>
-                <div className="flex items-center gap-2 text-[10px] text-slate-400 font-medium">
-                  <span>Di chuyển bằng</span>
-                  <div className="flex gap-1">
-                    <span className="px-1.5 py-0.5 bg-white rounded border border-slate-200">
-                      ↑
+              <div className="bg-slate-50/50 backdrop-blur-md px-6 py-3 flex items-center justify-between border-t border-slate-100/50">
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                    Smart Suggestions
+                  </span>
+                </div>
+                <div className="hidden sm:flex items-center gap-4 text-[10px] text-slate-400 font-bold">
+                  <div className="flex items-center gap-1.5">
+                    <span className="flex items-center justify-center w-5 h-5 bg-white rounded-md border border-slate-200 shadow-sm">
+                      ↑↓
                     </span>
-                    <span className="px-1.5 py-0.5 bg-white rounded border border-slate-200">
-                      ↓
+                    <span>Navigate</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="flex items-center justify-center px-1.5 h-5 bg-white rounded-md border border-slate-200 shadow-sm capitalize">
+                      Enter
                     </span>
+                    <span>Select</span>
                   </div>
                 </div>
               </div>

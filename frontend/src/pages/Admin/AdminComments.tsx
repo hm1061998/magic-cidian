@@ -10,23 +10,22 @@ import {
 import type { Feedback } from "@/types";
 import {
   fetchAllComments,
-  fetchCommentStats,
   updateCommentStatus,
   deleteComment,
-  type CommentStats,
 } from "@/services/api/commentService";
-import { toast } from "@/services/ui/toastService";
 import { modalService } from "@/services/ui/modalService";
 import Pagination from "@/components/common/Pagination";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/redux/store";
+import { getCommentStats } from "@/redux/adminSlice";
 
 const AdminComments: React.FC = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const { commentStats: stats, commentLoading: statsLoading } = useSelector(
+    (state: RootState) => state.admin
+  );
+
   const [comments, setComments] = useState<Feedback[]>([]);
-  const [stats, setStats] = useState<CommentStats>({
-    total: 0,
-    pending: 0,
-    approved: 0,
-    rejected: 0,
-  });
   const [filter, setFilter] = useState<
     "all" | "pending" | "approved" | "rejected"
   >("pending");
@@ -35,21 +34,12 @@ const AdminComments: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    loadStats();
-  }, []);
+    dispatch(getCommentStats(false));
+  }, [dispatch]);
 
   useEffect(() => {
     loadComments();
   }, [filter, page]);
-
-  const loadStats = async () => {
-    try {
-      const data = await fetchCommentStats();
-      setStats(data);
-    } catch (error) {
-      console.error("Error loading stats", error);
-    }
-  };
 
   const loadComments = async () => {
     setLoading(true);
@@ -76,7 +66,7 @@ const AdminComments: React.FC = () => {
     try {
       await updateCommentStatus(commentId, status);
       await loadComments();
-      await loadStats();
+      dispatch(getCommentStats(true));
     } catch (error: any) {
       alert(
         error.response?.data?.message ||
@@ -95,7 +85,7 @@ const AdminComments: React.FC = () => {
     try {
       await deleteComment(commentId);
       await loadComments();
-      await loadStats();
+      dispatch(getCommentStats(true));
     } catch (error: any) {
       alert(
         error.response?.data?.message ||
@@ -148,27 +138,41 @@ const AdminComments: React.FC = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+        <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm relative overflow-hidden">
           <div className="text-slate-600 text-sm mb-1">Tổng số</div>
-          <div className="text-3xl font-bold text-slate-800">{stats.total}</div>
+          <div className="text-3xl font-bold text-slate-800">
+            {stats?.total || 0}
+          </div>
+          {statsLoading && (
+            <div className="absolute inset-0 bg-white/50 animate-pulse" />
+          )}
         </div>
-        <div className="bg-yellow-50 rounded-xl border border-yellow-200 p-4 shadow-sm">
+        <div className="bg-yellow-50 rounded-xl border border-yellow-200 p-4 shadow-sm relative overflow-hidden">
           <div className="text-yellow-700 text-sm mb-1">Chờ duyệt</div>
           <div className="text-3xl font-bold text-yellow-700">
-            {stats.pending}
+            {stats?.pending || 0}
           </div>
+          {statsLoading && (
+            <div className="absolute inset-0 bg-yellow-50/50 animate-pulse" />
+          )}
         </div>
-        <div className="bg-green-50 rounded-xl border border-green-200 p-4 shadow-sm">
+        <div className="bg-green-50 rounded-xl border border-green-200 p-4 shadow-sm relative overflow-hidden">
           <div className="text-green-700 text-sm mb-1">Đã duyệt</div>
           <div className="text-3xl font-bold text-green-700">
-            {stats.approved}
+            {stats?.approved || 0}
           </div>
+          {statsLoading && (
+            <div className="absolute inset-0 bg-green-50/50 animate-pulse" />
+          )}
         </div>
-        <div className="bg-red-50 rounded-xl border border-red-200 p-4 shadow-sm">
+        <div className="bg-red-50 rounded-xl border border-red-200 p-4 shadow-sm relative overflow-hidden">
           <div className="text-red-700 text-sm mb-1">Từ chối</div>
           <div className="text-3xl font-bold text-red-700">
-            {stats.rejected}
+            {stats?.rejected || 0}
           </div>
+          {statsLoading && (
+            <div className="absolute inset-0 bg-red-50/50 animate-pulse" />
+          )}
         </div>
       </div>
 

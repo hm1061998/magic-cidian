@@ -31,3 +31,8 @@ export const logoutAdmin = async () => {
     localStorage.removeItem("auth_hint");
   }
 };
+
+export const getByMe = async () => {
+  const response = await http.get("/auth/me");
+  return response.data;
+};

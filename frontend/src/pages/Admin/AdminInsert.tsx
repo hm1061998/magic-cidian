@@ -12,6 +12,9 @@ import { AdminOutletContext } from "@/layouts/AdminLayout";
 import { useForm, useFieldArray } from "react-hook-form";
 import Input from "@/components/common/Input";
 import Textarea from "@/components/common/Textarea";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/redux/store";
+import { getAdminStats } from "@/redux/adminSlice";
 
 interface AdminInsertProps {
   onBack: () => void;
@@ -52,6 +55,7 @@ type IdiomFormInputs = {
 const AdminInsert: React.FC<AdminInsertProps> = ({ onBack, idiomId }) => {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
+  const dispatch = useDispatch<AppDispatch>();
   const topRef = useRef<HTMLDivElement>(null);
   const { setPageHeader } = useOutletContext<AdminOutletContext>();
 
@@ -149,6 +153,7 @@ const AdminInsert: React.FC<AdminInsertProps> = ({ onBack, idiomId }) => {
         toast.success("Đã thêm từ mới thành công!");
         reset();
       }
+      dispatch(getAdminStats(true));
       scrollToTop();
     } catch (err: any) {
       toast.error(err.message || "Có lỗi xảy ra.");

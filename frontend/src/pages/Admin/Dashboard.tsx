@@ -8,27 +8,24 @@ import {
   HistoryIcon,
   ChevronRightIcon,
 } from "@/components/common/icons";
-import { fetchAdminStats } from "@/services/api/idiomService";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/redux/store";
+import { getAdminStats } from "@/redux/adminSlice";
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const [stats, setStats] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const dispatch = useDispatch<AppDispatch>();
+  const { stats, loading, error } = useSelector(
+    (state: RootState) => state.admin
+  );
 
   useEffect(() => {
-    loadStats();
-  }, []);
+    dispatch(getAdminStats(false));
+  }, [dispatch]);
 
-  const loadStats = async () => {
-    try {
-      const data = await fetchAdminStats();
-      setStats(data);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
+  const onRefresh = () => {
+    dispatch(getAdminStats(true));
   };
 
   const onNavigate = (key: string) => {
@@ -39,12 +36,29 @@ const AdminDashboard: React.FC = () => {
     navigate(`/admin/idiom/detail/${idiom.id}`);
   };
 
-  if (loading)
+  if (loading && !stats)
     return (
       <div className="flex-1 flex items-center justify-center">
         <SpinnerIcon className="w-10 h-10 text-red-600" />
       </div>
     );
+
+  if (error && !stats) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+        <div className="bg-red-50 text-red-600 p-6 rounded-3xl mb-4 max-w-sm">
+          <p className="font-bold mb-2">Đã xảy ra lỗi</p>
+          <p className="text-sm opacity-80">{error}</p>
+        </div>
+        <button
+          onClick={onRefresh}
+          className="px-6 py-2 bg-slate-800 text-white rounded-xl text-sm font-bold active:scale-95 transition-all"
+        >
+          Thử lại
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto w-full animate-pop">
@@ -53,6 +67,18 @@ const AdminDashboard: React.FC = () => {
           Bảng điều khiển Admin
         </h1>
         <div className="flex gap-2">
+          <button
+            onClick={onRefresh}
+            disabled={loading}
+            className={`flex items-center gap-2 bg-white text-slate-600 px-4 py-2 rounded-xl text-sm font-bold border border-slate-200 hover:bg-slate-50 transition-all ${
+              loading ? "opacity-50 animate-pulse" : ""
+            }`}
+          >
+            <HistoryIcon
+              className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
+            />
+            Làm mới
+          </button>
           <button
             onClick={() => onNavigate("insert")}
             className="flex items-center gap-2 bg-red-700 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg shadow-red-100 hover:bg-red-800 transition-all"

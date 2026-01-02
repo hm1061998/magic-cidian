@@ -12,6 +12,8 @@ import {
   ChatBubbleIcon,
 } from "@/components/common/icons";
 import { fetchCommentStats } from "@/services/api/commentService";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
 interface NavItemProps {
   to: string;
   end?: boolean;
@@ -66,6 +68,7 @@ export type AdminOutletContext = {
 const AdminLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useSelector((state: RootState) => state.auth);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const [headerState, setHeaderState] = useState<{
@@ -232,7 +235,7 @@ const AdminLayout: React.FC = () => {
                 <UserIcon className="w-4 h-4" />
               </div>
               <span className="text-sm font-bold text-slate-600 pr-2 hidden md:block">
-                Administrator
+                {user?.displayName || user?.username || "Administrator"}
               </span>
             </div>
           </div>

@@ -24,7 +24,13 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
                 ? "border-red-500"
                 : "border-slate-200 hover:border-slate-300"
             }
-            bg-white text-slate-700 placeholder:text-slate-400
+            ${!className.includes("bg-") ? "bg-white" : ""}
+            ${!className.includes("text-") ? "text-slate-700" : ""}
+            ${
+              !className.includes("placeholder:")
+                ? "placeholder:text-slate-400"
+                : ""
+            }
             focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-red-500
             disabled:bg-slate-50 disabled:text-slate-400
             ${className}

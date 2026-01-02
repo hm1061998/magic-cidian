@@ -8,6 +8,7 @@ import {
   ExampleSentenceEntity,
   IdiomEntity,
 } from './entities/idiom.entity';
+import { SearchLogEntity } from './entities/search-log.entity';
 import { GoogleGenAI, Type } from '@google/genai';
 import { CreateIdiomDto } from './dto/create-idiom.dto';
 import { SearchMode } from './idioms.controller';
@@ -24,6 +25,8 @@ export class IdiomsService {
     private analysisRepository: Repository<CharacterAnalysisEntity>,
     @InjectRepository(ExampleSentenceEntity)
     private examplesRepository: Repository<ExampleSentenceEntity>,
+    @InjectRepository(SearchLogEntity)
+    private searchLogRepository: Repository<SearchLogEntity>,
     private dataSource: DataSource,
   ) {
     if (process.env.API_KEY) {
@@ -35,38 +38,59 @@ export class IdiomsService {
     try {
       const totalIdioms = await this.idiomRepository.count();
 
-      // Thống kê theo cấp độ
-      const levels = ['Sơ cấp', 'Trung cấp', 'Cao cấp'];
-      const levelStats = await Promise.all(
-        levels.map(async (level) => ({
-          name: level,
-          count: await this.idiomRepository.count({ where: { level } }),
-        })),
-      );
+      // 1. Thống kê theo cấp độ (1 query Duy nhất)
+      const levelResults = await this.idiomRepository
+        .createQueryBuilder('idiom')
+        .select('idiom.level', 'name')
+        .addSelect('COUNT(*)', 'count')
+        .groupBy('idiom.level')
+        .getRawMany();
 
-      // Thống kê theo loại
-      const types = ['Quán dụng ngữ', 'Thành ngữ (Chengyu)', 'Tiếng lóng'];
-      const typeStats = await Promise.all(
-        types.map(async (type) => ({
-          name: type,
-          count: await this.idiomRepository.count({ where: { type } }),
-        })),
-      );
+      const levelStats = levelResults.map((r) => ({
+        name: r.name || 'Chưa phân loại',
+        count: parseInt(r.count),
+      }));
 
-      // Lấy 5 từ vựng mới thêm gần nhất
+      // 2. Thống kê theo loại (1 query Duy nhất)
+      const typeResults = await this.idiomRepository
+        .createQueryBuilder('idiom')
+        .select('idiom.type', 'name')
+        .addSelect('COUNT(*)', 'count')
+        .groupBy('idiom.type')
+        .getRawMany();
+
+      const typeStats = typeResults.map((r) => ({
+        name: r.name || 'Chưa phân loại',
+        count: parseInt(r.count),
+      }));
+
+      // 3. Lấy 5 từ vựng mới thêm gần nhất
       const recentIdioms = await this.idiomRepository.find({
         order: { createdAt: 'DESC' },
         take: 5,
         select: ['id', 'hanzi', 'pinyin', 'createdAt'],
       });
 
+      // 4. Tìm từ khóa HOT (tìm kiếm thất bại nhiều nhất)
+      const hotKeywords = await this.searchLogRepository
+        .createQueryBuilder('log')
+        .select('log.query', 'query')
+        .addSelect('COUNT(log.id)', 'count')
+        .where('log.found = :found', { found: false })
+        .groupBy('log.query')
+        .orderBy('count', 'DESC')
+        .take(10)
+        .getRawMany();
+
       return {
         totalIdioms,
         levelStats,
         typeStats,
         recentIdioms,
+        hotKeywords,
       };
     } catch (error) {
+      this.logger.error('Error getting admin stats:', error);
       throw new HttpException('Lỗi khi lấy dữ liệu thống kê.', 400);
     }
   }
@@ -137,20 +161,51 @@ export class IdiomsService {
     return idiom;
   }
 
-  async fetchSuggestions(query: string) {
-    if (!query || query.trim().length < 1) return [];
+  async fetchSuggestions(query: string, page: number = 1, limit: number = 8) {
+    const skip = (page - 1) * limit;
+
+    if (!query || query.trim().length < 1) {
+      // Return most recent idioms if no query
+      const [data, total] = await this.idiomRepository.findAndCount({
+        order: { createdAt: 'DESC' },
+        select: ['id', 'hanzi', 'pinyin', 'vietnameseMeaning'],
+        take: limit,
+        skip: skip,
+      });
+
+      return {
+        data,
+        meta: {
+          page,
+          limit,
+          total,
+          hasMore: skip + limit < total,
+        },
+      };
+    }
 
     const normalizedQuery = query.toLowerCase().trim();
 
-    return await this.idiomRepository.find({
+    const [data, total] = await this.idiomRepository.findAndCount({
       where: [
         { hanzi: ILike(`${normalizedQuery}%`) },
         { pinyin: ILike(`${normalizedQuery}%`) },
         { vietnameseMeaning: ILike(`%${normalizedQuery}%`) },
       ],
       select: ['id', 'hanzi', 'pinyin', 'vietnameseMeaning'],
-      take: 8,
+      take: limit,
+      skip: skip,
     });
+
+    return {
+      data,
+      meta: {
+        page,
+        limit,
+        total,
+        hasMore: skip + limit < total,
+      },
+    };
   }
 
   async search(query: string, mode: SearchMode) {
@@ -169,8 +224,21 @@ export class IdiomsService {
       });
 
       if (dbIdiom) {
+        // Log thành công
+        await this.searchLogRepository.save({
+          query: normalizedQuery,
+          found: true,
+          mode: 'database',
+        });
         return { ...dbIdiom, dataSource: 'database' };
       }
+
+      // Log thất bại
+      await this.searchLogRepository.save({
+        query: normalizedQuery,
+        found: false,
+        mode: 'database',
+      });
     }
 
     throw new HttpException('Không tìm thấy từ này trong thư viện.', 400);

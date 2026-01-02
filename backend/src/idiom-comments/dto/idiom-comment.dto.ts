@@ -40,6 +40,14 @@ export class CommentQueryDto {
   userId?: string;
 
   @IsOptional()
+  @IsString()
+  search?: string;
+
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  onlyReported?: boolean;
+
+  @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)

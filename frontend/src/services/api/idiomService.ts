@@ -62,9 +62,15 @@ export const fetchAdminStats = async () => {
   return response.data;
 };
 
-export const fetchSuggestions = async (query: string): Promise<Idiom[]> => {
-  if (!query || query.trim().length < 1) return [];
-  const response = await http.get<Idiom[]>("/idioms/suggestions", { query });
+// Updated return type to support pagination
+export const fetchSuggestions = async (
+  query: string = "",
+  page: number = 1
+): Promise<{ data: Idiom[]; meta: { hasMore: boolean } }> => {
+  const response = await http.get<{ data: Idiom[]; meta: any }>(
+    "/idioms/suggestions",
+    { query, page }
+  );
   return response.data;
 };
 

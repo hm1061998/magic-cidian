@@ -50,4 +50,7 @@ export class IdiomCommentEntity {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @Column({ nullable: true })
+  processedAt: Date;
 }

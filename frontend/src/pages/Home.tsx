@@ -79,9 +79,9 @@ const Home: React.FC = () => {
     const fetchTimer = setTimeout(async () => {
       if (query.trim() && searchMode === "database" && !currentIdiom) {
         try {
-          const results = await fetchSuggestions(query);
-          setSuggestions(results);
-          setShowSuggestions(results.length > 0);
+          const { data } = await fetchSuggestions(query);
+          setSuggestions(data);
+          setShowSuggestions(data.length > 0);
           setSelectedIndex(-1);
         } catch (err) {
           console.error("Suggestions error:", err);

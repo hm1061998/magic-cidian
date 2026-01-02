@@ -50,8 +50,13 @@ export class IdiomsController {
   }
 
   @Get('suggestions')
-  async getSuggestions(@Query('query') query: string) {
-    return this.idiomsService.fetchSuggestions(query);
+  @Get('suggestions')
+  async getSuggestions(
+    @Query('query') query: string,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 8,
+  ) {
+    return this.idiomsService.fetchSuggestions(query, page, limit);
   }
 
   @Get('search')

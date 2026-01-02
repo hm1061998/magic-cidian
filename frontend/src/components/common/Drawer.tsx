@@ -1,0 +1,69 @@
+import React, { useEffect } from "react";
+import { CloseIcon } from "./icons";
+
+interface DrawerProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title?: string;
+  children: React.ReactNode;
+  footer?: React.ReactNode;
+  className?: string;
+}
+
+const Drawer: React.FC<DrawerProps> = ({
+  isOpen,
+  onClose,
+  title,
+  children,
+  footer,
+  className = "",
+}) => {
+  // Prevent body scroll when drawer is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-slate-900/20 backdrop-blur-sm animate-in fade-in duration-300"
+        onClick={onClose}
+      />
+
+      {/* Drawer Panel */}
+      <div
+        className={`relative w-full max-w-sm bg-white shadow-2xl h-full flex flex-col animate-in slide-in-from-right duration-300 border-l border-slate-100 ${className}`}
+      >
+        <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-white">
+          <h3 className="font-bold text-lg text-slate-800">{title}</h3>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400 hover:text-slate-600"
+          >
+            <CloseIcon className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-5">{children}</div>
+
+        {footer && (
+          <div className="p-5 border-t border-slate-100 bg-slate-50 flex gap-3">
+            {footer}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default Drawer;

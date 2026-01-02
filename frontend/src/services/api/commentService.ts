@@ -66,6 +66,8 @@ export interface CommentQueryParams {
   status?: "pending" | "approved" | "rejected";
   idiomId?: string;
   userId?: string;
+  search?: string;
+  onlyReported?: boolean;
   page?: number;
   limit?: number;
 }
@@ -83,6 +85,13 @@ export interface CommentStats {
   pending: number;
   approved: number;
   rejected: number;
+  averageProcessingTime: number;
+  topReported: Array<{
+    id: string;
+    hanzi: string;
+    pinyin: string;
+    totalreports: number;
+  }>;
 }
 
 /**

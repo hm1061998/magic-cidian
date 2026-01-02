@@ -94,7 +94,15 @@ export class IdiomCommentsService {
   }
 
   async findAll(query: CommentQueryDto) {
-    const { status, idiomId, userId, page = 1, limit = 20 } = query;
+    const {
+      status,
+      idiomId,
+      userId,
+      search,
+      onlyReported,
+      page = 1,
+      limit = 20,
+    } = query;
 
     const queryBuilder = this.commentRepository
       .createQueryBuilder('comment')
@@ -111,6 +119,17 @@ export class IdiomCommentsService {
 
     if (userId) {
       queryBuilder.andWhere('comment.user.id = :userId', { userId });
+    }
+
+    if (onlyReported) {
+      queryBuilder.andWhere('comment.reportCount > 0');
+    }
+
+    if (search) {
+      queryBuilder.andWhere(
+        '(comment.content ILike :search OR user.displayName ILike :search OR idiom.hanzi ILike :search)',
+        { search: `%${search}%` },
+      );
     }
 
     queryBuilder
@@ -151,6 +170,10 @@ export class IdiomCommentsService {
         'Không tìm thấy bình luận',
         HttpStatus.BAD_REQUEST,
       );
+    }
+
+    if (!comment.processedAt) {
+      comment.processedAt = new Date();
     }
 
     comment.status = updateStatusDto.status;
@@ -222,24 +245,46 @@ export class IdiomCommentsService {
   }
 
   async getStats() {
-    const [total, pending, approved, rejected] = await Promise.all([
-      this.commentRepository.count(),
-      this.commentRepository.count({
-        where: { status: CommentStatus.PENDING },
-      }),
-      this.commentRepository.count({
-        where: { status: CommentStatus.APPROVED },
-      }),
-      this.commentRepository.count({
-        where: { status: CommentStatus.REJECTED },
-      }),
-    ]);
+    // 1. Lấy thống kê số lượng theo status trong 1 query duy nhất
+    const statusResults = await this.commentRepository
+      .createQueryBuilder('comment')
+      .select('comment.status', 'status')
+      .addSelect('COUNT(*)', 'count')
+      .groupBy('comment.status')
+      .getRawMany();
+
+    const statsMap = statusResults.reduce((acc, row) => {
+      acc[row.status] = parseInt(row.count);
+      return acc;
+    }, {});
+
+    const pending = statsMap[CommentStatus.PENDING] || 0;
+    const approved = statsMap[CommentStatus.APPROVED] || 0;
+    const rejected = statsMap[CommentStatus.REJECTED] || 0;
+    const total = pending + approved + rejected;
+
+    // 2. Top thành ngữ bị report nhiều nhất (Đã tối ưu QueryBuilder)
+    const topReported = await this.commentRepository
+      .createQueryBuilder('comment')
+      .innerJoin('comment.idiom', 'idiom')
+      .select([
+        'idiom.id AS id',
+        'idiom.hanzi AS hanzi',
+        'idiom.pinyin AS pinyin',
+        'SUM(comment.reportCount) AS totalreports',
+      ])
+      .groupBy('idiom.id, idiom.hanzi, idiom.pinyin')
+      .having('SUM(comment.reportCount) > 0')
+      .orderBy('totalreports', 'DESC')
+      .take(5)
+      .getRawMany();
 
     return {
       total,
       pending,
       approved,
       rejected,
+      topReported,
     };
   }
 }

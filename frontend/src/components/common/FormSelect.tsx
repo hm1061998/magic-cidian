@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { ChevronDownIcon } from "./icons";
+import { ChevronDownIcon, SearchIcon } from "./icons";
 
 interface Option {
   value: string;
@@ -14,6 +14,12 @@ interface FormSelectProps {
   error?: string;
   placeholder?: string;
   disabled?: boolean;
+  className?: string;
+  searchable?: boolean;
+  onSearchChange?: (value: string) => void;
+  searchValue?: string;
+  onLoadMore?: () => void;
+  loading?: boolean;
 }
 
 const FormSelectCustom: React.FC<FormSelectProps> = ({
@@ -24,9 +30,17 @@ const FormSelectCustom: React.FC<FormSelectProps> = ({
   error,
   placeholder = "Chọn...",
   disabled,
+  className = "",
+  searchable,
+  onSearchChange,
+  searchValue,
+  onLoadMore,
+  loading = false,
 }) => {
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
 
   const selected = options.find((o) => o.value === value);
 
@@ -44,13 +58,28 @@ const FormSelectCustom: React.FC<FormSelectProps> = ({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  // Autofocus input when opened
+  useEffect(() => {
+    if (open && searchable && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [open, searchable]);
+
+  const handleScroll = (e: React.UIEvent<HTMLUListElement>) => {
+    if (!onLoadMore || loading) return;
+    const { scrollTop, clientHeight, scrollHeight } = e.currentTarget;
+    if (scrollTop + clientHeight >= scrollHeight - 10) {
+      onLoadMore();
+    }
+  };
+
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-1.5" ref={wrapperRef}>
       {label && (
         <label className="text-sm font-bold text-slate-700 ml-1">{label}</label>
       )}
 
-      <div className="relative" ref={wrapperRef}>
+      <div className="relative">
         {/* Trigger */}
         <button
           type="button"
@@ -67,13 +96,18 @@ const FormSelectCustom: React.FC<FormSelectProps> = ({
             focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-red-500
             disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed
             transition-all duration-200
+            ${className}
           `}
         >
-          <span className={selected ? "text-slate-700" : "text-slate-400"}>
+          <span
+            className={`truncate ${
+              selected ? "text-slate-700 font-medium" : "text-slate-400"
+            }`}
+          >
             {selected?.label || placeholder}
           </span>
           <ChevronDownIcon
-            className={`w-5 h-5 transition-transform ml-2 ${
+            className={`w-5 h-5 transition-transform ml-2 shrink-0 ${
               open ? "rotate-180" : ""
             } ${disabled ? "text-slate-300" : ""}`}
           />
@@ -81,30 +115,72 @@ const FormSelectCustom: React.FC<FormSelectProps> = ({
 
         {/* Dropdown */}
         {open && (
-          <ul
+          <div
             className="
           absolute z-50 mt-2 w-full
-          max-h-60 overflow-auto
           rounded-xl border border-slate-200
-          bg-white shadow-lg
+          bg-white shadow-xl overflow-hidden
+          animate-in fade-in zoom-in-95 duration-200
         "
           >
-            {options.map((opt) => (
-              <li
-                key={opt.value}
-                onClick={() => {
-                  onChange?.(opt.value);
-                  setOpen(false);
-                }}
-                className="
-              px-4 py-2 text-sm cursor-pointer
-              hover:bg-red-50 hover:text-red-600
-            "
-              >
-                {opt.label}
-              </li>
-            ))}
-          </ul>
+            {searchable && (
+              <div className="p-2 border-b border-slate-100 bg-slate-50/50">
+                <div className="relative">
+                  <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-all"
+                    placeholder="Tìm kiếm..."
+                    value={searchValue}
+                    onChange={(e) => onSearchChange?.(e.target.value)}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </div>
+              </div>
+            )}
+            <ul
+              ref={listRef}
+              onScroll={handleScroll}
+              className="max-h-60 overflow-y-auto custom-scrollbar p-1"
+            >
+              {!searchable && options.length === 0 && (
+                <li className="px-4 py-3 text-sm text-slate-400 text-center italic">
+                  Không có tùy chọn
+                </li>
+              )}
+              {searchable && options.length === 0 && !loading && (
+                <li className="px-4 py-3 text-sm text-slate-400 text-center italic">
+                  Không tìm thấy kết quả
+                </li>
+              )}
+              {options.map((opt) => (
+                <li
+                  key={opt.value}
+                  onClick={() => {
+                    onChange?.(opt.value);
+                    setOpen(false);
+                  }}
+                  className={`
+                    px-4 py-2 text-sm cursor-pointer rounded-lg
+                    hover:bg-red-50 hover:text-red-700 transition-colors
+                    ${
+                      value === opt.value
+                        ? "bg-red-50 text-red-700 font-bold"
+                        : "text-slate-600"
+                    }
+                  `}
+                >
+                  {opt.label}
+                </li>
+              ))}
+              {loading && (
+                <li className="px-4 py-2 text-center text-slate-400 text-xs flex justify-center">
+                  <span className="w-4 h-4 border-2 border-red-200 border-t-red-600 rounded-full animate-spin"></span>
+                </li>
+              )}
+            </ul>
+          </div>
         )}
       </div>
 

@@ -10,6 +10,12 @@ interface Stats {
   levelStats: Array<{ name: string; count: number }>;
   typeStats: Array<{ name: string; count: number }>;
   recentIdioms: any[];
+  contentHealth: {
+    missingExamples: number;
+    missingImages: number;
+    missingOrigin: number;
+  };
+  hotKeywords: Array<{ query: string; count: number }>;
   [key: string]: any;
 }
 

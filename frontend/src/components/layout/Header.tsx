@@ -40,13 +40,13 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
 
   return (
     <header
-      className={`py-2 px-3 md:py-3 md:px-6 sticky top-0 z-[60] transition-all duration-300 ${
+      className={`py-1.5 px-3 md:py-2 md:px-5 sticky top-0 z-[60] transition-all duration-300 ${
         isHome
           ? "bg-transparent border-transparent"
           : "bg-white/80 backdrop-blur-xl border-b border-slate-100 shadow-sm"
       }`}
     >
-      <div className="container mx-auto flex justify-between items-center">
+      <div className="max-w-6xl mx-auto flex justify-between items-center">
         <div className="flex items-center gap-2 md:gap-4">
           {shouldShowBackButton && (
             <button

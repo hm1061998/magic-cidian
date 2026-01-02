@@ -5,7 +5,7 @@ import {
   SavedIdiomEntity,
   SRSProgressEntity,
   HistoryEntity,
-} from 'src/user-data/entities/user-data.entities';
+} from 'src/user-data/entities/user-data.entity';
 import { IdiomEntity } from 'src/idioms/entities/idiom.entity';
 
 @Injectable()
@@ -39,11 +39,11 @@ export class UserDataService {
     }
   }
 
-  async isSaved(userId: string, idiomId: string): Promise<boolean> {
+  async isSaved(userId: string, idiomId: string) {
     const count = await this.savedRepository.count({
       where: { user: { id: userId }, idiom: { id: idiomId } },
     });
-    return count > 0;
+    return { isSaved: count > 0 };
   }
 
   async getSavedIdioms(userId: string, page: number = 1, limit: number = 12) {

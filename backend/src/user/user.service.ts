@@ -1,11 +1,12 @@
 import {
   Injectable,
   BadRequestException,
-  NotFoundException,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { UserEntity } from './entities/user.entities';
+import { UserEntity } from './entities/user.entity';
 import { comparePasswords, hashPassword } from '../auth/utils/crypto.utils';
 
 @Injectable()
@@ -17,7 +18,11 @@ export class UserService {
 
   async findOne(id: string): Promise<UserEntity> {
     const user = await this.userRepository.findOne({ where: { id } });
-    if (!user) throw new NotFoundException('Người dùng không tồn tại');
+    if (!user)
+      throw new HttpException(
+        'Người dùng không tồn tại',
+        HttpStatus.BAD_REQUEST,
+      );
     return user;
   }
 
@@ -37,7 +42,11 @@ export class UserService {
       select: ['id', 'password'],
     });
 
-    if (!user) throw new NotFoundException('Người dùng không tồn tại');
+    if (!user)
+      throw new HttpException(
+        'Người dùng không tồn tại',
+        HttpStatus.BAD_REQUEST,
+      );
 
     const isMatch = await comparePasswords(passData.oldPass, user.password);
     if (!isMatch) throw new BadRequestException('Mật khẩu cũ không chính xác');

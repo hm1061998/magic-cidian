@@ -6,7 +6,7 @@ import {
   SavedIdiomEntity,
   SRSProgressEntity,
   HistoryEntity,
-} from 'src/user-data/entities/user-data.entities';
+} from 'src/user-data/entities/user-data.entity';
 import { IdiomEntity } from 'src/idioms/entities/idiom.entity';
 
 @Module({

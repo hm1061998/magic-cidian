@@ -17,13 +17,15 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { AuthModule } from './auth/auth.module';
 import { HealthController } from './health.controller';
-import { UserEntity } from './user/entities/user.entities';
+import { UserEntity } from './user/entities/user.entity';
 import {
   HistoryEntity,
   SavedIdiomEntity,
   SRSProgressEntity,
-} from './user-data/entities/user-data.entities';
+} from './user-data/entities/user-data.entity';
 import { UserDataModule } from './user-data/user-data.module';
+import { IdiomCommentsModule } from './idiom-comments/idiom-comments.module';
+import { IdiomCommentEntity } from './idiom-comments/entities/idiom-comment.entity';
 
 const isProd = process.env.NODE_ENV === 'production';
 @Module({
@@ -46,6 +48,7 @@ const isProd = process.env.NODE_ENV === 'production';
           SavedIdiomEntity,
           SRSProgressEntity,
           HistoryEntity,
+          IdiomCommentEntity,
         ],
         synchronize: true, // Lưu ý: Chỉ dùng true cho môi trường Dev để tự tạo bảng
         autoLoadEntities: true,
@@ -56,6 +59,7 @@ const isProd = process.env.NODE_ENV === 'production';
     AuthModule,
     UserDataModule,
     UserModule,
+    IdiomCommentsModule,
     ...(isProd
       ? [
           ServeStaticModule.forRoot({

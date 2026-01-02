@@ -7,7 +7,7 @@ import {
   Index,
   CreateDateColumn,
 } from 'typeorm';
-import { UserEntity } from '../../user/entities/user.entities';
+import { UserEntity } from '../../user/entities/user.entity';
 import { IdiomEntity } from '../../idioms/entities/idiom.entity';
 
 @Entity('saved_idioms')

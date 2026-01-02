@@ -8,7 +8,7 @@ import {
 import {
   SavedIdiomEntity,
   SRSProgressEntity,
-} from '../../user-data/entities/user-data.entities';
+} from '../../user-data/entities/user-data.entity';
 
 @Entity('users')
 export class UserEntity {

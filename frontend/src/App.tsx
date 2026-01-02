@@ -15,7 +15,8 @@ import WordSearchGame from "@/pages/WordSearchGame";
 import HistoryList from "@/pages/HistoryList";
 import Profile from "@/pages/Profile";
 import Dashboard from "@/pages/Admin/Dashboard";
-import { addToHistory } from "@/services/api/idiomService";
+import AdminComments from "@/views/AdminComments";
+import { addToLocalHistory } from "@/services/api";
 import Auth from "@/pages/Auth";
 import RequireAuth from "@/context/RequireAuth";
 import AdminLayout from "@/layouts/AdminLayout";
@@ -65,7 +66,7 @@ const App: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
 
   React.useEffect(() => {
-    document.title = `${__APP_NAME__} - Học Quán Dụng Ngữ Thông Minh`;
+    document.title = `${__APP_NAME__} - Từ điển Tra cứu & Học tập Quán dụng ngữ`;
     const hasHint = localStorage.getItem("auth_hint") === "true";
     if (hasHint) {
       dispatch(fetchCurrentUser());
@@ -104,7 +105,7 @@ const App: React.FC = () => {
                 <HistoryList
                   onBack={() => navigate("/")}
                   onSelect={(idiom) => {
-                    addToHistory(idiom);
+                    addToLocalHistory(idiom);
                     navigate(`/?query=${encodeURIComponent(idiom.hanzi)}`);
                   }}
                 />
@@ -143,6 +144,7 @@ const App: React.FC = () => {
                 <AdminInsert onBack={() => navigate("/admin/idiom/list")} />
               }
             />
+            <Route path="comments" element={<AdminComments />} />
           </Route>
         </Route>
       </Routes>

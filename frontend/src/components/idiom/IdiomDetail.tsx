@@ -9,47 +9,51 @@ import {
   PencilIcon,
   SpeakerWaveIcon,
   SpinnerIcon,
+  ChevronRightIcon,
+  CheckCircleIcon,
 } from "@/components/common/icons";
 import IdiomComments from "./IdiomComments";
 import { toast } from "@/services/ui/toastService";
 import {
   checkSavedStatus,
-  fetchSavedIdioms,
   toggleSaveIdiom,
   updateSRSProgress,
 } from "@/services/api/userDataService";
 
 interface IdiomDetailProps {
   idiom: Idiom;
-  isLoggedIn: boolean; // Added prop
-  isPremium: boolean; // Added prop
+  isLoggedIn: boolean;
+  isPremium: boolean;
 }
 
-const Section: React.FC<{
+const InfoCard: React.FC<{
   title: string;
+  icon?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
-  style?: React.CSSProperties;
-}> = ({ title, children, className, style }) => (
-  <div className={`mb-6 md:mb-8 ${className || ""}`} style={style}>
-    <h3 className="font-hanzi text-lg md:text-xl font-bold text-red-700 border-b border-red-200 pb-2 mb-3 md:mb-4">
-      {title}
-    </h3>
-    <div className="text-slate-700 leading-relaxed text-sm md:text-base">
+}> = ({ title, icon, children, className }) => (
+  <div
+    className={`bg-white rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 ${
+      className || ""
+    }`}
+  >
+    <div className="flex items-center gap-3 mb-4 md:mb-6">
+      {icon && (
+        <div className="p-2 bg-red-50 rounded-xl text-red-600 shrink-0">
+          {React.cloneElement(icon as React.ReactElement, {
+            className: "w-5 h-5 md:w-6 md:h-6",
+          })}
+        </div>
+      )}
+      <h3 className="text-lg md:text-xl font-hanzi font-black text-slate-800 tracking-tight">
+        {title}
+      </h3>
+    </div>
+    <div className="text-slate-600 leading-relaxed text-sm md:text-[15px] font-medium">
       {children}
     </div>
   </div>
 );
-
-const getTypeColor = (type: string) => {
-  const t = type.toLowerCase();
-  if (t.includes("thành ngữ")) return "bg-red-100 text-red-800 border-red-200";
-  if (t.includes("lóng") || t.includes("mạng"))
-    return "bg-purple-100 text-purple-800 border-purple-200";
-  if (t.includes("quán dụng"))
-    return "bg-blue-100 text-blue-800 border-blue-200";
-  return "bg-amber-100 text-amber-800 border-amber-200";
-};
 
 const IdiomDetail: React.FC<IdiomDetailProps> = ({
   idiom,
@@ -80,9 +84,7 @@ const IdiomDetail: React.FC<IdiomDetailProps> = ({
     }
 
     if (!idiom.id) {
-      toast.info(
-        "Không thể lưu từ chưa có trong hệ thống. Hãy thử tìm từ khác hoặc liên hệ admin."
-      );
+      toast.info("Không thể lưu từ chưa có trong hệ thống.");
       return;
     }
 
@@ -91,12 +93,12 @@ const IdiomDetail: React.FC<IdiomDetailProps> = ({
       const result = await toggleSaveIdiom(idiom.id);
       setIsSaved(result.saved);
       if (result.saved) {
-        toast.success(`Đã lưu "${idiom.hanzi}" vào thư viện cá nhân!`);
+        toast.success(`Đã lưu "${idiom.hanzi}" vào thư viện!`);
       } else {
         toast.info(`Đã bỏ lưu "${idiom.hanzi}"`);
       }
     } catch (e) {
-      toast.error("Lỗi đồng bộ dữ liệu. Vui lòng thử lại.");
+      toast.error("Lỗi đồng bộ dữ liệu.");
     } finally {
       setIsSyncing(false);
     }
@@ -104,18 +106,15 @@ const IdiomDetail: React.FC<IdiomDetailProps> = ({
 
   const handleSpeak = () => {
     if ("speechSynthesis" in window) {
-      window.speechSynthesis.cancel(); // Stop previous utterance
+      window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(idiom.hanzi);
       utterance.lang = "zh-CN";
       utterance.rate = 0.8;
-
-      // Attempt to pick a Chinese voice
       const voices = window.speechSynthesis.getVoices();
       const chineseVoice = voices.find(
         (v) => v.lang.includes("zh") || v.lang.includes("CN")
       );
       if (chineseVoice) utterance.voice = chineseVoice;
-
       window.speechSynthesis.speak(utterance);
     } else {
       toast.error("Trình duyệt không hỗ trợ đọc văn bản.");
@@ -131,7 +130,6 @@ const IdiomDetail: React.FC<IdiomDetailProps> = ({
       toast.info("Từ này đã có trong bộ thẻ ghi nhớ của bạn rồi!");
       return;
     }
-    // Nếu chưa lưu thì lưu lại
     await handleToggleSave();
   };
 
@@ -143,295 +141,326 @@ const IdiomDetail: React.FC<IdiomDetailProps> = ({
     if (!idiom.id) return;
 
     try {
-      // Reset về trạng thái mới: interval=0, repetition=0, ef=2.5, nextReview=now
       await updateSRSProgress(idiom.id, {
         interval: 0,
         repetition: 0,
-        easeFactor: 2.5,
+        efactor: 2.5,
         nextReviewDate: Date.now().toString(),
       });
-      toast.success(
-        "Đã cài đặt lại tiến độ. Từ này sẽ xuất hiện ngay trong bài ôn tập tới!"
-      );
+      toast.success("Đã cài đặt lại tiến độ học tập!");
     } catch (e) {
       toast.error("Không thể cập nhật tiến độ học.");
     }
   };
 
-  return (
-    <div className="max-w-4xl mx-auto pb-12 animate-[fadeInUp_0.4s_ease-out]">
-      {/* Header Section */}
-      <div className="bg-white/60 backdrop-blur-md p-6 md:p-8 rounded-2xl shadow-sm border border-slate-200 mb-6 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-1 h-full bg-red-600"></div>
+  const scrollToComments = () => {
+    const section = document.getElementById("discussion-section");
+    if (section) {
+      section.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-4xl md:text-5xl font-hanzi font-bold text-slate-800 tracking-wide">
-                {idiom.hanzi}
-              </h1>
-              {/* <span
-                className={`text-xs px-2 py-1 rounded-full border ${getTypeColor(
-                  idiom.type
-                )}`}
-              >
-                {idiom.type}
-              </span> */}
+  return (
+    <div className="max-w-6xl mx-auto pb-8 md:pb-12 animate-[fadeInUp_0.4s_ease-out] px-4">
+      {/* Hero Header Section */}
+      <div className="relative mb-5 md:mb-8 group mt-3 md:mt-5">
+        {/* Background Decor */}
+        <div className="absolute -top-10 -left-10 w-48 md:w-64 h-48 md:h-64 bg-red-500/5 rounded-full blur-3xl group-hover:bg-red-500/10 transition-colors duration-700"></div>
+        <div className="absolute -bottom-10 -right-10 w-64 md:w-96 h-64 md:h-96 bg-indigo-500/5 rounded-full blur-3xl group-hover:bg-indigo-500/10 transition-colors duration-700"></div>
+
+        <div className="relative bg-white/70 backdrop-blur-2xl rounded-2xl md:rounded-[2rem] p-5 md:p-8 border border-white shadow-[0_20px_50px_rgba(0,0,0,0.05)] overflow-hidden">
+          <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-start md:items-center">
+            {/* Hanzi Visual */}
+            <div className="flex-1 space-y-4 w-full">
+              <div className="flex items-center justify-between md:justify-start gap-4">
+                <h1 className="text-5xl sm:text-7xl md:text-8xl font-hanzi font-black text-slate-800 tracking-tighter drop-shadow-sm leading-tight">
+                  {idiom.hanzi}
+                </h1>
+                <button
+                  onClick={handleSpeak}
+                  className="w-12 h-12 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-slate-50 text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all duration-300 flex items-center justify-center shrink-0 group/voice"
+                >
+                  <SpeakerWaveIcon className="w-6 h-6 md:w-8 md:h-8 group-hover/voice:scale-110 transition-transform" />
+                </button>
+              </div>
+
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6">
+                <p className="text-2xl md:text-4xl text-red-600 font-black font-sans tracking-widest bg-red-50 px-3 md:px-4 py-1 rounded-xl md:rounded-2xl border border-red-100/50 w-fit">
+                  {idiom.pinyin}
+                </p>
+                <div className="h-6 w-px bg-slate-200 hidden sm:block"></div>
+                <p className="text-xl md:text-3xl font-black text-slate-700 tracking-tight leading-tight">
+                  {idiom.vietnameseMeaning}
+                </p>
+              </div>
+
+              {idiom.usageContext && (
+                <div className="flex items-center gap-2 pt-1 md:pt-2">
+                  <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-slate-400">
+                    Ngữ cảnh
+                  </span>
+                  <span className="px-2.5 py-0.5 md:px-3 md:py-1 bg-white border border-slate-100 text-indigo-600 text-[10px] md:text-[11px] font-black rounded-full shadow-sm uppercase whitespace-nowrap">
+                    {idiom.usageContext}
+                  </span>
+                </div>
+              )}
             </div>
-            {/* Main Pinyin Display & Speak Button */}
-            <div className="flex items-center gap-2">
-              {/* Modified for Pinyin clarity: font-sans, wider tracking */}
-              <p className="text-xl md:text-2xl text-red-600 font-medium font-sans tracking-wider">
-                {idiom.pinyin}
-              </p>
+
+            {/* Functional Actions */}
+            <div className="flex flex-row md:flex-col gap-3 w-full md:w-auto">
               <button
-                onClick={handleSpeak}
-                className="p-2 rounded-full text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                title="Nghe phát âm"
+                onClick={handleToggleSave}
+                disabled={isSyncing}
+                className={`flex-1 md:w-48 h-14 md:h-16 rounded-xl md:rounded-2xl border-2 flex items-center justify-center gap-2 md:gap-3 font-black text-sm md:text-base transition-all active:scale-95 ${
+                  isSaved
+                    ? "bg-red-50 border-red-200 text-red-600 shadow-xl shadow-red-500/10"
+                    : "bg-white border-slate-100 text-slate-400 hover:border-red-200 hover:text-red-600"
+                }`}
               >
-                <SpeakerWaveIcon className="w-6 h-6" />
+                {isSyncing ? (
+                  <SpinnerIcon className="w-5 h-5 md:w-6 md:h-6 animate-spin" />
+                ) : (
+                  <>
+                    <BookmarkIcon
+                      className={`w-5 h-5 md:w-6 md:h-6 ${
+                        isSaved ? "fill-current" : ""
+                      }`}
+                    />
+                    <span>{isSaved ? "Đã lưu" : "Lưu từ"}</span>
+                  </>
+                )}
+              </button>
+              <button
+                onClick={scrollToComments}
+                className="flex-1 md:w-48 h-14 md:h-16 bg-slate-900 text-white rounded-xl md:rounded-2xl flex items-center justify-center gap-2 md:gap-3 font-black text-sm md:text-base shadow-xl shadow-slate-900/20 hover:bg-slate-800 transition-all active:scale-95 group"
+              >
+                <span>Góp ý</span>
+                <PencilIcon className="w-3.5 h-3.5 md:w-4 md:h-4 text-white/50 group-hover:text-white transition-colors" />
               </button>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={handleToggleSave}
-              disabled={isSyncing}
-              className={`p-3 rounded-xl border shadow-sm transition-all group ${
-                isSaved
-                  ? "bg-red-50 border-red-200 text-red-600"
-                  : "bg-white border-slate-200 text-slate-400 hover:text-red-500"
-              }`}
-            >
-              {isSyncing ? (
-                <SpinnerIcon className="w-6 h-6" />
-              ) : (
-                <BookmarkIcon
-                  className={`w-6 h-6 ${isSaved ? "fill-current" : ""}`}
-                />
-              )}
-            </button>
-          </div>
-        </div>
-
-        {(idiom.literalMeaning || idiom.figurativeMeaning) && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h3 className="text-slate-500 text-sm uppercase tracking-wider mb-1 font-semibold">
-                Nghĩa đen
-              </h3>
-              <p className="text-slate-800 font-medium text-lg">
-                {idiom.literalMeaning}
+          {/* Meanings Strip */}
+          <div className="mt-6 md:mt-10 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 pt-5 md:pt-7 border-t border-slate-100/50">
+            <div className="space-y-1 md:space-y-2">
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                Nghĩa Trung
+              </span>
+              <p className="text-base md:text-lg font-bold text-slate-800 leading-relaxed">
+                {idiom.chineseDefinition}
               </p>
             </div>
-            <div>
-              <h3 className="text-slate-500 text-sm uppercase tracking-wider mb-1 font-semibold">
-                Nghĩa bóng / Thực tế
-              </h3>
-              <p className="text-slate-800 font-medium text-lg">
-                {idiom.figurativeMeaning}
+            <div className="space-y-1 md:space-y-2">
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                Giải nghĩa bóng
+              </span>
+              <p className="text-base md:text-lg font-bold text-slate-800 italic leading-relaxed">
+                "{idiom.figurativeMeaning || idiom.literalMeaning}"
               </p>
             </div>
           </div>
-        )}
-
-        {/* Usage Context Badge if available */}
-        {idiom.usageContext && (
-          <div className="mt-4 pt-4 border-t border-slate-100">
-            <span className="text-sm text-slate-500 mr-2 font-semibold">
-              Ngữ cảnh:
-            </span>
-            <span className="text-sm text-purple-700 bg-purple-50 px-2 py-1 rounded-md">
-              {idiom.usageContext}
-            </span>
-          </div>
-        )}
-
-        {/* Vietnamese Meaning (Translation) */}
-        <div className="mt-3">
-          <span className="text-sm text-slate-500 mr-2 font-semibold">
-            Nghĩa tiếng Việt:
-          </span>
-          <span className="text-lg font-bold text-slate-800">
-            {idiom.vietnameseMeaning}
-          </span>
         </div>
-        <div className="mt-3">
-          <span className="text-sm text-slate-500 mr-2 font-semibold">
-            Nghĩa tiếng Trung:
-          </span>
-          <span className="text-lg font-bold text-slate-800">
-            {idiom.chineseDefinition}
-          </span>
-        </div>
-
-        {idiom.imageUrl && (
-          <div className="mt-6 w-full rounded-xl overflow-hidden border border-slate-100 shadow-sm relative group">
-            <img
-              src={idiom.imageUrl}
-              alt={`Minh họa cho ${idiom.hanzi}`}
-              className="w-full h-auto object-cover max-h-[300px] transition-transform duration-700 group-hover:scale-105"
-            />
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity">
-              <p className="text-white text-xs text-center">
-                Hình ảnh minh họa
-              </p>
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* Content Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column: Analysis & Origin */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-slate-200">
-            {idiom.analysis?.length > 0 && (
-              <Section title="Phân tích chi tiết">
-                <div className="flex flex-wrap gap-4 justify-center md:justify-start">
-                  {idiom.analysis.map((char, index) => (
-                    <div
-                      key={index}
-                      className="flex flex-col items-center group"
-                    >
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 md:gap-8">
+        {/* Main Content Area */}
+        <div className="xl:col-span-8 space-y-6 md:space-y-8">
+          {/* Detailed Analysis Section */}
+          {idiom.analysis?.length > 0 && (
+            <div className="bg-white rounded-[1.5rem] md:rounded-[2rem] p-5 md:p-8 border border-slate-100 shadow-sm relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-red-50 rounded-full -mr-16 -mt-16 opacity-50"></div>
+
+              <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-8">
+                <div className="w-1.5 md:w-2 h-6 md:h-8 bg-red-600 rounded-full"></div>
+                <h3 className="text-xl md:text-2xl font-hanzi font-black text-slate-800">
+                  Phân tích chi tiết
+                </h3>
+              </div>
+
+              <div className="flex flex-wrap gap-6 sm:gap-10 md:gap-14 justify-center md:justify-start">
+                {idiom.analysis.map((char, index) => (
+                  <div
+                    key={index}
+                    className="flex flex-col items-center group/char scale-90 sm:scale-100"
+                  >
+                    <div className="relative">
                       <WritingGrid character={char.character} />
-                      <div className="mt-2 text-center">
-                        {/* Character Pinyin: font-sans for better tone mark rendering, wide tracking */}
-                        <p className="text-red-600 font-semibold text-base font-sans tracking-wide">
-                          {char.pinyin}
-                        </p>
-                        <p className="text-slate-600 text-xs mt-0.5 max-w-[80px] truncate">
-                          {char.meaning}
-                        </p>
+                      <div className="absolute -bottom-1 -right-1 w-6 h-6 md:w-8 md:h-8 bg-white border border-slate-100 rounded-lg md:rounded-xl flex items-center justify-center shadow-lg">
+                        <span className="text-[10px] md:text-xs font-black text-red-600">
+                          {index + 1}
+                        </span>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </Section>
-            )}
-
-            <Section title="Nguồn gốc & Điển tích">
-              <p>{idiom.origin}</p>
-            </Section>
-
-            <Section title="Cách dùng & Ngữ pháp">
-              <p>{idiom.grammar}</p>
-            </Section>
-          </div>
-
-          <div className="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-slate-200">
-            <Section title="Ví dụ minh họa" className="mb-0">
-              <div className="space-y-4">
-                {idiom.examples.map((ex, idx) => (
-                  <div
-                    key={idx}
-                    className="bg-slate-50 p-4 rounded-lg border border-slate-100 hover:border-amber-200 transition-colors"
-                  >
-                    <p className="text-lg font-hanzi text-slate-800 mb-2">
-                      {ex.chinese}
-                    </p>
-                    {/* Example Pinyin: font-sans, tracking-wide, leading-loose (more vertical space) for perfect tone display */}
-                    <p className="text-base text-slate-600 mb-2 font-sans tracking-wide leading-loose">
-                      {ex.pinyin}
-                    </p>
-                    <p className="text-slate-700 border-l-2 border-red-400 pl-3">
-                      {ex.vietnamese}
-                    </p>
+                    <div className="mt-4 md:mt-6 text-center">
+                      <p className="text-red-600 font-black text-lg md:text-xl font-sans tracking-widest mb-0.5 md:mb-1">
+                        {char.pinyin}
+                      </p>
+                      <p className="text-slate-500 text-xs md:text-sm font-bold max-w-[80px] md:max-w-[100px] leading-tight">
+                        {char.meaning}
+                      </p>
+                    </div>
                   </div>
                 ))}
               </div>
-            </Section>
-          </div>
-        </div>
-
-        {/* Right Column: Actions & Comments */}
-        <div className="space-y-6">
-          {/* Action Cards */}
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-            <h3 className="font-bold text-slate-800 mb-4 flex items-center">
-              <VideoIcon className="w-5 h-5 mr-2 text-amber-500" />
-              Góc học tập
-            </h3>
-
-            <div className="space-y-3">
-              <button
-                onClick={handleAddToFlashcard}
-                className="w-full flex items-center justify-center space-x-2 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all shadow-md active:scale-95 group"
-              >
-                <CardIcon className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-                <span>Thêm vào Flashcard</span>
-              </button>
-
-              <button
-                onClick={handleStudyAgain}
-                className="w-full flex items-center justify-center space-x-2 py-3 bg-white border-2 border-amber-400 text-amber-600 rounded-lg hover:bg-amber-50 transition-all shadow-sm active:scale-95 group"
-              >
-                <RefreshIcon className="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" />
-                <span>Học lại</span>
-              </button>
-
-              <button
-                disabled={!idiom.videoUrl}
-                className={`w-full py-3 bg-slate-100 text-slate-600 rounded-lg transition-colors text-sm ${
-                  !idiom.videoUrl
-                    ? "opacity-50 cursor-not-allowed disabled"
-                    : "hover:bg-slate-200"
-                }`}
-              >
-                <a
-                  href={idiom.videoUrl ? idiom.videoUrl : undefined}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`w-full h-full`}
-                >
-                  {`Xem video giải thích ${idiom.videoUrl ? "" : "(Sắp có)"}`}
-                </a>
-              </button>
             </div>
-          </div>
+          )}
 
-          {/* Personal Notes Section */}
-          {/* <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-            <h3 className="font-bold text-slate-800 mb-4 flex items-center">
-              <PencilIcon className="w-5 h-5 mr-2 text-blue-500" />
-              Ghi chú của bạn
-            </h3>
-
-            {!isLoggedIn ? (
-              <div className="text-center py-6 px-4 bg-slate-50 rounded-lg border border-dashed border-slate-300">
-                <p className="text-slate-500 text-sm">
-                  Đăng nhập để tạo ghi chú riêng cho từ này.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <textarea
-                  value={userNote}
-                  onChange={(e) => setUserNote(e.target.value)}
-                  placeholder="Viết ghi chú cá nhân tại đây (ví dụ: cách nhớ, bối cảnh đã gặp...)"
-                  className="w-full h-32 p-3 bg-slate-50 border border-slate-200 rounded-lg text-slate-700 text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none resize-none transition-all placeholder-slate-400"
+          {/* Illustration Section */}
+          {idiom.imageUrl && (
+            <div className="bg-white rounded-[1.5rem] md:rounded-[2rem] overflow-hidden border border-slate-100 shadow-sm group">
+              <div className="relative aspect-[4/3] sm:aspect-[16/7] md:aspect-[21/9]">
+                <img
+                  src={idiom.imageUrl}
+                  className="w-full h-full object-cover"
+                  alt={idiom.hanzi}
                 />
-                <div className="flex justify-end">
-                  <button
-                    onClick={handleSaveNote}
-                    className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={!userNote.trim()}
-                  >
-                    Lưu ghi chú
-                  </button>
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent"></div>
+                <div className="absolute bottom-4 md:bottom-6 left-4 md:left-8 flex items-center gap-2 md:gap-3">
+                  <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/20">
+                    <CheckCircleIcon className="w-5 h-5 md:w-6 md:h-6" />
+                  </div>
+                  <span className="text-white font-black text-xs md:text-sm tracking-wide">
+                    Minh họa trực quan
+                  </span>
                 </div>
               </div>
-            )}
-          </div> */}
+            </div>
+          )}
 
-          {/* Comments Section */}
-          {/* <IdiomComments
-            idiomHanzi={idiom.hanzi}
-            isLoggedIn={isLoggedIn}
-            isPremium={isPremium}
-          /> */}
+          {/* Origin & Grammar Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+            <InfoCard
+              title="Điển tích"
+              className="md:order-1"
+              icon={<ChevronRightIcon />}
+            >
+              {idiom.origin}
+            </InfoCard>
+            <InfoCard
+              title="Ngữ pháp"
+              className="md:order-2"
+              icon={<PencilIcon />}
+            >
+              {idiom.grammar}
+            </InfoCard>
+          </div>
+
+          {/* Examples Section */}
+          <div className="bg-slate-900 rounded-[1.5rem] md:rounded-[2rem] p-5 md:p-10 text-white shadow-2xl shadow-slate-900/20 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-48 md:w-64 h-48 md:h-64 bg-red-600/10 rounded-full blur-3xl -mr-24 md:-mr-32 -mt-24 md:-mt-32"></div>
+
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 md:mb-10">
+              <div className="flex items-center gap-3 md:gap-4">
+                <div className="w-1.5 md:w-2 h-6 md:h-8 bg-red-600 rounded-full text-sm md:text-base"></div>
+                <h3 className="text-xl md:text-3xl font-hanzi font-black">
+                  Ví dụ minh họa
+                </h3>
+              </div>
+              <div className="bg-white/5 border border-white/10 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-white/40 w-fit">
+                Ứng dụng
+              </div>
+            </div>
+
+            <div className="space-y-6 md:space-y-8">
+              {idiom.examples.map((ex, idx) => (
+                <div key={idx} className="relative pl-6 md:pl-10 group/ex">
+                  <div className="absolute left-0 top-0 w-px h-full bg-white/10"></div>
+                  <div className="absolute left-[-3px] md:left-[-4px] top-0 w-1.5 md:w-2 h-1.5 md:h-2 rounded-full bg-red-600 shadow-[0_0_15px_rgba(220,38,38,0.5)]"></div>
+
+                  <div className="space-y-3 md:space-y-4">
+                    <p className="text-xl md:text-3xl font-hanzi font-medium leading-relaxed">
+                      {ex.chinese}
+                    </p>
+                    <p className="text-red-400 font-black font-sans tracking-widest text-xs md:text-sm uppercase opacity-60">
+                      {ex.pinyin}
+                    </p>
+                    <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
+                      <p className="text-white/70 text-sm md:text-base font-medium italic">
+                        "{ex.vietnamese}"
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
+
+        {/* Action Sidebar - Mobile bottom, XL side */}
+        <div className="xl:col-span-4 mt-2 md:mt-0">
+          <div className="xl:sticky xl:top-24 space-y-4 md:space-y-6">
+            <div className="bg-white border border-slate-100 rounded-[1.5rem] md:rounded-[2rem] p-5 md:p-7 shadow-sm">
+              <div className="flex items-center gap-3 mb-5 md:mb-7">
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-amber-50 rounded-xl md:rounded-2xl flex items-center justify-center text-amber-500 shadow-inner">
+                  <VideoIcon className="w-5 h-5 md:w-6 md:h-6" />
+                </div>
+                <h4 className="text-xl md:text-2xl font-black text-slate-800 tracking-tight">
+                  Góc học tập
+                </h4>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-3 md:gap-4">
+                <button
+                  onClick={handleAddToFlashcard}
+                  className="w-full h-14 md:h-16 bg-red-600 text-white rounded-xl md:rounded-2xl flex items-center justify-center gap-3 font-black text-sm hover:bg-red-700 transition-all shadow-xl shadow-red-600/20 active:scale-95"
+                >
+                  <CardIcon className="w-5 h-5" />
+                  <span>Flashcard</span>
+                </button>
+
+                <button
+                  onClick={handleStudyAgain}
+                  className="w-full h-14 md:h-16 bg-white border-2 border-amber-400 text-amber-600 rounded-xl md:rounded-2xl flex items-center justify-center gap-3 font-black text-sm hover:bg-amber-50 transition-all active:scale-95"
+                >
+                  <RefreshIcon className="w-5 h-5" />
+                  <span>Học lại</span>
+                </button>
+
+                <button
+                  disabled={!idiom.videoUrl}
+                  className={`w-full h-14 md:h-16 rounded-xl md:rounded-2xl flex items-center justify-center font-black text-sm transition-all sm:col-span-2 xl:col-span-1 ${
+                    !idiom.videoUrl
+                      ? "bg-slate-50 text-slate-300 cursor-not-allowed"
+                      : "bg-indigo-50 text-indigo-600 border border-indigo-100"
+                  }`}
+                >
+                  <a
+                    href={idiom.videoUrl || undefined}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3"
+                  >
+                    <VideoIcon className="w-5 h-5" />
+                    <span>Video HD</span>
+                  </a>
+                </button>
+              </div>
+            </div>
+
+            {/* Learning Tip Card - Simple on mobile */}
+            <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-[1.5rem] md:rounded-[2rem] p-6 md:p-8 text-white relative overflow-hidden shadow-2xl shadow-indigo-600/20">
+              <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+              <h5 className="text-[10px] font-black uppercase tracking-widest text-white/50 mb-2 md:mb-3">
+                Tip học tập
+              </h5>
+              <p className="text-base md:text-lg font-bold leading-relaxed mb-3 md:mb-5">
+                Nhớ lâu hơn 300% với phương pháp{" "}
+                <span className="text-amber-400">Spaced Repetition</span>.
+              </p>
+              <div className="flex items-center gap-2 text-[10px] font-black text-white/40 uppercase">
+                <CheckCircleIcon className="w-4 h-4" /> Hệ thống GYSpace
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Discussion Area */}
+      <div
+        id="discussion-section"
+        className="pt-8 md:pt-10 border-t border-slate-100"
+      >
+        <IdiomComments idiomId={idiom.id} idiomHanzi={idiom.hanzi} />
       </div>
     </div>
   );

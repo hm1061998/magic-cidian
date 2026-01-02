@@ -9,7 +9,7 @@ import {
 } from "@/components/common/icons";
 import type { Idiom } from "@/types";
 import { fetchHistory, clearAllHistory } from "@/services/api/userDataService";
-import { confirmService } from "@/services/ui/confirmService";
+import { modalService } from "@/services/ui/modalService";
 import { toast } from "@/services/ui/toastService";
 
 interface HistoryListProps {
@@ -46,19 +46,16 @@ const HistoryList: React.FC<HistoryListProps> = ({ onBack, onSelect }) => {
   };
 
   const handleClearAll = async () => {
-    confirmService.show({
-      title: "Xóa toàn bộ lịch sử?",
-      message:
-        "Bạn có chắc chắn muốn xóa toàn bộ lịch sử tra cứu? Hành động này không thể hoàn tác.",
-      type: "warning",
-      confirmText: "Xóa tất cả",
-      cancelText: "Hủy",
-      onConfirm: async () => {
-        await clearAllHistory();
-        setHistoryItems([]);
-        toast.info("Đã xóa lịch sử.");
-      },
-    });
+    const confirmed = await modalService.danger(
+      "Bạn có chắc chắn muốn xóa toàn bộ lịch sử tra cứu không? Hành động này không thể hoàn tác.",
+      "Xóa lịch sử"
+    );
+
+    if (confirmed) {
+      await clearAllHistory();
+      setHistoryItems([]);
+      toast.info("Đã xóa lịch sử.");
+    }
   };
 
   const filteredItems = historyItems.filter(

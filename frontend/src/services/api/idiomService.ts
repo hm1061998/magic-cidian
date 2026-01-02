@@ -164,7 +164,11 @@ export const fetchStoredIdioms = async (
   }
 };
 
-export const addToHistory = (idiom: Idiom) => {
+/**
+ * Add idiom to local search history (localStorage)
+ * Note: For server-side history, use userDataService.addToHistory
+ */
+export const addToLocalHistory = (idiom: Idiom) => {
   try {
     const stored = localStorage.getItem("search_history");
     let historyItems: Idiom[] = stored ? JSON.parse(stored) : [];

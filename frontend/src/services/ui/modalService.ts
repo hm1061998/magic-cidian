@@ -1,4 +1,4 @@
-export interface ConfirmOptions {
+export interface ModalOptions {
   title?: string;
   message: string;
   confirmText?: string;
@@ -8,29 +8,29 @@ export interface ConfirmOptions {
   onCancel?: () => void;
 }
 
-export interface ConfirmState {
+export interface ModalState {
   isOpen: boolean;
-  options: ConfirmOptions;
+  options: ModalOptions;
   isProcessing: boolean;
 }
 
-type ConfirmListener = (state: ConfirmState) => void;
+type ModalListener = (state: ModalState) => void;
 type ResolveFunction = (value: boolean) => void;
 
-class ConfirmService {
-  private state: ConfirmState = {
+class ModalService {
+  private state: ModalState = {
     isOpen: false,
     options: { message: "" },
     isProcessing: false,
   };
-  private listeners: ConfirmListener[] = [];
+  private listeners: ModalListener[] = [];
   private resolver: ResolveFunction | null = null;
 
   private notify() {
     this.listeners.forEach((listener) => listener({ ...this.state }));
   }
 
-  subscribe(listener: ConfirmListener) {
+  subscribe(listener: ModalListener) {
     this.listeners.push(listener);
     // Immediately notify with current state
     listener({ ...this.state });
@@ -39,7 +39,7 @@ class ConfirmService {
     };
   }
 
-  show(options: ConfirmOptions): Promise<boolean> {
+  show(options: ModalOptions): Promise<boolean> {
     this.state = {
       isOpen: true,
       options,
@@ -64,7 +64,7 @@ class ConfirmService {
         // Don't close modal on error, let user retry or cancel
         this.state.isProcessing = false;
         this.notify();
-        console.error("Confirm action failed:", error);
+        console.error("Modal action failed:", error);
       }
     } else {
       this.close(true);
@@ -112,15 +112,25 @@ class ConfirmService {
     });
   }
 
-  info(message: string, title?: string): Promise<boolean> {
+  confirm(message: string, title?: string): Promise<boolean> {
     return this.show({
       message,
-      title: title || "Thông báo",
+      title: title || "Xác nhận",
       type: "info",
       confirmText: "Xác nhận",
       cancelText: "Hủy",
     });
   }
+
+  info(message: string, title?: string): Promise<boolean> {
+    return this.show({
+      message,
+      title: title || "Thông báo",
+      type: "info",
+      confirmText: "Đóng",
+      cancelText: "",
+    });
+  }
 }
 
-export const confirmService = new ConfirmService();
+export const modalService = new ModalService();

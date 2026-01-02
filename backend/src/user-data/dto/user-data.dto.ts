@@ -1,8 +1,15 @@
-import { IsNotEmpty, IsString, IsNumber, IsOptional } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsNumber,
+  IsOptional,
+  IsDefined,
+} from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class UpdateSRSDto {
   @IsNotEmpty()
-  @IsString()
+  @Transform(({ value }) => String(value))
   idiomId: string;
 
   @IsNotEmpty()
@@ -13,9 +20,14 @@ export class UpdateSRSDto {
   @IsNumber()
   repetition: number;
 
-  @IsNotEmpty()
+  @IsDefined({ message: 'efactor hoặc easeFactor không được để trống' })
   @IsNumber()
+  @Transform(({ value, obj }) => value ?? obj.easeFactor)
   efactor: number;
+
+  @IsOptional()
+  @IsNumber()
+  easeFactor?: number;
 
   @IsNotEmpty()
   nextReviewDate: string | number;

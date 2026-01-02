@@ -9,31 +9,48 @@ import {
   ArrowLeftIcon,
   MenuIcon,
   CloseIcon,
+  ChatBubbleIcon,
 } from "@/components/common/icons";
+import { fetchCommentStats } from "@/services/api/commentService";
 interface NavItemProps {
   to: string;
   end?: boolean;
   icon: React.ReactNode;
   label: string;
   onClick?: () => void;
+  badge?: number;
 }
 
-const NavItem: React.FC<NavItemProps> = ({ to, end, icon, label, onClick }) => {
+const NavItem: React.FC<NavItemProps> = ({
+  to,
+  end,
+  icon,
+  label,
+  onClick,
+  badge,
+}) => {
   return (
     <NavLink
       to={to}
       end={end}
       onClick={onClick}
       className={({ isActive }) =>
-        `flex items-center space-x-3 px-4 py-3 rounded-xl transition-all font-medium ${
+        `flex items-center justify-between px-4 py-3 rounded-xl transition-all font-medium ${
           isActive
             ? "bg-red-600 text-white shadow-lg shadow-red-900/20"
             : "text-slate-400 hover:bg-slate-800 hover:text-white"
         }`
       }
     >
-      <div className="w-5 h-5">{icon}</div>
-      <span>{label}</span>
+      <div className="flex items-center space-x-3">
+        <div className="w-5 h-5">{icon}</div>
+        <span>{label}</span>
+      </div>
+      {badge !== undefined && badge > 0 && (
+        <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 bg-red-500 text-white text-[10px] font-black rounded-full shadow-lg">
+          {badge > 99 ? "99+" : badge}
+        </span>
+      )}
     </NavLink>
   );
 };
@@ -56,6 +73,23 @@ const AdminLayout: React.FC = () => {
     onBack?: () => void;
     data?: any;
   }>({ title: null });
+
+  const [pendingCount, setPendingCount] = useState(0);
+
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const stats = await fetchCommentStats();
+        setPendingCount(stats.pending);
+      } catch (err) {
+        console.error("Failed to fetch comment stats", err);
+      }
+    };
+
+    loadStats();
+    const timer = setInterval(loadStats, 30000); // Poll every 30s
+    return () => clearInterval(timer);
+  }, []);
 
   // Reset header state and close sidebar on location change
   useEffect(() => {
@@ -80,6 +114,7 @@ const AdminLayout: React.FC = () => {
       return "Thêm từ mới";
     if (location.pathname.startsWith("/admin/idiom/detail"))
       return `Chi tiết từ vựng ${headerState.data?.hanzi}`;
+    if (location.pathname.startsWith("/admin/comments")) return "Quản lý góp ý";
     return "Admin Portal";
   };
 
@@ -144,6 +179,12 @@ const AdminLayout: React.FC = () => {
               to="/admin/idiom/insert"
               icon={<PlusIcon />}
               label="Thêm từ mới"
+            />
+            <NavItem
+              to="/admin/comments"
+              icon={<ChatBubbleIcon />}
+              label="Quản lý góp ý"
+              badge={pendingCount}
             />
           </nav>
         </div>

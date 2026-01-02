@@ -1,0 +1,245 @@
+import {
+  Injectable,
+  HttpException,
+  HttpStatus,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import {
+  IdiomCommentEntity,
+  CommentStatus,
+} from './entities/idiom-comment.entity';
+import { IdiomEntity } from '../idioms/entities/idiom.entity';
+import { UserEntity } from '../user/entities/user.entity';
+import {
+  CreateCommentDto,
+  UpdateCommentStatusDto,
+  CommentQueryDto,
+} from './dto/idiom-comment.dto';
+
+@Injectable()
+export class IdiomCommentsService {
+  constructor(
+    @InjectRepository(IdiomCommentEntity)
+    private commentRepository: Repository<IdiomCommentEntity>,
+    @InjectRepository(IdiomEntity)
+    private idiomRepository: Repository<IdiomEntity>,
+    @InjectRepository(UserEntity)
+    private userRepository: Repository<UserEntity>,
+  ) {}
+
+  async create(createCommentDto: CreateCommentDto, userId: string) {
+    const idiom = await this.idiomRepository.findOne({
+      where: { id: createCommentDto.idiomId },
+    });
+
+    if (!idiom) {
+      throw new HttpException(
+        'Không tìm thấy thành ngữ',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new HttpException(
+        'Không tìm thấy người dùng',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const comment = this.commentRepository.create({
+      content: createCommentDto.content,
+      user: user,
+      idiom: idiom,
+      status: CommentStatus.PENDING,
+    });
+
+    return await this.commentRepository.save(comment);
+  }
+
+  async findByIdiom(
+    idiomId: string,
+    page: number = 1,
+    limit: number = 10,
+    sort: string = 'createdAt',
+    order: 'ASC' | 'DESC' = 'DESC',
+  ) {
+    const skip = (page - 1) * limit;
+    const [data, total] = await this.commentRepository.findAndCount({
+      where: {
+        idiom: { id: idiomId },
+        status: CommentStatus.APPROVED,
+      },
+      order: { [sort]: order },
+      relations: ['user'],
+      take: limit,
+      skip: skip,
+    });
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        lastPage: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  async findAll(query: CommentQueryDto) {
+    const { status, idiomId, userId, page = 1, limit = 20 } = query;
+
+    const queryBuilder = this.commentRepository
+      .createQueryBuilder('comment')
+      .leftJoinAndSelect('comment.user', 'user')
+      .leftJoinAndSelect('comment.idiom', 'idiom');
+
+    if (status) {
+      queryBuilder.andWhere('comment.status = :status', { status });
+    }
+
+    if (idiomId) {
+      queryBuilder.andWhere('comment.idiom.id = :idiomId', { idiomId });
+    }
+
+    if (userId) {
+      queryBuilder.andWhere('comment.user.id = :userId', { userId });
+    }
+
+    queryBuilder
+      .orderBy('comment.createdAt', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    const [comments, total] = await queryBuilder.getManyAndCount();
+
+    return {
+      data: comments,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  async updateStatus(
+    id: string,
+    updateStatusDto: UpdateCommentStatusDto,
+    adminId: string,
+  ) {
+    const admin = await this.userRepository.findOne({
+      where: { id: adminId },
+    });
+
+    if (!admin || !admin.isAdmin) {
+      throw new ForbiddenException('Chỉ admin mới có quyền thực hiện');
+    }
+
+    const comment = await this.commentRepository.findOne({
+      where: { id },
+    });
+
+    if (!comment) {
+      throw new HttpException(
+        'Không tìm thấy bình luận',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    comment.status = updateStatusDto.status;
+    return await this.commentRepository.save(comment);
+  }
+
+  async like(id: string, userId: string) {
+    const comment = await this.commentRepository.findOne({
+      where: { id },
+    });
+
+    if (!comment) {
+      throw new HttpException(
+        'Không tìm thấy bình luận',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    // Note: Trong production, nên tạo bảng riêng để track user đã like
+    // Hiện tại chỉ tăng số lượng like
+    comment.likes += 1;
+    return await this.commentRepository.save(comment);
+  }
+
+  async report(id: string) {
+    const comment = await this.commentRepository.findOne({
+      where: { id },
+    });
+
+    if (!comment) {
+      throw new HttpException(
+        'Không tìm thấy bình luận',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    comment.reportCount += 1;
+
+    // Tự động reject nếu bị report quá 5 lần
+    if (comment.reportCount >= 5) {
+      comment.status = CommentStatus.REJECTED;
+    }
+
+    return await this.commentRepository.save(comment);
+  }
+
+  async delete(id: string, userId: string) {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (!user || !user.isAdmin) {
+      throw new ForbiddenException('Chỉ admin mới có quyền xóa');
+    }
+
+    const comment = await this.commentRepository.findOne({
+      where: { id },
+    });
+
+    if (!comment) {
+      throw new HttpException(
+        'Không tìm thấy bình luận',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    await this.commentRepository.remove(comment);
+    return { message: 'Đã xóa bình luận thành công' };
+  }
+
+  async getStats() {
+    const [total, pending, approved, rejected] = await Promise.all([
+      this.commentRepository.count(),
+      this.commentRepository.count({
+        where: { status: CommentStatus.PENDING },
+      }),
+      this.commentRepository.count({
+        where: { status: CommentStatus.APPROVED },
+      }),
+      this.commentRepository.count({
+        where: { status: CommentStatus.REJECTED },
+      }),
+    ]);
+
+    return {
+      total,
+      pending,
+      approved,
+      rejected,
+    };
+  }
+}

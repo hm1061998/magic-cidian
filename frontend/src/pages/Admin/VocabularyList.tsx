@@ -17,7 +17,7 @@ import {
 } from "@/services/api/idiomService";
 import { Idiom } from "@/types";
 import { useNavigate } from "react-router";
-import { confirmService } from "@/services/ui/confirmService";
+import { modalService } from "@/services/ui/modalService";
 import { toast } from "@/services/ui/toastService";
 import FormSelect from "@/components/common/FormSelect";
 import Input from "@/components/common/Input";
@@ -160,18 +160,16 @@ const VocabularyList: React.FC<VocabularyListProps> = ({
   ) => {
     e.stopPropagation();
 
-    confirmService.show({
-      title: "Xác nhận xóa?",
-      message: `Bạn có chắc chắn muốn xóa từ "${hanzi}" không? Hành động này không thể hoàn tác.`,
-      type: "danger",
-      confirmText: "Xóa ngay",
-      cancelText: "Hủy",
-      onConfirm: async () => {
-        await deleteIdiom(id);
-        toast.success("Đã xóa thành công!");
-        loadIdioms();
-      },
-    });
+    const confirmed = await modalService.danger(
+      `Bạn có chắc chắn muốn xóa từ "${hanzi}" không? Hành động này không thể hoàn tác.`,
+      "Xác nhận xóa?"
+    );
+
+    if (confirmed) {
+      await deleteIdiom(id);
+      toast.success("Đã xóa thành công!");
+      loadIdioms();
+    }
   };
 
   const handleEdit = (e: React.MouseEvent, id: string) => {

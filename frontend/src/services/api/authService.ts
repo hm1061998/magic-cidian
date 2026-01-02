@@ -1,5 +1,11 @@
 import { http } from "./httpService";
 
+/**
+ * Authentication Service
+ * Handles user authentication and session management
+ * Note: Auth state is managed by Redux (authSlice), not localStorage
+ */
+
 export const registerUser = async (username: string, pass: string) => {
   const response = await http.post("/auth/register", { username, pass });
   return response.data;
@@ -8,7 +14,7 @@ export const registerUser = async (username: string, pass: string) => {
 export const loginAdmin = async (username: string, pass: string) => {
   const response = await http.post("/auth/login", { username, pass });
 
-  // Chỉ lưu một "dấu hiệu" nhỏ để Frontend biết cần fetch user
+  // Set hint for frontend to fetch user on next load
   localStorage.setItem("auth_hint", "true");
   return response.data;
 };
@@ -19,25 +25,9 @@ export const logoutAdmin = async () => {
   } catch (e) {
     console.warn("Logout API call failed", e);
   } finally {
-    // Clean up everything
+    // Clean up localStorage
     localStorage.removeItem("admin_token");
     localStorage.removeItem("admin_user");
     localStorage.removeItem("auth_hint");
   }
-};
-
-export const getAuthToken = () => {
-  return null; // Token is now in cookie
-};
-
-export const getCurrentUser = () => {
-  return null; // Should use Redux instead
-};
-
-export const isAuthenticated = () => {
-  return false; // Should check Redux in components
-};
-
-export const isAdmin = () => {
-  return false; // Should check Redux in components
 };

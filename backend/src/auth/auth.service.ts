@@ -7,7 +7,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { UserEntity } from '../user/entities/user.entities';
+import { UserEntity } from '../user/entities/user.entity';
 import { comparePasswords, hashPassword } from './utils/crypto.utils';
 
 @Injectable()

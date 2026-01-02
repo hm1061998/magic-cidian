@@ -10,10 +10,10 @@ export const toggleSaveIdiom = async (idiomId: string) => {
 
 export const checkSavedStatus = async (idiomId: string): Promise<boolean> => {
   try {
-    const response = await http.get<boolean>(
+    const response = await http.get<{ isSaved: boolean }>(
       `${API_BASE_URL}/saved/check/${idiomId}`
     );
-    return response.data;
+    return !!response.data?.isSaved;
   } catch (e) {
     return false;
   }
@@ -36,7 +36,7 @@ export const fetchSavedIdioms = async (
 
 export const updateSRSProgress = async (idiomId: string, srsData: any) => {
   const response = await http.post(`${API_BASE_URL}/srs`, {
-    idiomId: `${idiomId}`,
+    idiomId,
     ...srsData,
   });
   return response.data;

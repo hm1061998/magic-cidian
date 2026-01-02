@@ -41,10 +41,20 @@ export interface Idiom extends IdiomRow {
 
 export interface Feedback {
   id: string;
-  idiomHanzi: string;
-  username: string;
   content: string;
-  timestamp: number;
-  isPremium: boolean;
   likes: number;
+  status: "pending" | "approved" | "rejected";
+  reportCount: number;
+  user: {
+    id: string;
+    username: string;
+    displayName?: string;
+    isAdmin: boolean;
+  };
+  idiom?: {
+    id: string;
+    hanzi: string;
+  };
+  createdAt: string;
+  updatedAt: string;
 }

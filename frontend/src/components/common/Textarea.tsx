@@ -18,17 +18,15 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         <textarea
           ref={ref}
           className={`
-            w-full px-4 py-2 rounded-xl border bg-white
+            w-full px-4 py-2 rounded-xl border transition-all duration-200 min-h-[100px] resize-y
             ${
               error
                 ? "border-red-500"
                 : "border-slate-200 hover:border-slate-300"
             }
+            bg-white text-slate-700 placeholder:text-slate-400
             focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-red-500
             disabled:bg-slate-50 disabled:text-slate-400
-            transition-all duration-200
-            placeholder:text-slate-400 text-slate-700
-            min-h-[100px] resize-y
             ${className}
           `}
           {...props}

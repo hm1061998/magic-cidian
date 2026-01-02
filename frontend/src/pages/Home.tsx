@@ -482,7 +482,7 @@ const Home: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                    Smart Suggestions
+                    Gợi ý thông minh
                   </span>
                 </div>
                 <div className="hidden sm:flex items-center gap-4 text-[10px] text-slate-400 font-bold">
@@ -490,13 +490,13 @@ const Home: React.FC = () => {
                     <span className="flex items-center justify-center w-5 h-5 bg-white rounded-md border border-slate-200 shadow-sm">
                       ↑↓
                     </span>
-                    <span>Navigate</span>
+                    <span>Di chuyển</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <span className="flex items-center justify-center px-1.5 h-5 bg-white rounded-md border border-slate-200 shadow-sm capitalize">
                       Enter
                     </span>
-                    <span>Select</span>
+                    <span>Chọn</span>
                   </div>
                 </div>
               </div>
@@ -559,7 +559,7 @@ const Home: React.FC = () => {
                 <CardIcon className="w-7 h-7 text-white" />
               </div>
               <h3 className="text-2xl font-bold text-white mb-2">
-                SRS Flashcard
+                Ôn tập Flashcard
               </h3>
               <p className="text-red-100 text-sm opacity-90 leading-relaxed">
                 Ôn tập hiệu quả bằng thuật toán ghi nhớ thông minh nhất.

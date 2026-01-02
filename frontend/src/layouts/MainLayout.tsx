@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import Header from "@/components/layout/Header";
@@ -7,6 +7,7 @@ import ToastContainer from "@/components/common/ToastContainer";
 import { logoutAdmin } from "@/services/api/authService";
 import { RootState } from "@/redux/store";
 import { logout as reduxLogout } from "@/redux/authSlice";
+import { ChevronDownIcon } from "@/components/common/icons";
 
 const MainLayout: React.FC = () => {
   const navigate = useNavigate();
@@ -15,6 +16,8 @@ const MainLayout: React.FC = () => {
     (state: RootState) => state.auth
   );
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const scrollContainerRef = useRef<HTMLElement>(null);
 
   const handleLogout = useCallback(async () => {
     await logoutAdmin();
@@ -23,14 +26,49 @@ const MainLayout: React.FC = () => {
     navigate("/");
   }, [navigate, dispatch]);
 
+  useEffect(() => {
+    const mainElement = scrollContainerRef.current;
+    if (!mainElement) return;
+
+    const handleScroll = () => {
+      setShowScrollTop(mainElement.scrollTop > 100);
+    };
+
+    mainElement.addEventListener("scroll", handleScroll);
+    return () => mainElement.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    scrollContainerRef.current?.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
   return (
     <div className="h-screen flex flex-col relative font-sans overflow-hidden bg-slate-50">
       <ToastContainer />
       <Header onMenuClick={() => setIsSidebarOpen(true)} />
 
-      <main className="flex-1 overflow-y-auto w-full p-3 md:p-4 relative">
+      <main
+        ref={scrollContainerRef}
+        className="flex-1 overflow-y-auto w-full p-3 md:p-4 relative scroll-smooth"
+      >
         <Outlet context={{ isLoggedIn: isAuthenticated, user }} />
       </main>
+
+      {/* Scroll To Top Button */}
+      <button
+        onClick={scrollToTop}
+        className={`fixed bottom-8 right-8 z-[9999] w-14 h-14 bg-red-600 text-white rounded-2xl shadow-[0_20px_50px_rgba(239,68,68,0.3)] flex items-center justify-center transition-all duration-500 hover:scale-110 active:scale-90 ${
+          showScrollTop
+            ? "translate-y-0 opacity-100"
+            : "translate-y-20 opacity-0 pointer-events-none"
+        } group`}
+        aria-label="Cuộn lên đầu trang"
+      >
+        <ChevronDownIcon className="w-8 h-8 transition-transform rotate-180" />
+      </button>
 
       <UserSidebar
         isOpen={isSidebarOpen}

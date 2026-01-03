@@ -3,7 +3,6 @@ import { Outlet, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import Header from "@/components/layout/Header";
 import UserSidebar from "@/components/layout/UserSidebar";
-import ToastContainer from "@/components/common/ToastContainer";
 import { logoutAdmin } from "@/services/api/authService";
 import { RootState } from "@/redux/store";
 import { logout as reduxLogout } from "@/redux/authSlice";
@@ -47,7 +46,6 @@ const MainLayout: React.FC = () => {
 
   return (
     <div className="h-screen flex flex-col relative font-sans overflow-hidden bg-slate-50">
-      <ToastContainer />
       <Header onMenuClick={() => setIsSidebarOpen(true)} />
 
       <main

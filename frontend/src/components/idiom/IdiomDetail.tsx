@@ -13,7 +13,7 @@ import {
   CheckCircleIcon,
 } from "@/components/common/icons";
 import IdiomComments from "./IdiomComments";
-import { toast } from "@/services/ui/toastService";
+import { toast } from "@/libs/Toast";
 import {
   checkSavedStatus,
   toggleSaveIdiom,

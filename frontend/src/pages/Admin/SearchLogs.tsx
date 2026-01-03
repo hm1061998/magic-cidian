@@ -16,8 +16,8 @@ import {
   bulkDeleteSearchLogs,
   SearchLog,
 } from "@/services/api/idiomService";
-import { toast } from "@/services/ui/toastService";
-import { modalService } from "@/services/ui/modalService";
+import { toast } from "@/libs/Toast";
+import { modalService } from "@/libs/Modal";
 
 const SearchLogs: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   const [logs, setLogs] = useState<SearchLog[]>([]);

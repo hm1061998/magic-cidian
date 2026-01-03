@@ -1,22 +1,20 @@
-import React, { useState, useEffect } from "react";
-import { toast, ToastMessage } from "@/services/ui/toastService";
+import React from "react";
+import { ToastMessage } from "../types";
 
-const ToastContainer: React.FC = () => {
-  const [activeToasts, setActiveToasts] = useState<ToastMessage[]>([]);
+interface ToastContainerProps {
+  toasts: ToastMessage[];
+  onRemove: (id: string) => void;
+}
 
-  useEffect(() => {
-    // Đăng ký nhận thông báo từ service
-    const unsubscribe = toast.subscribe((toasts) => {
-      setActiveToasts(toasts);
-    });
-    return unsubscribe;
-  }, []);
-
-  if (activeToasts.length === 0) return null;
+const ToastContainer: React.FC<ToastContainerProps> = ({
+  toasts,
+  onRemove,
+}) => {
+  if (!toasts || toasts?.length === 0) return null;
 
   return (
     <div className="fixed top-20 right-6 z-[100] flex flex-col gap-3 pointer-events-none">
-      {activeToasts.map((t) => (
+      {toasts?.map((t) => (
         <div
           key={t.id}
           className={`px-6 py-4 rounded-2xl shadow-2xl border flex items-center gap-3 backdrop-blur-lg animate-pop pointer-events-auto transition-all transform hover:scale-105 ${
@@ -40,7 +38,7 @@ const ToastContainer: React.FC = () => {
           </div>
           <p className="font-bold text-sm leading-tight">{t.message}</p>
           <button
-            onClick={() => toast.remove(t.id)}
+            onClick={() => onRemove(t.id)}
             className="ml-2 opacity-50 hover:opacity-100 transition-opacity"
           >
             ✕

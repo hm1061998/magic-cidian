@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import LoginView from "@/components/auth/LoginView";
 import RegisterView from "@/components/auth/RegisterView";
-import { toast } from "@/services/ui/toastService";
+import { toast } from "@/libs/Toast";
 
 interface LoginViewProps {
   onLoginSuccess: () => void;

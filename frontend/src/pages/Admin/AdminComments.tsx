@@ -20,8 +20,8 @@ import {
   bulkDeleteComments,
 } from "@/services/api/commentService";
 import { fetchSuggestions, fetchIdiomById } from "@/services/api/idiomService";
-import { modalService } from "@/services/ui/modalService";
-import { toast } from "@/services/ui/toastService";
+import { modalService } from "@/libs/Modal";
+import { toast } from "@/libs/Toast";
 import Pagination from "@/components/common/Pagination";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";

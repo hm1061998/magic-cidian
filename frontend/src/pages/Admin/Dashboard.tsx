@@ -17,7 +17,7 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
 import { getAdminStats, getCommentStats } from "@/redux/adminSlice";
-import { toast } from "@/services/ui/toastService";
+import { toast } from "@/libs/Toast";
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();

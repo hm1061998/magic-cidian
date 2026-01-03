@@ -9,7 +9,7 @@ import {
   UpdateProfileData,
   ChangePasswordData,
 } from "@/services/api/userDataService";
-import { toast } from "@/services/ui/toastService";
+import { toast } from "@/libs/Toast";
 import { UserIcon, LockIcon, SaveIcon } from "@/components/common/icons";
 
 interface PasswordFormData extends ChangePasswordData {

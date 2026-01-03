@@ -14,7 +14,7 @@ import {
   updateSRSProgress,
 } from "@/services/api/userDataService";
 import type { Idiom } from "@/types";
-import { toast } from "@/services/ui/toastService";
+import { toast } from "@/libs/Toast";
 import { useOutletContext } from "react-router-dom";
 
 interface FlashcardReviewProps {

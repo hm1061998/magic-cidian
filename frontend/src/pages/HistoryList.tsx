@@ -13,8 +13,8 @@ import {
   clearAllHistory,
   bulkDeleteHistory,
 } from "@/services/api/userDataService";
-import { modalService } from "@/services/ui/modalService";
-import { toast } from "@/services/ui/toastService";
+import { modalService } from "@/libs/Modal";
+import { toast } from "@/libs/Toast";
 import Pagination from "@/components/common/Pagination";
 import BulkActionBar from "@/components/common/BulkActionBar";
 import SelectAllCheckbox from "@/components/common/SelectAllCheckbox";

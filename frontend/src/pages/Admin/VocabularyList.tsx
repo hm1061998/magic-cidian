@@ -18,8 +18,8 @@ import {
 } from "@/services/api/idiomService";
 import { Idiom } from "@/types";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { modalService } from "@/services/ui/modalService";
-import { toast } from "@/services/ui/toastService";
+import { modalService } from "@/libs/Modal";
+import { toast } from "@/libs/Toast";
 import FormSelect from "@/components/common/FormSelect";
 import Input from "@/components/common/Input";
 import Pagination from "@/components/common/Pagination";

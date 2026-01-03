@@ -1,23 +1,27 @@
-import React, { useState, useEffect } from "react";
-import { modalService, ModalState } from "@/services/ui/modalService";
-import { SpinnerIcon, ExclamationIcon, QuestionMarkIcon } from "./icons";
+import React from "react";
+import { ModalOptions } from "../types";
+import {
+  SpinnerIcon,
+  ExclamationIcon,
+  QuestionMarkIcon,
+} from "@/components/common/icons";
 
-const ConfirmModal: React.FC = () => {
-  const [state, setState] = useState<ModalState>({
-    isOpen: false,
-    options: { message: "" },
-    isProcessing: false,
-  });
+interface ConfirmModalProps {
+  isOpen: boolean;
+  options: ModalOptions;
+  isProcessing: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+}
 
-  useEffect(() => {
-    // Đăng ký nhận thông báo từ service
-    const unsubscribe = modalService.subscribe((newState) => {
-      setState(newState);
-    });
-    return unsubscribe;
-  }, []);
-
-  if (!state.isOpen) return null;
+const ConfirmModal: React.FC<ConfirmModalProps> = ({
+  isOpen,
+  options,
+  isProcessing,
+  onConfirm,
+  onCancel,
+}) => {
+  if (!isOpen) return null;
 
   const {
     title = "Xác nhận",
@@ -25,7 +29,7 @@ const ConfirmModal: React.FC = () => {
     confirmText = "Xác nhận",
     cancelText = "Hủy",
     type = "info",
-  } = state.options;
+  } = options;
 
   // Color & Icon schemes for Premium look
   const schemes = {
@@ -59,7 +63,7 @@ const ConfirmModal: React.FC = () => {
       {/* Premium Backdrop */}
       <div
         className="absolute inset-0 bg-slate-900/40 backdrop-blur-md animate-[fadeIn_0.3s_ease-out]"
-        onClick={() => !state.isProcessing && modalService.handleCancel()}
+        onClick={() => !isProcessing && onCancel()}
       />
 
       {/* Hero Modal Card */}
@@ -90,19 +94,19 @@ const ConfirmModal: React.FC = () => {
           <div className="flex w-full flex-col sm:flex-row gap-4">
             {cancelText && (
               <button
-                onClick={() => modalService.handleCancel()}
-                disabled={state.isProcessing}
+                onClick={onCancel}
+                disabled={isProcessing}
                 className="flex-1 order-2 sm:order-1 py-4 bg-slate-100 text-slate-600 font-bold rounded-2xl hover:bg-slate-200 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {cancelText}
               </button>
             )}
             <button
-              onClick={() => modalService.handleConfirm()}
-              disabled={state.isProcessing}
+              onClick={onConfirm}
+              disabled={isProcessing}
               className={`flex-1 order-1 sm:order-2 py-4 bg-gradient-to-br ${s.accent} text-white font-black rounded-2xl shadow-xl ${s.glow} transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed group border border-white/10`}
             >
-              {state.isProcessing ? (
+              {isProcessing ? (
                 <SpinnerIcon className="w-6 h-6 animate-spin" />
               ) : (
                 <>

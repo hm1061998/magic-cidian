@@ -15,7 +15,7 @@ import {
 } from "@/components/common/icons";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
-import { toast } from "@/services/ui/toastService";
+import { toast } from "@/libs/Toast";
 import { useLocation } from "react-router-dom";
 
 interface UserSidebarProps {

@@ -14,8 +14,8 @@ import {
   toggleSaveIdiom,
   bulkDeleteSavedIdioms,
 } from "@/services/api/userDataService";
-import { toast } from "@/services/ui/toastService";
-import { modalService } from "@/services/ui/modalService";
+import { toast } from "@/libs/Toast";
+import { modalService } from "@/libs/Modal";
 import Pagination from "@/components/common/Pagination";
 import BulkActionBar from "@/components/common/BulkActionBar";
 import SelectAllCheckbox from "@/components/common/SelectAllCheckbox";

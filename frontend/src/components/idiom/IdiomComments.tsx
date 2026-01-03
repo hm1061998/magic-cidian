@@ -19,8 +19,8 @@ import {
   getLikedComments,
   saveLikedComment,
 } from "@/services/api/commentService";
-import { toast } from "@/services/ui/toastService";
-import { modalService } from "@/services/ui/modalService";
+import { toast } from "@/libs/Toast";
+import { modalService } from "@/libs/Modal";
 
 interface IdiomCommentsProps {
   idiomId: string;

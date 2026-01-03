@@ -10,7 +10,7 @@ import {
   updateIdiom,
   fetchIdiomById,
 } from "@/services/api/idiomService";
-import { toast } from "@/services/ui/toastService";
+import { toast } from "@/libs/Toast";
 import FormSelect from "@/components/common/FormSelect";
 import { useOutletContext, useSearchParams } from "react-router-dom";
 import { useForm, useFieldArray } from "react-hook-form";

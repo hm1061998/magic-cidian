@@ -1,196 +1,47 @@
-import React, { useState, useRef, useEffect } from "react";
+import React from "react";
 import {
   PlusIcon,
   TrashIcon,
   SpinnerIcon,
-  ArrowLeftIcon,
   PhotoIcon,
   SettingsIcon,
   BrainIcon,
   VideoIcon,
 } from "@/components/common/icons";
-import { mediaPickerService } from "@/libs/MediaPicker";
-import {
-  createIdiom,
-  updateIdiom,
-  fetchIdiomById,
-} from "@/services/api/idiomService";
 import { toast } from "@/libs/Toast";
 import FormSelect from "@/components/common/FormSelect";
-import { useOutletContext, useSearchParams } from "react-router-dom";
-import { useForm, useFieldArray } from "react-hook-form";
 import Input from "@/components/common/Input";
 import Textarea from "@/components/common/Textarea";
-import { useDispatch } from "react-redux";
-import { AppDispatch } from "@/redux/store";
-import { getAdminStats } from "@/redux/adminSlice";
+import { useAdminInsert } from "@/hooks/useAdminInsert";
+import AdminInsertHeader from "@/components/admin/AdminInsertHeader";
+import AdminInsertFooter from "@/components/admin/AdminInsertFooter";
 
 interface AdminInsertProps {
   onBack: () => void;
   idiomId?: string;
 }
 
-type AnalysisItem = {
-  character: string;
-  pinyin: string;
-  meaning: string;
-};
-
-type ExampleItem = {
-  chinese: string;
-  pinyin: string;
-  vietnamese: string;
-};
-
-type IdiomFormInputs = {
-  hanzi: string;
-  pinyin: string;
-  type: string;
-  level: string;
-  source: string;
-  vietnameseMeaning: string;
-  literalMeaning: string;
-  figurativeMeaning: string;
-  chineseDefinition: string;
-  origin: string;
-  grammar: string;
-  imageUrl: string;
-  videoUrl: string;
-  usageContext: string;
-  analysis: AnalysisItem[];
-  examples: ExampleItem[];
-};
-
 const AdminInsert: React.FC<AdminInsertProps> = ({ onBack, idiomId }) => {
-  const [loading, setLoading] = useState(false);
-  const [fetching, setFetching] = useState(false);
-  const dispatch = useDispatch<AppDispatch>();
-  const topRef = useRef<HTMLDivElement>(null);
-  const [searchParams] = useSearchParams();
-
   const {
+    loading,
+    fetching,
     register,
     handleSubmit,
-    control,
-    reset,
-    getValues,
+    errors,
+    analysisFields,
+    appendAnalysis,
+    removeAnalysis,
+    exampleFields,
+    appendExample,
+    removeExample,
+    imageUrlValue,
     setValue,
-    watch,
-    formState: { errors },
-  } = useForm<IdiomFormInputs>({
-    defaultValues: {
-      type: "Quán dụng ngữ",
-      level: "Trung cấp",
-      analysis: [{ character: "", pinyin: "", meaning: "" }],
-      examples: [{ chinese: "", pinyin: "", vietnamese: "" }],
-    },
-  });
+    onSubmit,
+    topRef,
+  } = useAdminInsert(idiomId);
 
-  const {
-    fields: analysisFields,
-    append: appendAnalysis,
-    remove: removeAnalysis,
-  } = useFieldArray({
-    control,
-    name: "analysis",
-  });
-
-  const imageUrlValue = watch("imageUrl");
-
-  const {
-    fields: exampleFields,
-    append: appendExample,
-    remove: removeExample,
-  } = useFieldArray({
-    control,
-    name: "examples",
-  });
-
-  useEffect(() => {
-    if (idiomId) {
-      loadIdiomData(idiomId);
-    } else {
-      // Check for 'hanzi' param for pre-filling
-      const hanziParam = searchParams.get("hanzi");
-      if (hanziParam) {
-        reset({ ...getValues(), hanzi: hanziParam });
-      }
-    }
-  }, [idiomId, searchParams, reset, getValues]);
-
-  const loadIdiomData = async (id: string) => {
-    setFetching(true);
-    try {
-      const data = await fetchIdiomById(id);
-      reset({
-        hanzi: data.hanzi || "",
-        pinyin: data.pinyin || "",
-        type: data.type || "Quán dụng ngữ",
-        level: data.level || "Trung cấp",
-        source: data.source || "",
-        vietnameseMeaning: data.vietnameseMeaning || "",
-        literalMeaning: data.literalMeaning || "",
-        figurativeMeaning: data.figurativeMeaning || "",
-        chineseDefinition: data.chineseDefinition || "",
-        origin: data.origin || "",
-        grammar: data.grammar || "",
-        imageUrl: data.imageUrl || "",
-        videoUrl: data.videoUrl || "",
-        usageContext: data.usageContext || "",
-        analysis: data.analysis?.length
-          ? data.analysis
-          : [{ character: "", pinyin: "", meaning: "" }],
-        examples: data.examples?.length
-          ? data.examples
-          : [{ chinese: "", pinyin: "", vietnamese: "" }],
-      });
-    } catch (err: any) {
-      toast.error("Không thể tải dữ liệu để sửa.");
-    } finally {
-      setFetching(false);
-    }
-  };
-
-  const handleOpenMediaPicker = async () => {
+  const handleOpenMediaPicker = () => {
     toast.warning("Chức năng này đang được phát triển");
-    return;
-    const selectedUrl = await mediaPickerService.open();
-    if (selectedUrl) {
-      setValue("imageUrl", selectedUrl, {
-        shouldValidate: true,
-        shouldDirty: true,
-      });
-    }
-  };
-
-  const scrollToTop = () => {
-    topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
-  const onSubmit = async (data: IdiomFormInputs) => {
-    setLoading(true);
-    try {
-      const payload = {
-        ...data,
-        analysis: data.analysis.filter((a) => a.character.trim()),
-        examples: data.examples.filter((ex) => ex.chinese.trim()),
-      };
-
-      if (idiomId) {
-        await updateIdiom(idiomId, payload);
-        toast.success("Đã cập nhật từ vựng thành công!");
-      } else {
-        await createIdiom(payload);
-        toast.success("Đã thêm từ mới thành công!");
-        reset();
-      }
-      dispatch(getAdminStats(true));
-      scrollToTop();
-    } catch (err: any) {
-      toast.error(err.message || "Có lỗi xảy ra.");
-    } finally {
-      setLoading(false);
-    }
   };
 
   if (fetching) {
@@ -203,32 +54,12 @@ const AdminInsert: React.FC<AdminInsertProps> = ({ onBack, idiomId }) => {
 
   return (
     <div className="h-full flex flex-col overflow-hidden bg-slate-50">
-      {/* Fixed Header */}
-      <div className="flex-none bg-white border-b border-slate-200 shadow-sm z-10 px-4 py-4 md:px-8">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {onBack && (
-              <button
-                type="button"
-                onClick={onBack}
-                className="p-2 -ml-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-all"
-                title="Quay lại"
-              >
-                <ArrowLeftIcon className="w-5 h-5" />
-              </button>
-            )}
-            <h1 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">
-              {idiomId ? "Chỉnh sửa từ vựng" : "Thêm từ vựng mới"}
-            </h1>
-          </div>
-        </div>
-      </div>
+      <AdminInsertHeader onBack={onBack} isEditing={!!idiomId} />
 
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="flex-1 flex flex-col overflow-hidden"
       >
-        {/* Scrollable Form Content */}
         <div
           ref={topRef}
           className="flex-1 overflow-y-auto scroll-smooth custom-scrollbar bg-slate-50/50"
@@ -536,7 +367,7 @@ const AdminInsert: React.FC<AdminInsertProps> = ({ onBack, idiomId }) => {
                           </div>
                         </div>
 
-                        {imageUrlValue && !errors.imageUrl && (
+                        {imageUrlValue && (
                           <div className="relative aspect-video rounded-xl overflow-hidden border border-slate-100 group/img bg-slate-50">
                             <img
                               src={imageUrlValue}
@@ -597,36 +428,11 @@ const AdminInsert: React.FC<AdminInsertProps> = ({ onBack, idiomId }) => {
           </div>
         </div>
 
-        {/* Fixed Footer */}
-        <div className="flex-none bg-white border-t border-slate-200 py-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-10 transition-all">
-          <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 flex flex-wrap-reverse sm:flex-nowrap justify-end items-center gap-3 sm:gap-4">
-            {idiomId && (
-              <button
-                type="button"
-                onClick={onBack}
-                className="flex-1 sm:flex-none px-8 py-3.5 font-black text-slate-400 hover:text-red-600 transition-all text-[10px] sm:text-xs uppercase tracking-[0.2em] outline-none"
-              >
-                Hủy bỏ
-              </button>
-            )}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full sm:w-auto px-10 py-4 bg-red-700 text-white rounded-2xl font-black shadow-2xl shadow-red-200 hover:bg-red-800 hover:-translate-y-1 transition-all flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-70 text-xs sm:text-sm uppercase tracking-widest"
-            >
-              {loading ? (
-                <SpinnerIcon className="w-5 h-5 animate-spin" />
-              ) : (
-                <>
-                  <PlusIcon className="w-5 h-5 transition-transform group-hover:rotate-90" />
-                  <span>
-                    {idiomId ? "Cập nhật từ vựng" : "Lưu từ vựng mới"}
-                  </span>
-                </>
-              )}
-            </button>
-          </div>
-        </div>
+        <AdminInsertFooter
+          loading={loading}
+          isEditing={!!idiomId}
+          onBack={onBack}
+        />
       </form>
     </div>
   );

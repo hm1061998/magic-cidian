@@ -60,6 +60,7 @@ export const useIdiomSearch = () => {
   const handleSearch = (searchTerm: string) => {
     if (!searchTerm.trim()) {
       setSearchParams({});
+      setQuery("");
       return;
     }
     setSearchParams({ query: searchTerm });

@@ -1,5 +1,5 @@
 import { http } from "./httpService";
-import type { Feedback } from "@/types";
+import type { Feedback, QueryParams, PaginatedResponse } from "@/types";
 
 /**
  * Comment Service
@@ -15,14 +15,13 @@ import type { Feedback } from "@/types";
  */
 export const fetchCommentsByIdiom = async (
   idiomId: string,
-  page: number = 1,
-  limit: number = 10,
-  sort: string = "createdAt",
-  order: "ASC" | "DESC" = "DESC"
-): Promise<{ data: Feedback[]; meta: any }> => {
-  const response = await http.get<{ data: Feedback[]; meta: any }>(
+  params: QueryParams = {}
+): Promise<PaginatedResponse<Feedback>> => {
+  const { sort = "createdAt,DESC", ...rest } = params;
+
+  const response = await http.get<PaginatedResponse<Feedback>>(
     `/idiom-comments/idiom/${idiomId}`,
-    { page, limit, sort, order }
+    { ...rest, sort }
   );
   return response.data;
 };
@@ -62,24 +61,6 @@ export const reportComment = async (commentId: string): Promise<Feedback> => {
 // Admin Comment APIs
 // ============================================
 
-export interface CommentQueryParams {
-  status?: "pending" | "approved" | "rejected";
-  idiomId?: string;
-  userId?: string;
-  search?: string;
-  onlyReported?: boolean;
-  page?: number;
-  limit?: number;
-}
-
-export interface PaginatedCommentsResponse {
-  data: Feedback[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
-
 export interface CommentStats {
   total: number;
   pending: number;
@@ -98,11 +79,16 @@ export interface CommentStats {
  * Fetch all comments with filters (Admin only)
  */
 export const fetchAllComments = async (
-  params: CommentQueryParams = {}
-): Promise<PaginatedCommentsResponse> => {
-  const response = await http.get<PaginatedCommentsResponse>(
+  params: QueryParams = {}
+): Promise<PaginatedResponse<Feedback>> => {
+  const { filter, ...rest } = params;
+
+  const response = await http.get<PaginatedResponse<Feedback>>(
     "/idiom-comments/admin/all",
-    params
+    {
+      ...rest,
+      filter: typeof filter === "object" ? JSON.stringify(filter) : filter,
+    }
   );
   return response.data;
 };

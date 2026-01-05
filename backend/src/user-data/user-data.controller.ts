@@ -33,11 +33,13 @@ export class UserDataController {
     @Request() req,
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 12,
+    @Query('sort') sort: string = 'createdAt,DESC',
   ) {
     return this.userDataService.getSavedIdioms(
       req.user.id,
       Number(page),
       Number(limit),
+      sort,
     );
   }
 
@@ -51,11 +53,13 @@ export class UserDataController {
     @Request() req,
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 50,
+    @Query('sort') sort: string = 'createdAt,DESC',
   ) {
     return this.userDataService.getSRSData(
       req.user.id,
       Number(page),
       Number(limit),
+      sort,
     );
   }
 
@@ -69,11 +73,13 @@ export class UserDataController {
     @Request() req,
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 20,
+    @Query('sort') sort: string = 'createdAt,DESC',
   ) {
     return this.userDataService.getHistory(
       req.user.id,
       Number(page),
       Number(limit),
+      sort,
     );
   }
 

@@ -107,8 +107,8 @@ const AdminComments: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
     // Actually we want to show loading spinner in dropdown for "load more" too
     setLoadingSuggestions(true);
     try {
-      // API now supports pagination: fetchSuggestions(query, page)
-      const { data, meta } = await fetchSuggestions(query, page);
+      // API now supports pagination: fetchSuggestions({ search: query, page })
+      const { data, meta } = await fetchSuggestions({ search: query, page });
 
       if (page === 1) {
         setIdiomSuggestions(data);
@@ -193,27 +193,19 @@ const AdminComments: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   const loadComments = async () => {
     setLoading(true);
     try {
-      const params: any = { page, limit: 15 };
-      if (filter !== "all") {
-        params.status = filter;
-      }
-
-      // Ưu tiên idiomId từ state (Select) hoặc URL
       const currentIdiomId = selectedIdiom?.id || idiomIdParam;
-      if (currentIdiomId) {
-        params.idiomId = currentIdiomId;
-      }
-
-      if (searchQuery.trim()) {
-        params.search = searchQuery.trim();
-      }
-      if (onlyReported) {
-        params.onlyReported = true;
-      }
-
-      const response = await fetchAllComments(params);
+      const response = await fetchAllComments({
+        page,
+        limit: 15,
+        search: searchQuery.trim(),
+        filter: {
+          status: filter !== "all" ? filter : undefined,
+          idiomId: currentIdiomId || undefined,
+          onlyReported: onlyReported || undefined,
+        },
+      });
       setComments(response.data);
-      setTotalPages(response.totalPages);
+      setTotalPages(response.meta.lastPage);
       setSelectedIds([]); // Clear selection when data changes
     } catch (error) {
       console.error("Error loading comments", error);
@@ -515,7 +507,7 @@ const AdminComments: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
                   {/* Header */}
                   <div className="flex items-start justify-between mb-4 pl-8">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 border border-slate-200 flex items-center justify-center text-slate-600 font-bold text-sm shadow-inner shrink-0">
+                      <div className="w-10 h-10 rounded-full bg-linear-to-br from-slate-100 to-slate-200 border border-slate-200 flex items-center justify-center text-slate-600 font-bold text-sm shadow-inner shrink-0">
                         {(comment.user.displayName || comment.user.username)
                           ?.charAt(0)
                           .toUpperCase()}
@@ -553,7 +545,7 @@ const AdminComments: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
 
                   {/* Content */}
                   <div className="flex-1 mb-5">
-                    <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100 text-slate-700 text-sm leading-relaxed whitespace-pre-wrap break-words min-h-[80px]">
+                    <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100 text-slate-700 text-sm leading-relaxed whitespace-pre-wrap wrap-break-word min-h-[80px]">
                       {comment.content}
                     </div>
                   </div>
@@ -652,7 +644,7 @@ const AdminComments: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
             </button>
             <button
               onClick={handleApplyFilters}
-              className="flex-[2] px-4 py-3 bg-slate-900 text-white text-[11px] font-black rounded-xl hover:bg-black shadow-lg shadow-slate-200 transition-all active:scale-[0.95] uppercase tracking-widest"
+              className="flex-2 px-4 py-3 bg-slate-900 text-white text-[11px] font-black rounded-xl hover:bg-black shadow-lg shadow-slate-200 transition-all active:scale-[0.95] uppercase tracking-widest"
             >
               Áp dụng bộ lọc
             </button>
@@ -701,7 +693,7 @@ const AdminComments: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
               onSearchChange={setIdiomSearchText}
               onLoadMore={handleLoadMoreSuggestions}
               loading={loadingSuggestions}
-              className="!bg-slate-50 border-slate-200 rounded-xl"
+              className="bg-slate-50! border-slate-200 rounded-xl"
             />
           </div>
 

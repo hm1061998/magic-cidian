@@ -53,13 +53,11 @@ const IdiomComments: React.FC<IdiomCommentsProps> = ({
     else setIsLoadingMore(true);
 
     try {
-      const response = await fetchCommentsByIdiom(
-        idiomId,
+      const response = await fetchCommentsByIdiom(idiomId, {
         page,
-        10,
-        sortBy,
-        "DESC"
-      );
+        limit: 10,
+        sort: `${sortBy},DESC`,
+      });
 
       if (refresh) {
         setComments(response.data);

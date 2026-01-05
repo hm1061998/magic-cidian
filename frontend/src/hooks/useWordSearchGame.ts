@@ -87,7 +87,8 @@ export const useWordSearchGame = () => {
     setFoundWords([]);
     setSelection(null);
     try {
-      const response = await fetchStoredIdioms(1, 100);
+      // Pass QueryParams object
+      const response = await fetchStoredIdioms({ page: 1, limit: 100 });
       const allIdioms = response.data.filter(
         (i: Idiom) => i.hanzi.length <= 4 && /[\u4e00-\u9fa5]+/.test(i.hanzi)
       );

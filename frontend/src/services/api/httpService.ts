@@ -130,7 +130,8 @@ class HttpService {
 
     const searchParams = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
-      if (value !== null && value !== undefined) {
+      // Skip null, undefined, and empty strings
+      if (value !== null && value !== undefined && value !== "") {
         searchParams.append(key, String(value));
       }
     });

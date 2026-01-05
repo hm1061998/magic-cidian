@@ -46,12 +46,21 @@ export class UserDataService {
     return { isSaved: count > 0 };
   }
 
-  async getSavedIdioms(userId: string, page: number = 1, limit: number = 12) {
+  async getSavedIdioms(
+    userId: string,
+    page: number = 1,
+    limit: number = 12,
+    sort: string = 'createdAt,DESC',
+  ) {
     const skip = (page - 1) * limit;
+
+    const [sortField, sortOrder] = sort.split(',');
+    const order = (sortOrder?.toUpperCase() as 'ASC' | 'DESC') || 'DESC';
+
     const [saved, total] = await this.savedRepository.findAndCount({
       where: { user: { id: userId } },
       relations: ['idiom'],
-      order: { createdAt: 'DESC' },
+      order: { [sortField]: order },
       take: limit,
       skip: skip,
     });
@@ -89,12 +98,21 @@ export class UserDataService {
     return this.srsRepository.save(progress);
   }
 
-  async getSRSData(userId: string, page: number = 1, limit: number = 50) {
+  async getSRSData(
+    userId: string,
+    page: number = 1,
+    limit: number = 50,
+    sort: string = 'createdAt,DESC',
+  ) {
     const skip = (page - 1) * limit;
+
+    const [sortField, sortOrder] = sort.split(',');
+    const order = (sortOrder?.toUpperCase() as 'ASC' | 'DESC') || 'DESC';
+
     const [progress, total] = await this.srsRepository.findAndCount({
       where: { user: { id: userId } },
       relations: ['idiom'],
-      order: { createdAt: 'DESC' },
+      order: { [sortField]: order },
       take: limit,
       skip: skip,
     });
@@ -135,12 +153,21 @@ export class UserDataService {
     return this.historyRepository.save(history);
   }
 
-  async getHistory(userId: string, page: number = 1, limit: number = 20) {
+  async getHistory(
+    userId: string,
+    page: number = 1,
+    limit: number = 20,
+    sort: string = 'createdAt,DESC',
+  ) {
     const skip = (page - 1) * limit;
+
+    const [sortField, sortOrder] = sort.split(',');
+    const order = (sortOrder?.toUpperCase() as 'ASC' | 'DESC') || 'DESC';
+
     const [history, total] = await this.historyRepository.findAndCount({
       where: { user: { id: userId } },
       relations: ['idiom'],
-      order: { createdAt: 'DESC' },
+      order: { [sortField]: order },
       take: limit,
       skip: skip,
     });

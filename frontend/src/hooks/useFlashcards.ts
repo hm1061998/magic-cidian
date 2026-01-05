@@ -32,7 +32,7 @@ export const useFlashcards = (isLoggedIn: boolean, source: "all" | "saved") => {
       try {
         const progressMap: SRSDataMap = {};
         if (isLoggedIn) {
-          const srsResponse = await fetchSRSData(1, 500);
+          const srsResponse = await fetchSRSData({ page: 1, limit: 500 });
           srsResponse.data.forEach((item: any) => {
             progressMap[item.idiom.hanzi] = {
               interval: item.interval,
@@ -46,10 +46,11 @@ export const useFlashcards = (isLoggedIn: boolean, source: "all" | "saved") => {
 
         let allCards: Idiom[] = [];
         if (source === "saved") {
-          const savedRes = await fetchSavedIdioms(1, 1000);
+          const savedRes = await fetchSavedIdioms({ page: 1, limit: 1000 });
           allCards = savedRes.data;
         } else {
-          const response = await fetchStoredIdioms(1, 1000);
+          // Pass QueryParams object
+          const response = await fetchStoredIdioms({ page: 1, limit: 1000 });
           allCards = response.data;
         }
         setTotalAvailableCards(allCards.length);

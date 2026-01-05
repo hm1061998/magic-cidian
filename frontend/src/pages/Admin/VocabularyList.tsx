@@ -77,15 +77,16 @@ const VocabularyList: React.FC<VocabularyListProps> = ({
   const loadIdioms = async () => {
     setLoading(true);
     try {
-      const response = await fetchStoredIdioms(
+      const response = await fetchStoredIdioms({
         page,
-        12,
-        debouncedFilter,
-        selectedLevel,
-        selectedType,
-        sortParam,
-        orderParam
-      );
+        limit: 12,
+        search: debouncedFilter,
+        filter: {
+          level: selectedLevel,
+          type: selectedType,
+        },
+        sort: `${sortParam},${orderParam}`,
+      });
       setIdioms(response.data);
       setTotalPages(response.meta.lastPage);
       setTotalItems(response.meta.total);
@@ -406,7 +407,7 @@ const VocabularyList: React.FC<VocabularyListProps> = ({
                       <h2 className="text-xl sm:text-2xl font-hanzi font-bold text-slate-800 group-hover:text-red-700 transition-colors">
                         {item.hanzi}
                       </h2>
-                      <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:flex">
+                      <div className="items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:flex">
                         <button
                           onClick={(e) => handleEdit(e, item.id)}
                           className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"

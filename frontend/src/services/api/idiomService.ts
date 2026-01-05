@@ -1,5 +1,5 @@
 import { http } from "./httpService";
-import { Idiom, SearchMode } from "@/types";
+import { Idiom, SearchMode, QueryParams, PaginatedResponse } from "@/types";
 import {
   TABLE_IDIOMS,
   TABLE_CHARACTER_ANALYSIS,
@@ -62,15 +62,15 @@ export const fetchAdminStats = async () => {
   return response.data;
 };
 
-// Updated return type to support pagination
+/**
+ * Fetch suggestions for search autocomplete
+ */
 export const fetchSuggestions = async (
-  query: string = "",
-  page: number = 1
-): Promise<{ data: Idiom[]; meta: { hasMore: boolean } }> => {
-  const response = await http.get<{ data: Idiom[]; meta: any }>(
-    "/idioms/suggestions",
-    { query, page }
-  );
+  params: QueryParams = {}
+): Promise<PaginatedResponse<Idiom> & { meta: { hasMore: boolean } }> => {
+  const response = await http.get<
+    PaginatedResponse<Idiom> & { meta: { hasMore: boolean } }
+  >("/idioms/suggestions", params);
   return response.data;
 };
 
@@ -145,55 +145,49 @@ export const bulkDeleteIdioms = async (ids: string[]) => {
   return response.data;
 };
 
-interface PaginatedResponse {
-  data: Idiom[];
-  meta: {
-    total: number;
-    page: number;
-    lastPage: number;
-    limit: number;
-  };
-}
-
+/**
+ * Fetch list of idioms with search and filters
+ */
 export const fetchStoredIdioms = async (
-  page = 1,
-  limit = 12,
-  filter = "",
-  level = "",
-  type = "",
-  sort = "createdAt",
-  order: "ASC" | "DESC" = "DESC"
-): Promise<PaginatedResponse> => {
+  params: QueryParams = {}
+): Promise<PaginatedResponse<Idiom>> => {
+  const { filter, sort = "createdAt,DESC", ...rest } = params;
+
   try {
-    const response = await http.get<PaginatedResponse>("/idioms", {
-      page,
-      limit,
-      filter,
-      level,
-      type,
+    const response = await http.get<PaginatedResponse<Idiom>>("/idioms", {
+      ...rest,
       sort,
-      order,
+      filter: typeof filter === "object" ? JSON.stringify(filter) : filter,
     });
     return response.data;
   } catch (error) {
     console.warn("Backend fetchAll failed, using LocalStorage fallback.");
+    const search = rest.search || "";
     try {
       const stored = localStorage.getItem("custom_idioms");
       const data = stored ? JSON.parse(stored) : [];
-      const filtered = filter
+      const filtered = search
         ? data.filter(
             (item: any) =>
-              item.hanzi.toLowerCase().includes(filter.toLowerCase()) ||
-              item.pinyin.toLowerCase().includes(filter.toLowerCase())
+              item.hanzi.toLowerCase().includes(search.toLowerCase()) ||
+              item.pinyin.toLowerCase().includes(search.toLowerCase())
           )
         : data;
 
       return {
         data: filtered,
-        meta: { total: filtered.length, page: 1, lastPage: 1, limit },
+        meta: {
+          total: filtered.length,
+          page: 1,
+          lastPage: 1,
+          limit: params.limit || 12,
+        },
       };
     } catch {
-      return { data: [], meta: { total: 0, page: 1, lastPage: 1, limit } };
+      return {
+        data: [],
+        meta: { total: 0, page: 1, lastPage: 1, limit: params.limit || 12 },
+      };
     }
   }
 };
@@ -222,22 +216,17 @@ export interface SearchLog {
 }
 
 export const fetchSearchLogs = async (
-  page: number = 1,
-  limit: number = 20,
-  search: string = "",
-  startDate?: string,
-  endDate?: string
-): Promise<{ data: SearchLog[]; meta: { lastPage: number } }> => {
-  const response = await http.get<{
-    data: SearchLog[];
-    meta: { lastPage: number };
-  }>("/idioms/admin/search-logs", {
-    page,
-    limit,
-    search,
-    startDate,
-    endDate,
-  });
+  params: QueryParams = {}
+): Promise<PaginatedResponse<any>> => {
+  const { filter, ...rest } = params;
+
+  const response = await http.get<PaginatedResponse<any>>(
+    "/idioms/admin/search-logs",
+    {
+      ...rest,
+      filter: typeof filter === "object" ? JSON.stringify(filter) : filter,
+    }
+  );
   return response.data;
 };
 

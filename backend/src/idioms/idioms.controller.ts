@@ -33,16 +33,14 @@ export class IdiomsController {
   async getSearchLogs(
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 20,
-    @Query('search') search: string = '',
-    @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
+    @Query('filter') filter: string = '',
+    @Query('sort') sort: string = 'lastsearched,DESC',
   ) {
     return this.idiomsService.getSearchLogs(
-      page,
-      limit,
-      search,
-      startDate,
-      endDate,
+      Number(page),
+      Number(limit),
+      filter,
+      sort,
     );
   }
 
@@ -62,31 +60,30 @@ export class IdiomsController {
   async findAll(
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 12,
+    @Query('search') search: string = '',
     @Query('filter') filter: string = '',
-    @Query('sort') sort: string = 'createdAt',
-    @Query('order') order: 'ASC' | 'DESC' = 'DESC',
-    @Query('level') level?: string,
-    @Query('type') type?: string,
+    @Query('sort') sort: string = 'createdAt,DESC',
   ) {
     return this.idiomsService.findAll(
       Number(page),
       Number(limit),
+      search,
       filter,
       sort,
-      order,
-      level,
-      type,
     );
   }
 
   @Get('suggestions')
-  @Get('suggestions')
   async getSuggestions(
-    @Query('query') query: string,
+    @Query('search') search: string = '',
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 8,
   ) {
-    return this.idiomsService.fetchSuggestions(query, page, limit);
+    return this.idiomsService.fetchSuggestions(
+      search,
+      Number(page),
+      Number(limit),
+    );
   }
 
   @Get('daily')

@@ -67,16 +67,19 @@ export class IdiomCommentsService {
     idiomId: string,
     page: number = 1,
     limit: number = 10,
-    sort: string = 'createdAt',
-    order: 'ASC' | 'DESC' = 'DESC',
+    sort: string = 'createdAt,DESC',
   ) {
     const skip = (page - 1) * limit;
+
+    const [sortField, sortOrder] = sort.split(',');
+    const order = (sortOrder?.toUpperCase() as 'ASC' | 'DESC') || 'DESC';
+
     const [data, total] = await this.commentRepository.findAndCount({
       where: {
         idiom: { id: idiomId },
         status: CommentStatus.APPROVED,
       },
-      order: { [sort]: order },
+      order: { [sortField]: order },
       relations: ['user'],
       take: limit,
       skip: skip,
@@ -94,7 +97,7 @@ export class IdiomCommentsService {
   }
 
   async findAll(query: CommentQueryDto) {
-    const {
+    let {
       status,
       idiomId,
       userId,
@@ -102,7 +105,24 @@ export class IdiomCommentsService {
       onlyReported,
       page = 1,
       limit = 20,
+      filter,
     } = query;
+
+    if (filter && typeof filter === 'string' && filter.trim().startsWith('{')) {
+      try {
+        const parsed = JSON.parse(filter);
+        status = parsed.status || status;
+        idiomId = parsed.idiomId || idiomId;
+        userId = parsed.userId || userId;
+        search = parsed.search || search;
+        onlyReported =
+          parsed.onlyReported !== undefined
+            ? parsed.onlyReported
+            : onlyReported;
+      } catch (e) {
+        // Fallback
+      }
+    }
 
     const queryBuilder = this.commentRepository
       .createQueryBuilder('comment')
@@ -132,8 +152,11 @@ export class IdiomCommentsService {
       );
     }
 
+    const [sortField, sortOrder] = (query.sort || 'createdAt,DESC').split(',');
+    const order = (sortOrder?.toUpperCase() as 'ASC' | 'DESC') || 'DESC';
+
     queryBuilder
-      .orderBy('comment.createdAt', 'DESC')
+      .orderBy(`comment.${sortField}`, order)
       .skip((page - 1) * limit)
       .take(limit);
 
@@ -141,10 +164,12 @@ export class IdiomCommentsService {
 
     return {
       data: comments,
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
+      meta: {
+        total,
+        page,
+        limit,
+        lastPage: Math.ceil(total / limit),
+      },
     };
   }
 

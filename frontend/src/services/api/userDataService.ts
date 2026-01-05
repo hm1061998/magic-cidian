@@ -1,5 +1,5 @@
 import { http } from "./httpService";
-import { Idiom } from "@/types";
+import { Idiom, QueryParams, PaginatedResponse } from "@/types";
 
 const API_BASE_URL = "/user-data";
 
@@ -20,17 +20,21 @@ export const checkSavedStatus = async (idiomId: string): Promise<boolean> => {
 };
 
 export const fetchSavedIdioms = async (
-  page: number = 1,
-  limit: number = 12
-): Promise<{ data: Idiom[]; meta: any }> => {
+  params: QueryParams = {}
+): Promise<PaginatedResponse<Idiom>> => {
+  const { filter, sort = "createdAt,DESC", ...rest } = params;
   try {
-    const response = await http.get<{ data: Idiom[]; meta: any }>(
+    const response = await http.get<PaginatedResponse<Idiom>>(
       `${API_BASE_URL}/saved`,
-      { page, limit }
+      {
+        ...rest,
+        sort,
+        filter: typeof filter === "object" ? JSON.stringify(filter) : filter,
+      }
     );
     return response.data;
   } catch (e) {
-    return { data: [], meta: { total: 0, lastPage: 1 } };
+    return { data: [], meta: { total: 0, lastPage: 1, page: 1, limit: 12 } };
   }
 };
 
@@ -43,17 +47,21 @@ export const updateSRSProgress = async (idiomId: string, srsData: any) => {
 };
 
 export const fetchSRSData = async (
-  page: number = 1,
-  limit: number = 100
-): Promise<{ data: any[]; meta: any }> => {
+  params: QueryParams = {}
+): Promise<PaginatedResponse<any>> => {
+  const { filter, sort = "createdAt,DESC", ...rest } = params;
   try {
-    const response = await http.get<{ data: any[]; meta: any }>(
+    const response = await http.get<PaginatedResponse<any>>(
       `${API_BASE_URL}/srs`,
-      { page, limit }
+      {
+        ...rest,
+        sort,
+        filter: typeof filter === "object" ? JSON.stringify(filter) : filter,
+      }
     );
     return response.data;
   } catch (e) {
-    return { data: [], meta: { total: 0, lastPage: 1 } };
+    return { data: [], meta: { total: 0, lastPage: 1, page: 1, limit: 12 } };
   }
 };
 
@@ -64,17 +72,21 @@ export const addToHistory = async (idiomId: string) => {
 };
 
 export const fetchHistory = async (
-  page: number = 1,
-  limit: number = 20
-): Promise<{ data: Idiom[]; meta: any }> => {
+  params: QueryParams = {}
+): Promise<PaginatedResponse<Idiom>> => {
+  const { filter, sort = "createdAt,DESC", ...rest } = params;
   try {
-    const response = await http.get<{ data: Idiom[]; meta: any }>(
+    const response = await http.get<PaginatedResponse<Idiom>>(
       `${API_BASE_URL}/history`,
-      { page, limit }
+      {
+        ...rest,
+        sort,
+        filter: typeof filter === "object" ? JSON.stringify(filter) : filter,
+      }
     );
     return response.data;
   } catch (e) {
-    return { data: [], meta: { total: 0, lastPage: 1 } };
+    return { data: [], meta: { total: 0, lastPage: 1, page: 1, limit: 12 } };
   }
 };
 

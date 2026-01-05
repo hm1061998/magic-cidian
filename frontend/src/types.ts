@@ -58,3 +58,24 @@ export interface Feedback {
   createdAt: string;
   updatedAt: string;
 }
+
+// Common Query Parameters for APIs
+export interface QueryParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  filter?: string | Record<string, any>;
+  sort?: string; // Standardized to "field,order" (e.g., "createdAt,DESC")
+}
+
+// Common Paginated Response wrapper
+export interface PaginatedResponse<T> {
+  data: T[];
+  meta: {
+    total: number;
+    page: number;
+    lastPage: number;
+    limit: number;
+    hasMore?: boolean;
+  };
+}

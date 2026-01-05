@@ -36,9 +36,17 @@ const SearchLogs: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   const fetchLogs = async () => {
     try {
       setLoading(true);
-      const data = await fetchSearchLogs(page, 20, search, startDate, endDate);
-      setLogs(data.data);
-      setTotalPages(data.meta.lastPage);
+      const response = await fetchSearchLogs({
+        page,
+        limit: 20,
+        search: search,
+        filter: {
+          startDate: startDate || undefined,
+          endDate: endDate || undefined,
+        },
+      });
+      setLogs(response.data);
+      setTotalPages(response.meta.lastPage);
       setSelectedQueries([]); // Clear selection when data changes
     } catch (error) {
       console.error(error);
@@ -291,7 +299,7 @@ const SearchLogs: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
                           : "border-slate-100"
                       }`}
                     >
-                      <label className="absolute top-4 left-4 z-10 w-full h-12 !p-0 block cursor-pointer">
+                      <label className="absolute top-4 left-4 z-10 w-full h-12 p-0! block cursor-pointer">
                         <input
                           type="checkbox"
                           checked={selectedQueries.includes(log.query)}

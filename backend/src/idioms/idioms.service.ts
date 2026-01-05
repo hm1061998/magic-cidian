@@ -99,17 +99,31 @@ export class IdiomsService {
   async getSearchLogs(
     page: number = 1,
     limit: number = 20,
-    search: string = '',
-    startDate?: string,
-    endDate?: string,
+    filter: string = '',
+    sort: string = 'count,DESC',
   ) {
     const skip = (page - 1) * limit;
+
+    let search = filter;
+    let startDate: string | undefined;
+    let endDate: string | undefined;
+
+    if (filter && typeof filter === 'string' && filter.trim().startsWith('{')) {
+      try {
+        const parsedFilter = JSON.parse(filter);
+        search = parsedFilter.search || '';
+        startDate = parsedFilter.startDate;
+        endDate = parsedFilter.endDate;
+      } catch (e) {
+        // Fallback
+      }
+    }
 
     const queryBuilder = this.searchLogRepository
       .createQueryBuilder('log')
       .select('log.query', 'query')
       .addSelect('COUNT(log.id)', 'count')
-      .addSelect('MAX(log.createdAt)', 'lastSearched')
+      .addSelect('MAX(log.createdAt)', 'lastsearched')
       .where('log.found = :found', { found: false });
 
     if (search) {
@@ -158,9 +172,12 @@ export class IdiomsService {
     const countResult = await countQuery.getRawOne();
     const total = parseInt(countResult?.total || '0');
 
+    const [sortField, sortOrder] = sort.split(',');
+    const order = (sortOrder?.toUpperCase() as 'ASC' | 'DESC') || 'DESC';
+
     const data = await queryBuilder
       .groupBy('log.query')
-      .orderBy('count', 'DESC')
+      .orderBy(sortField, order)
       .offset(skip)
       .limit(limit)
       .getRawMany();
@@ -169,7 +186,7 @@ export class IdiomsService {
       data: data.map((item) => ({
         query: item.query,
         count: parseInt(item.count),
-        lastSearched: item.lastSearched,
+        lastSearched: item.lastsearched,
       })),
       meta: {
         total,
@@ -200,31 +217,51 @@ export class IdiomsService {
   async findAll(
     page: number = 1,
     limit: number = 12,
+    search: string = '',
     filter: string = '',
-    sort: string = 'createdAt',
-    order: 'ASC' | 'DESC' = 'DESC',
-    level?: string,
-    type?: string,
+    sort: string = 'createdAt,DESC',
   ) {
     const skip = (page - 1) * limit;
 
+    let searchKeyword = search;
+    let filterLevel: string | undefined = undefined;
+    let filterType: string | undefined = undefined;
+
+    // Handle combined sort parameter (e.g., "createdAt,DESC")
+    const [sortField, sortOrder] = sort.split(',');
+    const order = (sortOrder?.toUpperCase() as 'ASC' | 'DESC') || 'DESC';
+
+    // ... (rest of filtering logic)
+    // Try to parse filter as JSON if it looks like an object (holds level/type)
+    if (filter && typeof filter === 'string' && filter.trim().startsWith('{')) {
+      try {
+        const parsedFilter = JSON.parse(filter);
+        searchKeyword = searchKeyword || parsedFilter.keyword || '';
+        filterLevel = parsedFilter.level || undefined;
+        filterType = parsedFilter.type || undefined;
+      } catch (e) {
+        if (!searchKeyword) searchKeyword = filter;
+      }
+    } else if (filter && !searchKeyword) {
+      searchKeyword = filter;
+    }
+
     const query: any = {};
+    if (filterLevel) query.level = filterLevel;
+    if (filterType) query.type = filterType;
 
-    if (level) query.level = level;
-    if (type) query.type = type;
-
-    const whereCondition = filter
+    const whereCondition = searchKeyword
       ? [
-          { ...query, hanzi: ILike(`%${filter}%`) },
-          { ...query, pinyin: ILike(`%${filter}%`) },
-          { ...query, vietnameseMeaning: ILike(`%${filter}%`) },
+          { ...query, hanzi: ILike(`%${searchKeyword}%`) },
+          { ...query, pinyin: ILike(`%${searchKeyword}%`) },
+          { ...query, vietnameseMeaning: ILike(`%${searchKeyword}%`) },
         ]
       : query;
 
     try {
       const [data, total] = await this.idiomRepository.findAndCount({
         where: whereCondition,
-        order: { [sort]: order },
+        order: { [sortField]: order },
         select: [
           'id',
           'hanzi',
@@ -263,10 +300,10 @@ export class IdiomsService {
     return idiom;
   }
 
-  async fetchSuggestions(query: string, page: number = 1, limit: number = 8) {
+  async fetchSuggestions(search: string, page: number = 1, limit: number = 8) {
     const skip = (page - 1) * limit;
 
-    if (!query || query.trim().length < 1) {
+    if (!search || search.trim().length < 1) {
       // Return most recent idioms if no query
       const [data, total] = await this.idiomRepository.findAndCount({
         order: { createdAt: 'DESC' },
@@ -281,12 +318,13 @@ export class IdiomsService {
           page,
           limit,
           total,
+          lastPage: Math.ceil(total / limit) || 1,
           hasMore: skip + limit < total,
         },
       };
     }
 
-    const normalizedQuery = query.toLowerCase().trim();
+    const normalizedQuery = search.toLowerCase().trim();
 
     const [data, total] = await this.idiomRepository.findAndCount({
       where: [
@@ -305,6 +343,7 @@ export class IdiomsService {
         page,
         limit,
         total,
+        lastPage: Math.ceil(total / limit) || 1,
         hasMore: skip + limit < total,
       },
     };

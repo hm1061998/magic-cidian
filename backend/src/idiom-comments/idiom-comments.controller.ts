@@ -31,15 +31,13 @@ export class IdiomCommentsController {
     @Param('idiomId') idiomId: string,
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
-    @Query('sort') sort: string = 'createdAt',
-    @Query('order') order: 'ASC' | 'DESC' = 'DESC',
+    @Query('sort') sort: string = 'createdAt,DESC',
   ) {
     return this.commentsService.findByIdiom(
       idiomId,
       Number(page),
       Number(limit),
       sort,
-      order,
     );
   }
 

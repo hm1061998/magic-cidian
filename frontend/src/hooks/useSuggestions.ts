@@ -16,7 +16,7 @@ export const useSuggestions = (
     const fetchTimer = setTimeout(async () => {
       if (query.trim() && searchMode === "database" && !isIdiomSelected) {
         try {
-          const { data } = await fetchSuggestions(query);
+          const { data } = await fetchSuggestions({ search: query });
           setSuggestions(data);
           setShowSuggestions(data.length > 0);
           setSelectedIndex(-1);

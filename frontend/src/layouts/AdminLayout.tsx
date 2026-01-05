@@ -15,6 +15,7 @@ import {
   ExclamationIcon,
 } from "@/components/common/icons";
 import { fetchCommentStats } from "@/services/api/commentService";
+import { getReportStats } from "@/services/api/reportService";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 interface NavItemProps {
@@ -75,6 +76,7 @@ const AdminLayout: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const [pendingCount, setPendingCount] = useState(0);
+  const [reportPendingCount, setReportPendingCount] = useState(0);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const scrollContainerRef = useRef<HTMLElement>(null);
 
@@ -100,10 +102,13 @@ const AdminLayout: React.FC = () => {
   useEffect(() => {
     const loadStats = async () => {
       try {
-        const stats = await fetchCommentStats();
-        setPendingCount(stats.pending);
+        const commentStats = await fetchCommentStats();
+        setPendingCount(commentStats.pending);
+
+        const reportStats = await getReportStats();
+        setReportPendingCount(reportStats.pending);
       } catch (err) {
-        console.error("Failed to fetch comment stats", err);
+        console.error("Failed to fetch stats", err);
       }
     };
 
@@ -217,6 +222,7 @@ const AdminLayout: React.FC = () => {
               to="/admin/reports"
               icon={<ExclamationIcon />}
               label="Báo lỗi từ điển"
+              badge={reportPendingCount}
             />
             <NavItem
               to="/admin/search-logs"

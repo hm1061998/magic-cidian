@@ -37,6 +37,12 @@ export class DictionaryReportsController {
     return this.reportsService.findMyReports(req.user.id, query);
   }
 
+  @Get('stats')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  async getStats() {
+    return this.reportsService.getStats();
+  }
+
   @Get()
   @UseGuards(JwtAuthGuard, AdminGuard)
   async findAll(@Query() query: ReportQueryDto) {

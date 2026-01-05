@@ -4,6 +4,7 @@ import {
   fetchCommentStats,
   type CommentStats,
 } from "@/services/api/commentService";
+import { getReportStats } from "@/services/api/reportService";
 
 interface Stats {
   totalIdioms: number;
@@ -22,21 +23,27 @@ interface Stats {
 interface AdminState {
   stats: Stats | null;
   commentStats: CommentStats | null;
+  reportStats: { pending: number; topReported: any[] } | null;
   loading: boolean;
   commentLoading: boolean;
+  reportLoading: boolean;
   error: string | null;
   lastUpdated: number | null;
   commentsLastUpdated: number | null;
+  reportsLastUpdated: number | null;
 }
 
 const initialState: AdminState = {
   stats: null,
   commentStats: null,
+  reportStats: null,
   loading: false,
   commentLoading: false,
+  reportLoading: false,
   error: null,
   lastUpdated: null,
   commentsLastUpdated: null,
+  reportsLastUpdated: null,
 };
 
 // Async thunk to fetch admin stats with caching logic
@@ -90,6 +97,30 @@ export const getCommentStats = createAsyncThunk(
   }
 );
 
+// Async thunk to fetch report stats
+export const fetchReportStats = createAsyncThunk(
+  "admin/fetchReportStats",
+  async (force: boolean | undefined, { getState, rejectWithValue }) => {
+    const state = getState() as { admin: AdminState };
+    const { reportsLastUpdated, reportStats } = state.admin;
+
+    const CACHE_DURATION = 5 * 60 * 1000;
+    const isFresh =
+      reportsLastUpdated && Date.now() - reportsLastUpdated < CACHE_DURATION;
+
+    if (!force && reportStats && isFresh) {
+      return reportStats;
+    }
+
+    try {
+      const data = await getReportStats();
+      return data;
+    } catch (error: any) {
+      return rejectWithValue(error.message || "Không thể tải thống kê báo cáo");
+    }
+  }
+);
+
 const adminSlice = createSlice({
   name: "admin",
   initialState,
@@ -97,8 +128,10 @@ const adminSlice = createSlice({
     clearAdminStats: (state) => {
       state.stats = null;
       state.commentStats = null;
+      state.reportStats = null;
       state.lastUpdated = null;
       state.commentsLastUpdated = null;
+      state.reportsLastUpdated = null;
     },
   },
   extraReducers: (builder) => {
@@ -127,6 +160,18 @@ const adminSlice = createSlice({
       })
       .addCase(getCommentStats.rejected, (state) => {
         state.commentLoading = false;
+      })
+      // Report Stats
+      .addCase(fetchReportStats.pending, (state) => {
+        state.reportLoading = true;
+      })
+      .addCase(fetchReportStats.fulfilled, (state, action) => {
+        state.reportLoading = false;
+        state.reportStats = action.payload;
+        state.reportsLastUpdated = Date.now();
+      })
+      .addCase(fetchReportStats.rejected, (state) => {
+        state.reportLoading = false;
       });
   },
 });

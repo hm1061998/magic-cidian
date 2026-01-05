@@ -61,6 +61,13 @@ export const getAllReports = async (query: ReportQuery = {}) => {
   return response.data;
 };
 
+export const getReportStats = async () => {
+  const response = await http.get<{ pending: number; topReported: any[] }>(
+    "/dictionary-reports/stats"
+  );
+  return response.data;
+};
+
 export const updateReport = async (
   id: string,
   data: Partial<DictionaryReport>

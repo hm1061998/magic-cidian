@@ -98,6 +98,28 @@ export class DictionaryReportsService {
     };
   }
 
+  async getStats() {
+    const pending = await this.reportRepository.count({
+      where: { status: ReportStatus.PENDING },
+    });
+
+    const topReported = await this.reportRepository
+      .createQueryBuilder('report')
+      .innerJoin('report.idiom', 'idiom')
+      .select([
+        'idiom.id AS id',
+        'idiom.hanzi AS hanzi',
+        'idiom.pinyin AS pinyin',
+        'COUNT(report.id) AS totalreports',
+      ])
+      .groupBy('idiom.id, idiom.hanzi, idiom.pinyin')
+      .orderBy('totalreports', 'DESC')
+      .take(5)
+      .getRawMany();
+
+    return { pending, topReported };
+  }
+
   async findOne(id: string) {
     const report = await this.reportRepository.findOne({
       where: { id },

@@ -16,24 +16,29 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
-import { getAdminStats, getCommentStats } from "@/redux/adminSlice";
+import {
+  getAdminStats,
+  getCommentStats,
+  fetchReportStats,
+} from "@/redux/adminSlice";
 import { toast } from "@/libs/Toast";
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
-  const { stats, loading, error, commentStats } = useSelector(
+  const { stats, loading, error, commentStats, reportStats } = useSelector(
     (state: RootState) => state.admin
   );
 
   useEffect(() => {
     dispatch(getAdminStats(false));
     dispatch(getCommentStats(false));
+    dispatch(fetchReportStats(false));
   }, [dispatch]);
-
   const onRefresh = () => {
     dispatch(getAdminStats(true));
     dispatch(getCommentStats(true));
+    dispatch(fetchReportStats(true));
   };
 
   const onNavigate = (path: string) => {
@@ -55,7 +60,7 @@ const AdminDashboard: React.FC = () => {
   if (error && !stats) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-8 text-center min-h-[60vh]">
-        <div className="bg-red-50 text-red-600 p-8 rounded-[2rem] border border-red-100 shadow-xl shadow-red-50">
+        <div className="bg-red-50 text-red-600 p-8 rounded-4xl border border-red-100 shadow-xl shadow-red-50">
           <FlagIcon className="w-16 h-16 mx-auto mb-4 opacity-20" />
           <p className="font-bold text-xl mb-2 text-red-700">Lỗi kết nối</p>
           <p className="text-sm opacity-80 mb-6">{error}</p>
@@ -105,7 +110,7 @@ const AdminDashboard: React.FC = () => {
       {/* Main Grid Layout - Compact Bento */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6">
         {/* Row 1, Col 1-8: Welcome & Strategy */}
-        <div className="lg:col-span-7 xl:col-span-8 bg-gradient-to-br from-slate-900 to-slate-800 rounded-[2rem] p-6 sm:p-8 md:p-10 text-white relative overflow-hidden shadow-2xl min-h-[260px] sm:min-h-[300px] flex flex-col justify-center">
+        <div className="lg:col-span-7 xl:col-span-8 bg-linear-to-br from-slate-900 to-slate-800 rounded-4xl p-6 sm:p-8 md:p-10 text-white relative overflow-hidden shadow-2xl min-h-[260px] sm:min-h-[300px] flex flex-col justify-center">
           <div className="relative z-10 space-y-4 sm:space-y-5">
             <h2 className="text-2xl sm:text-3xl md:text-3xl xl:text-4xl font-bold leading-tight">
               Phát triển kho từ vựng.
@@ -140,9 +145,9 @@ const AdminDashboard: React.FC = () => {
           <CompactStatCard
             icon={<ChatBubbleIcon className="w-5 h-5 sm:w-6 sm:h-6" />}
             label="Chờ duyệt"
-            value={commentStats?.pending || 0}
+            value={reportStats?.pending || 0}
             color="amber"
-            onClick={() => onNavigate("/admin/comments")}
+            onClick={() => onNavigate("/admin/reports?status=pending")}
           />
         </div>
 
@@ -318,7 +323,7 @@ const AdminDashboard: React.FC = () => {
             icon={<FlagIcon className="w-4 h-4 text-red-600" />}
             action={
               <button
-                onClick={() => onNavigate("/admin/comments?onlyReported=true")}
+                onClick={() => onNavigate("/admin/reports")}
                 className="text-xs font-bold text-red-600 hover:text-red-700 flex items-center gap-1"
               >
                 Xem tất cả <ChevronRightIcon className="w-3 h-3" />
@@ -326,19 +331,11 @@ const AdminDashboard: React.FC = () => {
             }
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {commentStats?.topReported?.slice(0, 4).map((item: any) => (
-                <ReportItem
-                  key={item.id}
-                  item={item}
-                  onClick={(item: any) =>
-                    onNavigate(
-                      `/admin/comments?idiomId=${item.id}&onlyReported=true`
-                    )
-                  }
-                />
+              {reportStats?.topReported?.slice(0, 4).map((item: any) => (
+                <ReportItem key={item.id} item={item} />
               ))}
-              {(!commentStats?.topReported ||
-                commentStats.topReported.length === 0) && (
+              {(!reportStats?.topReported ||
+                reportStats.topReported.length === 0) && (
                 <p className="col-span-2 text-slate-400 text-xs italic py-4 text-center">
                   Không có nội dung rà soát.
                 </p>
@@ -361,7 +358,7 @@ const CompactStatCard = ({ icon, label, value, color, onClick }: any) => {
   return (
     <div
       onClick={onClick}
-      className={`p-4 sm:p-6 rounded-[1.5rem] border transition-all cursor-pointer shadow-sm hover:shadow-md active:scale-[0.98] flex items-center justify-between group ${styles[color]}`}
+      className={`p-4 sm:p-6 rounded-3xl border transition-all cursor-pointer shadow-sm hover:shadow-md active:scale-[0.98] flex items-center justify-between group ${styles[color]}`}
     >
       <div>
         <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest opacity-60 mb-0.5 sm:mb-1">
@@ -377,7 +374,7 @@ const CompactStatCard = ({ icon, label, value, color, onClick }: any) => {
 };
 
 const Section = ({ title, icon, action, children }: any) => (
-  <div className="bg-white rounded-[1.5rem] p-5 border border-slate-100 shadow-sm h-full hover:shadow-md transition-shadow">
+  <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm h-full hover:shadow-md transition-shadow">
     <div className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-2">
         {icon}

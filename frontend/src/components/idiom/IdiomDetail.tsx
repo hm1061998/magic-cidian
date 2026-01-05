@@ -11,6 +11,8 @@ import {
   SpinnerIcon,
   ChevronRightIcon,
   CheckCircleIcon,
+  ExclamationIcon,
+  ChatBubbleIcon,
 } from "@/components/common/icons";
 import IdiomComments from "./IdiomComments";
 import { toast } from "@/libs/Toast";
@@ -59,6 +61,7 @@ const IdiomDetail: React.FC<IdiomDetailProps> = ({
   idiom,
   isLoggedIn,
   isPremium,
+  onClickReport,
 }) => {
   const [isSaved, setIsSaved] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -231,11 +234,24 @@ const IdiomDetail: React.FC<IdiomDetailProps> = ({
                 )}
               </button>
               <button
-                onClick={scrollToComments}
+                onClick={() => {
+                  if (!isLoggedIn) {
+                    toast.error("Vui lòng đăng nhập để báo lỗi.");
+                    return;
+                  }
+                  onClickReport();
+                }}
                 className="flex-1 md:w-48 h-14 md:h-16 bg-slate-900 text-white rounded-xl md:rounded-2xl flex items-center justify-center gap-2 md:gap-3 font-black text-sm md:text-base shadow-xl shadow-slate-900/20 hover:bg-slate-800 transition-all active:scale-95 group"
               >
-                <span>Góp ý</span>
-                <PencilIcon className="w-3.5 h-3.5 md:w-4 md:h-4 text-white/50 group-hover:text-white transition-colors" />
+                <ExclamationIcon className="w-5 h-5 md:w-6 md:h-6 group-hover:scale-110 transition-transform" />
+                <span>Báo lỗi</span>
+              </button>
+              <button
+                onClick={scrollToComments}
+                className="flex-1 md:w-48 h-14 md:h-16 bg-white border-2 border-slate-100 text-slate-400 rounded-xl md:rounded-2xl flex items-center justify-center gap-2 md:gap-3 font-black text-sm md:text-base hover:border-indigo-200 hover:text-indigo-600 transition-all active:scale-95 group"
+              >
+                <ChatBubbleIcon className="w-5 h-5 md:w-6 md:h-6 group-hover:scale-110 transition-transform" />
+                <span>Thảo luận</span>
               </button>
             </div>
           </div>

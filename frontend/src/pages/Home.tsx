@@ -8,6 +8,7 @@ import SearchSuggestions from "@/components/home/SearchSuggestions";
 import HomeActionCards from "@/components/home/HomeActionCards";
 import { useIdiomSearch } from "@/hooks/useIdiomSearch";
 import { useSuggestions } from "@/hooks/useSuggestions";
+import ReportModal from "@/components/idiom/ReportModal";
 
 const Home: React.FC = () => {
   const {
@@ -32,6 +33,7 @@ const Home: React.FC = () => {
 
   const [voiceLang, setVoiceLang] = useState<"vi-VN" | "zh-CN">("vi-VN");
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   const {
     isListening,
@@ -86,8 +88,16 @@ const Home: React.FC = () => {
             idiom={currentIdiom}
             isLoggedIn={isLoggedIn}
             isPremium={true}
+            onClickReport={() => setIsReportModalOpen(true)}
           />
         </div>
+
+        <ReportModal
+          isOpen={isReportModalOpen}
+          onClose={() => setIsReportModalOpen(false)}
+          idiomId={currentIdiom.id || ""}
+          idiomHanzi={currentIdiom.hanzi}
+        />
       </div>
     );
   }

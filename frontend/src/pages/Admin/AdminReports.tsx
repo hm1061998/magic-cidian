@@ -1,0 +1,436 @@
+import React, { useState, useEffect } from "react";
+import {
+  ArrowLeftIcon,
+  ExclamationIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  ClockIcon,
+  TrashIcon,
+  SearchIcon,
+  CloseIcon,
+  FunnelIcon,
+  SpinnerIcon,
+} from "@/components/common/icons";
+import {
+  getAllReports,
+  updateReport,
+  deleteReport,
+  DictionaryReport,
+} from "@/services/api/reportService";
+import { modalService } from "@/libs/Modal";
+import { toast } from "@/libs/Toast";
+import Pagination from "@/components/common/Pagination";
+import Drawer from "@/components/common/Drawer";
+
+const REPORT_TYPES = [
+  { value: "content_error", label: "Sai nội dung" },
+  { value: "audio_error", label: "Lỗi âm thanh" },
+  { value: "missing_info", label: "Thiếu thông tin" },
+  { value: "other", label: "Lỗi khác" },
+];
+
+const AdminReports: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
+  const [reports, setReports] = useState<DictionaryReport[]>([]);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isUpdating, setIsUpdating] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadReports();
+  }, [statusFilter, typeFilter, page]);
+
+  const loadReports = async () => {
+    setLoading(true);
+    try {
+      const response = await getAllReports({
+        page,
+        limit: 10,
+        status: statusFilter !== "all" ? statusFilter : undefined,
+        type: typeFilter !== "all" ? typeFilter : undefined,
+        search: searchQuery.trim() || undefined,
+      });
+      setReports(response.data);
+      setTotalPages(response.meta.totalPages);
+      setTotalCount(response.meta.total);
+    } catch (error) {
+      console.error("Error loading reports", error);
+      toast.error("Không thể tải danh sách báo cáo");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateStatus = async (
+    reportId: string,
+    status: string,
+    adminNote?: string
+  ) => {
+    setIsUpdating(reportId);
+    try {
+      await updateReport(reportId, { status: status as any, adminNote });
+      toast.success("Đã cập nhật trạng thái báo cáo");
+      await loadReports();
+    } catch (error) {
+      toast.error("Cập nhật thất bại");
+    } finally {
+      setIsUpdating(null);
+    }
+  };
+
+  const handleDelete = async (reportId: string) => {
+    const confirmed = await modalService.danger(
+      "Bạn có chắc chắn muốn xóa báo cáo này? Hành động này không thể hoàn tác.",
+      "Xác nhận xóa"
+    );
+    if (!confirmed) return;
+
+    try {
+      await deleteReport(reportId);
+      toast.success("Đã xóa báo cáo");
+      await loadReports();
+    } catch (error) {
+      toast.error("Xóa thất bại");
+    }
+  };
+
+  const openNoteModal = async (report: DictionaryReport, newStatus: string) => {
+    const note = window.prompt(
+      "Nhập phản hồi cho người dùng (tùy chọn):",
+      report.adminNote || ""
+    );
+    if (note !== null) {
+      await handleUpdateStatus(report.id, newStatus, note);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString("vi-VN");
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "resolved":
+        return (
+          <span className="inline-flex items-center px-2 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg bg-green-100 text-green-700 border border-green-200">
+            <CheckCircleIcon className="w-3 h-3 mr-1" />
+            Đã xử lý
+          </span>
+        );
+      case "rejected":
+        return (
+          <span className="inline-flex items-center px-2 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg bg-red-100 text-red-700 border border-red-200">
+            <XCircleIcon className="w-3 h-3 mr-1" />
+            Từ chối
+          </span>
+        );
+      case "processing":
+        return (
+          <span className="inline-flex items-center px-2 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg bg-indigo-100 text-indigo-700 border border-indigo-200">
+            <SpinnerIcon className="w-3 h-3 mr-1" />
+            Đang xử lý
+          </span>
+        );
+      default:
+        return (
+          <span className="inline-flex items-center px-2 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg bg-yellow-100 text-yellow-700 border border-yellow-200">
+            <ClockIcon className="w-3 h-3 mr-1" />
+            Chờ duyệt
+          </span>
+        );
+    }
+  };
+
+  const getTypeLabel = (type: string) => {
+    return REPORT_TYPES.find((t) => t.value === type)?.label || type;
+  };
+
+  return (
+    <div className="h-full flex flex-col overflow-hidden bg-slate-50">
+      <div className="flex-none bg-white border-b border-slate-200 shadow-sm z-10 p-4 sm:p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              {onBack && (
+                <button
+                  onClick={onBack}
+                  className="p-2 text-slate-400 hover:text-red-700 hover:bg-red-50 rounded-xl transition-all border border-transparent hover:border-red-100"
+                >
+                  <ArrowLeftIcon className="w-5 h-5" />
+                </button>
+              )}
+              <div>
+                <h1 className="text-xl sm:text-2xl font-black text-slate-800 flex items-center gap-3">
+                  <ExclamationIcon className="w-6 h-6 sm:w-8 sm:h-8 text-red-600 shrink-0" />
+                  Báo lỗi từ điển
+                </h1>
+                <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-0.5">
+                  Quản lý {totalCount} báo cáo từ người dùng
+                </p>
+              </div>
+            </div>
+
+            {/* <div className="flex items-center gap-2">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  setPage(1);
+                  loadReports();
+                }}
+                className="relative flex-1 sm:w-64"
+              >
+                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm báo cáo..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all text-sm font-medium"
+                />
+              </form>
+              <button
+                onClick={() => setIsFilterOpen(true)}
+                className={`p-2.5 rounded-xl border transition-all ${
+                  statusFilter !== "all" || typeFilter !== "all"
+                    ? "bg-red-50 border-red-200 text-red-600"
+                    : "bg-white border-slate-200 text-slate-500 hover:border-slate-300"
+                }`}
+              >
+                <FunnelIcon className="w-5 h-5" />
+              </button>
+            </div> */}
+          </div>
+
+          <div className="flex gap-2 mt-6 overflow-x-auto no-scrollbar">
+            {["all", "pending", "processing", "resolved", "rejected"].map(
+              (s) => (
+                <button
+                  key={s}
+                  onClick={() => {
+                    setStatusFilter(s);
+                    setPage(1);
+                  }}
+                  className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all whitespace-nowrap border-2 ${
+                    statusFilter === s
+                      ? "bg-slate-900 border-slate-900 text-white shadow-lg"
+                      : "bg-white border-slate-100 text-slate-400 hover:border-slate-200"
+                  }`}
+                >
+                  {s === "all"
+                    ? "Tất cả"
+                    : s === "pending"
+                    ? "Chờ duyệt"
+                    : s === "processing"
+                    ? "Đang xử lý"
+                    : s === "resolved"
+                    ? "Đã xong"
+                    : "Từ chối"}
+                </button>
+              )
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar">
+        <div className="max-w-7xl mx-auto">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+              <SpinnerIcon className="w-10 h-10 animate-spin mb-4" />
+              <p className="font-black text-xs uppercase tracking-widest">
+                Đang tải dữ liệu...
+              </p>
+            </div>
+          ) : reports.length === 0 ? (
+            <div className="bg-white rounded-[2rem] border border-slate-100 p-20 flex flex-col items-center justify-center text-center shadow-sm">
+              <div className="w-20 h-20 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mb-6">
+                <ExclamationIcon className="w-10 h-10" />
+              </div>
+              <h3 className="text-xl font-black text-slate-800">
+                Không tìm thấy báo cáo
+              </h3>
+              <p className="text-slate-500 mt-2 font-medium">
+                Hiện tại không có báo cáo nào khớp với bộ lọc của bạn.
+              </p>
+              {(statusFilter !== "all" ||
+                typeFilter !== "all" ||
+                searchQuery) && (
+                <button
+                  onClick={() => {
+                    setStatusFilter("all");
+                    setTypeFilter("all");
+                    setSearchQuery("");
+                  }}
+                  className="mt-6 text-red-600 font-black text-sm uppercase tracking-widest hover:underline"
+                >
+                  Xóa tất cả bộ lọc
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+              {reports.map((report) => (
+                <div
+                  key={report.id}
+                  className="bg-white rounded-[1.5rem] sm:rounded-[2rem] border border-slate-100 p-5 sm:p-7 shadow-sm hover:shadow-xl transition-all group flex flex-col"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
+                        <ExclamationIcon className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600 block mb-0.5">
+                          {getTypeLabel(report.type)}
+                        </span>
+                        <h4 className="font-hanzi font-black text-lg text-slate-800 tracking-tight">
+                          {report.idiom?.hanzi}
+                        </h4>
+                      </div>
+                    </div>
+                    {getStatusBadge(report.status)}
+                  </div>
+
+                  <div className="bg-slate-50/50 rounded-2xl p-4 mb-4 border border-slate-100 flex-1">
+                    <p className="text-sm font-medium text-slate-700 leading-relaxed whitespace-pre-wrap">
+                      {report.description}
+                    </p>
+                  </div>
+
+                  {report.adminNote && (
+                    <div className="mb-4 p-4 bg-emerald-50/50 border border-emerald-100 rounded-2xl">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 mb-1">
+                        Phản hồi từ Admin:
+                      </p>
+                      <p className="text-xs font-bold text-emerald-700 italic">
+                        "{report.adminNote}"
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-50">
+                    <div className="overflow-hidden">
+                      <p className="text-[10px] font-black text-slate-800 truncate">
+                        Bởi: {report.user?.displayName || report.user?.username}
+                      </p>
+                      <p className="text-[9px] font-bold text-slate-400 uppercase">
+                        {formatDate(report.createdAt)}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {report.status !== "resolved" && (
+                        <button
+                          onClick={() => openNoteModal(report, "resolved")}
+                          disabled={isUpdating === report.id}
+                          className="px-3 py-1.5 bg-emerald-600 text-white text-[10px] font-black rounded-lg hover:bg-emerald-700 transition-all uppercase tracking-widest shadow-lg shadow-emerald-100"
+                        >
+                          Xử lý xong
+                        </button>
+                      )}
+                      {report.status === "pending" && (
+                        <button
+                          onClick={() =>
+                            handleUpdateStatus(report.id, "processing")
+                          }
+                          disabled={isUpdating === report.id}
+                          className="px-3 py-1.5 bg-indigo-600 text-white text-[10px] font-black rounded-lg hover:bg-indigo-700 transition-all uppercase tracking-widest shadow-lg shadow-indigo-100"
+                        >
+                          Đang xem
+                        </button>
+                      )}
+                      {report.status !== "rejected" &&
+                        report.status !== "resolved" && (
+                          <button
+                            onClick={() => openNoteModal(report, "rejected")}
+                            disabled={isUpdating === report.id}
+                            className="px-3 py-1.5 bg-slate-100 text-slate-600 text-[10px] font-black rounded-lg hover:bg-slate-200 transition-all uppercase tracking-widest"
+                          >
+                            Từ chối
+                          </button>
+                        )}
+                      <button
+                        onClick={() => handleDelete(report.id)}
+                        className="p-1.5 text-slate-300 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                      >
+                        <TrashIcon className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {totalPages > 1 && (
+            <div className="mt-8 flex justify-center">
+              <Pagination
+                currentPage={page}
+                totalPages={totalPages}
+                onPageChange={setPage}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+
+      <Drawer
+        isOpen={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
+        title="Bộ lọc báo cáo"
+        footer={
+          <button
+            onClick={() => {
+              setStatusFilter("all");
+              setTypeFilter("all");
+              setIsFilterOpen(false);
+            }}
+            className="w-full py-3 bg-white border-2 border-slate-100 text-slate-400 text-xs font-black rounded-xl hover:border-slate-200 uppercase tracking-widest transition-all"
+          >
+            Thiết lập lại
+          </button>
+        }
+      >
+        <div className="space-y-8 py-4">
+          <div className="space-y-4">
+            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">
+              Loại lỗi
+            </h4>
+            <div className="grid grid-cols-1 gap-2">
+              <button
+                onClick={() => setTypeFilter("all")}
+                className={`px-4 py-3 rounded-xl border-2 text-left transition-all text-xs font-black uppercase tracking-widest ${
+                  typeFilter === "all"
+                    ? "border-slate-900 bg-slate-900 text-white"
+                    : "border-slate-50 bg-white text-slate-400"
+                }`}
+              >
+                Tất cả loại lỗi
+              </button>
+              {REPORT_TYPES.map((t) => (
+                <button
+                  key={t.value}
+                  onClick={() => setTypeFilter(t.value)}
+                  className={`px-4 py-3 rounded-xl border-2 text-left transition-all text-xs font-black uppercase tracking-widest ${
+                    typeFilter === t.value
+                      ? "border-slate-900 bg-slate-900 text-white"
+                      : "border-slate-50 bg-white text-slate-400"
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </Drawer>
+    </div>
+  );
+};
+
+export default AdminReports;

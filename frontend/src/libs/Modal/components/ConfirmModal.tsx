@@ -59,7 +59,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
   const s = schemes[type || "info"];
 
   return (
-    <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-999 flex items-center justify-center p-4">
       {/* Premium Backdrop */}
       <div
         className="absolute inset-0 bg-slate-900/40 backdrop-blur-md animate-[fadeIn_0.3s_ease-out]"
@@ -69,13 +69,13 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
       {/* Hero Modal Card */}
       <div className="relative bg-white/95 backdrop-blur-xl rounded-[2.5rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.2)] max-w-[420px] w-full border border-white/40 animate-[pop_0.4s_cubic-bezier(0.34,1.56,0.64,1)] overflow-hidden">
         {/* Top Decorative Line */}
-        <div className={`h-2.5 w-full bg-gradient-to-r ${s.accent}`} />
+        <div className={`h-2.5 w-full bg-linear-to-r ${s.accent}`} />
 
         <div className="p-8 md:p-10 flex flex-col items-center text-center relative z-10">
           {/* Animated Icon Area */}
           <div className="relative mb-8 group">
             <div
-              className={`absolute inset-0 bg-gradient-to-br ${s.accent} blur-2xl opacity-20 group-hover:opacity-40 transition-opacity duration-500`}
+              className={`absolute inset-0 bg-linear-to-br ${s.accent} blur-2xl opacity-20 group-hover:opacity-40 transition-opacity duration-500`}
             ></div>
             <div
               className={`relative w-24 h-24 ${s.light} ${s.text} rounded-3xl flex items-center justify-center shadow-inner ring-4 ring-white`}
@@ -104,7 +104,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
             <button
               onClick={onConfirm}
               disabled={isProcessing}
-              className={`flex-1 order-1 sm:order-2 py-4 bg-gradient-to-br ${s.accent} text-white font-black rounded-2xl shadow-xl ${s.glow} transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed group border border-white/10`}
+              className={`flex-1 order-1 sm:order-2 py-4 bg-linear-to-br ${s.accent} text-white font-black rounded-2xl shadow-xl ${s.glow} transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed group border border-white/10`}
             >
               {isProcessing ? (
                 <SpinnerIcon className="w-6 h-6 animate-spin" />

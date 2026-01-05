@@ -12,6 +12,7 @@ import {
   HomeIcon,
   BrainIcon,
   SettingsIcon,
+  ExclamationIcon,
 } from "@/components/common/icons";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
@@ -334,6 +335,19 @@ const UserSidebar: React.FC<UserSidebarProps> = ({
                     return;
                   }
                   onViewChange("history");
+                  onClose();
+                }}
+              />
+              <MenuButton
+                icon={<ExclamationIcon className="w-5 h-5 text-red-600" />}
+                label="Báo cáo của tôi"
+                isActive={isPathActive("/reports")}
+                onClick={() => {
+                  if (!isLoggedIn) {
+                    toast.error("Vui lòng đăng nhập");
+                    return;
+                  }
+                  onViewChange("reports");
                   onClose();
                 }}
               />

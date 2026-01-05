@@ -14,9 +14,11 @@ import FlashcardReview from "@/pages/FlashcardReview";
 import WordSearchGame from "@/pages/WordSearchGame";
 import HistoryList from "@/pages/HistoryList";
 import Profile from "@/pages/Profile";
+import UserReportList from "@/pages/UserReportList";
 import Dashboard from "@/pages/Admin/Dashboard";
 import AdminComments from "@/pages/Admin/AdminComments";
 import SearchLogs from "@/pages/Admin/SearchLogs";
+import AdminReports from "@/pages/Admin/AdminReports";
 import { addToLocalHistory } from "@/services/api";
 import Auth from "@/pages/Auth";
 import RequireAuth from "@/context/RequireAuth";
@@ -102,8 +104,20 @@ const App: React.FC = () => {
                 <HistoryList
                   onBack={() => navigate("/")}
                   onSelect={(idiom) => {
-                    addToLocalHistory(idiom);
                     navigate(`/?query=${encodeURIComponent(idiom.hanzi)}`);
+                  }}
+                />
+              }
+            />
+            <Route
+              path="/reports"
+              element={
+                <UserReportList
+                  onBack={() => navigate("/")}
+                  onSelect={(idiom) => {
+                    navigate(
+                      `/?query=${encodeURIComponent(idiom.idiom?.hanzi)}`
+                    );
                   }}
                 />
               }
@@ -148,6 +162,10 @@ const App: React.FC = () => {
             <Route
               path="search-logs"
               element={<SearchLogs onBack={() => navigate("/admin")} />}
+            />
+            <Route
+              path="reports"
+              element={<AdminReports onBack={() => navigate("/admin")} />}
             />
           </Route>
         </Route>

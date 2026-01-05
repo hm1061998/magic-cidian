@@ -13,7 +13,7 @@ const ToastContainer: React.FC<ToastContainerProps> = ({
   if (!toasts || toasts?.length === 0) return null;
 
   return (
-    <div className="fixed top-20 right-6 z-[100] flex flex-col gap-3 pointer-events-none">
+    <div className="fixed top-20 right-6 z-1000 flex flex-col gap-3 pointer-events-none">
       {toasts?.map((t) => (
         <div
           key={t.id}

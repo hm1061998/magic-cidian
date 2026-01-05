@@ -81,6 +81,7 @@ const MainLayout: React.FC = () => {
           else if (view === "history") navigate("/history");
           else if (view === "profile") navigate("/profile");
           else if (view === "admin" || view === "list") navigate("/admin");
+          else if (view === "reports") navigate("/reports");
           else navigate("/");
           setIsSidebarOpen(false); // Auto close sidebar on navigate
         }}

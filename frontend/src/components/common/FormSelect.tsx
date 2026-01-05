@@ -31,6 +31,7 @@ const FormSelectCustom: React.FC<FormSelectProps> = ({
   placeholder = "Chọn...",
   disabled,
   className = "",
+  containerClassName = "",
   searchable,
   onSearchChange,
   searchValue,
@@ -74,7 +75,10 @@ const FormSelectCustom: React.FC<FormSelectProps> = ({
   };
 
   return (
-    <div className="flex flex-col gap-1.5" ref={wrapperRef}>
+    <div
+      className={`flex flex-col gap-1.5 ${containerClassName}`}
+      ref={wrapperRef}
+    >
       {label && (
         <label className="text-sm font-bold text-slate-700 ml-1">{label}</label>
       )}

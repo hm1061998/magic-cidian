@@ -12,6 +12,7 @@ import {
   ChatBubbleIcon,
   FireIcon,
   ChevronDownIcon,
+  ExclamationIcon,
 } from "@/components/common/icons";
 import { fetchCommentStats } from "@/services/api/commentService";
 import { useSelector } from "react-redux";
@@ -209,8 +210,13 @@ const AdminLayout: React.FC = () => {
             <NavItem
               to="/admin/comments"
               icon={<ChatBubbleIcon />}
-              label="Quản lý góp ý"
+              label="Quản lý thảo luận"
               badge={pendingCount}
+            />
+            <NavItem
+              to="/admin/reports"
+              icon={<ExclamationIcon />}
+              label="Báo lỗi từ điển"
             />
             <NavItem
               to="/admin/search-logs"

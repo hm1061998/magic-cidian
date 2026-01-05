@@ -1,0 +1,79 @@
+import { useState, useEffect, useCallback } from "react";
+import { useSearchParams, useOutletContext } from "react-router-dom";
+import {
+  fetchIdiomDetails,
+  fetchSuggestions,
+} from "@/services/api/idiomService";
+import { addToHistory } from "@/services/api/userDataService";
+import type { Idiom, SearchMode } from "@/types";
+
+export const useIdiomSearch = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [query, setQuery] = useState<string>("");
+  const [currentIdiom, setCurrentIdiom] = useState<
+    (Idiom & { dataSource: string }) | null
+  >(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [searchMode, setSearchMode] = useState<SearchMode>("database");
+  const { isLoggedIn } = useOutletContext<{ isLoggedIn: boolean }>();
+
+  const searchQuery = searchParams.get("query");
+
+  const executeSearch = useCallback(
+    async (searchTerm: string, mode: SearchMode) => {
+      if (!searchTerm.trim()) {
+        setCurrentIdiom(null);
+        setError(null);
+        return;
+      }
+
+      setIsLoading(true);
+      setError(null);
+      setCurrentIdiom(null);
+
+      try {
+        const result = await fetchIdiomDetails(searchTerm, mode);
+        setCurrentIdiom(result);
+        if (result?.id && isLoggedIn) {
+          addToHistory(result.id);
+        }
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [isLoggedIn]
+  );
+
+  useEffect(() => {
+    if (searchQuery) {
+      setQuery(searchQuery);
+      executeSearch(searchQuery, searchMode);
+    } else {
+      setCurrentIdiom(null);
+      setError(null);
+    }
+  }, [searchQuery, searchMode, executeSearch]);
+
+  const handleSearch = (searchTerm: string) => {
+    if (!searchTerm.trim()) {
+      setSearchParams({});
+      return;
+    }
+    setSearchParams({ query: searchTerm });
+  };
+
+  return {
+    query,
+    setQuery,
+    currentIdiom,
+    isLoading,
+    error,
+    searchMode,
+    setSearchMode,
+    handleSearch,
+    isLoggedIn,
+  };
+};

@@ -236,53 +236,48 @@ const VocabularyList: React.FC<VocabularyListProps> = ({
     selectedIds.length > 0 && selectedIds.length < idioms.length;
 
   return (
-    <div className="h-full flex flex-col overflow-hidden bg-slate-50">
+    <div className="vocab-page-root">
       {/* Top Section: Title & Actions & Filters */}
-      <div className="flex-none bg-white border-b border-slate-200 shadow-sm z-10">
-        <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-            <div className="flex items-center gap-2 sm:gap-3">
+      <div className="vocab-header">
+        <div className="vocab-header-container">
+          <div className="vocab-title-row">
+            <div className="vocab-title-group">
               {onBack && (
                 <button
                   onClick={onBack}
-                  className="p-1.5 -ml-1 text-slate-400 hover:text-red-700 hover:bg-red-50 rounded-full transition-all"
+                  className="vocab-back-btn"
                   title="Quay lại"
                 >
                   <ArrowLeftIcon className="w-5 h-5" />
                 </button>
               )}
-              <h1 className="text-lg sm:text-2xl font-hanzi font-bold text-slate-800">
-                Kho từ vựng{" "}
-                <span className="text-slate-400 font-sans text-xs sm:text-lg font-normal">
-                  ({totalItems})
-                </span>
+              <h1 className="vocab-page-title">
+                Kho từ vựng <span className="vocab-count">({totalItems})</span>
               </h1>
             </div>
 
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <div className="relative flex-1 sm:flex-initial">
+            <div className="vocab-actions-group">
+              <div className="vocab-file-input-container">
                 <input
                   type="file"
                   ref={fileInputRef}
                   onChange={handleExcelImport}
                   accept=".xlsx, .xls"
-                  className="hidden"
+                  className="vocab-file-input"
                   id="excel-upload-list"
                 />
                 <label
                   htmlFor="excel-upload-list"
-                  className={`flex items-center justify-center gap-2 px-4 h-10 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-all cursor-pointer shadow-md font-bold text-[10px] sm:text-xs ${
-                    isImporting ? "opacity-75 cursor-not-allowed" : ""
+                  className={`vocab-action-btn import ${
+                    isImporting ? "disabled" : ""
                   }`}
                 >
                   {isImporting ? (
-                    <SpinnerIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <SpinnerIcon className="vocab-action-icon animate-spin" />
                   ) : (
-                    <UploadIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <UploadIcon className="vocab-action-icon" />
                   )}
-                  <span className="whitespace-nowrap uppercase tracking-wider">
-                    Nhập Excel
-                  </span>
+                  <span className="vocab-btn-text">Nhập Excel</span>
                 </label>
               </div>
 
@@ -290,30 +285,26 @@ const VocabularyList: React.FC<VocabularyListProps> = ({
                 onClick={() => {
                   navigate("/admin/idiom/insert");
                 }}
-                className="flex-1 sm:flex-initial flex items-center justify-center px-4 h-10 bg-red-700 hover:bg-red-800 text-white rounded-xl transition-all shadow-md font-bold text-[10px] sm:text-xs group"
+                className="vocab-action-btn add group"
               >
-                <div className="flex items-center space-x-2">
-                  <PlusIcon className="w-3 h-3 sm:w-4 sm:h-4 transition-transform group-hover:rotate-90" />
-                  <span className="whitespace-nowrap uppercase tracking-wider">
-                    Thêm
-                  </span>
-                </div>
+                <PlusIcon className="vocab-action-icon group-hover:rotate-90" />
+                <span className="vocab-btn-text">Thêm</span>
               </button>
             </div>
           </div>
 
-          <div className="flex flex-col lg:flex-row gap-2 sm:gap-3">
-            <div className="relative flex-1 group">
-              <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-red-500 transition-colors" />
+          <div className="vocab-filter-bar">
+            <div className="vocab-search-wrapper group">
+              <SearchIcon className="vocab-search-icon" />
               <input
                 type="text"
                 placeholder="Tìm từ vựng..."
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
-                className="w-full h-10 pl-9 pr-4 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-red-400 transition-all font-medium text-slate-700 text-[10px] sm:text-sm"
+                className="vocab-search-input"
               />
             </div>
-            <div className="grid grid-cols-2 lg:flex gap-2 sm:gap-3">
+            <div className="vocab-filter-group">
               <FormSelect
                 value={selectedLevel}
                 onChange={(e) => {
@@ -326,7 +317,7 @@ const VocabularyList: React.FC<VocabularyListProps> = ({
                   { value: "Trung cấp", label: "Trung cấp" },
                   { value: "Cao cấp", label: "Cao cấp" },
                 ]}
-                className="lg:min-w-[120px] h-10 text-[10px] sm:text-xs"
+                className="vocab-select level"
               />
               <FormSelect
                 value={selectedType}
@@ -340,7 +331,7 @@ const VocabularyList: React.FC<VocabularyListProps> = ({
                   { value: "Thành ngữ (Chengyu)", label: "Thành ngữ" },
                   { value: "Tiếng lóng", label: "Tiếng lóng" },
                 ]}
-                className="lg:min-w-[140px] h-10 text-[10px] sm:text-xs"
+                className="vocab-select type"
               />
             </div>
           </div>
@@ -348,16 +339,16 @@ const VocabularyList: React.FC<VocabularyListProps> = ({
       </div>
 
       {/* Middle Section: Scrollable List */}
-      <div className="flex-1 overflow-y-auto scroll-smooth custom-scrollbar">
-        <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pb-6 pt-2">
+      <div className="vocab-list-container custom-scrollbar">
+        <div className="vocab-list-inner">
           {loading ? (
-            <div className="flex justify-center items-center py-16">
+            <div className="vocab-loading">
               <SpinnerIcon className="w-8 h-8 text-red-600" />
             </div>
           ) : error ? (
-            <div className="text-center text-red-500 py-10">{error}</div>
+            <div className="vocab-error">{error}</div>
           ) : idioms.length === 0 ? (
-            <div className="text-center text-slate-400 py-16">
+            <div className="vocab-empty">
               <p>Không tìm thấy kết quả phù hợp.</p>
             </div>
           ) : (
@@ -378,19 +369,17 @@ const VocabularyList: React.FC<VocabularyListProps> = ({
                 className="mb-4"
               />
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+              <div className="vocab-grid">
                 {idioms.map((item) => (
                   <div
                     key={item.id}
                     onClick={() => onEdit(item.id)}
-                    className={`bg-white p-4 sm:p-5 rounded-2xl border shadow-sm hover:shadow-md cursor-pointer transition-all group relative overflow-hidden ${
-                      selectedIds.includes(item.id)
-                        ? "border-indigo-400 bg-indigo-50/30 ring-2 ring-indigo-50"
-                        : "border-slate-200 hover:border-red-200"
+                    className={`vocab-card group ${
+                      selectedIds.includes(item.id) ? "is-selected" : ""
                     }`}
                   >
                     {/* Checkbox */}
-                    <div className="absolute top-4 left-4 z-10">
+                    <div className="vocab-checkbox-wrapper">
                       <input
                         type="checkbox"
                         checked={selectedIds.includes(item.id)}
@@ -399,39 +388,35 @@ const VocabularyList: React.FC<VocabularyListProps> = ({
                           toggleSelect(item.id);
                         }}
                         onClick={(e) => e.stopPropagation()}
-                        className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-2 focus:ring-indigo-100 cursor-pointer"
+                        className="vocab-checkbox"
                       />
                     </div>
 
-                    <div className="flex justify-between items-start mb-2 pl-8">
-                      <h2 className="text-xl sm:text-2xl font-hanzi font-bold text-slate-800 group-hover:text-red-700 transition-colors">
-                        {item.hanzi}
-                      </h2>
-                      <div className="items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:flex">
+                    <div className="vocab-card-header">
+                      <h2 className="vocab-card-title">{item.hanzi}</h2>
+                      <div className="vocab-card-actions">
                         <button
                           onClick={(e) => handleEdit(e, item.id)}
-                          className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          className="vocab-card-action-btn edit"
                           title="Sửa"
                         >
-                          <PencilIcon className="w-4 h-4" />
+                          <PencilIcon className="vocab-card-action-icon" />
                         </button>
                         <button
                           onClick={(e) => handleDelete(e, item.id, item.hanzi)}
-                          className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          className="vocab-card-action-btn delete"
                           title="Xóa"
                         >
-                          <TrashIcon className="w-4 h-4" />
+                          <TrashIcon className="vocab-card-action-icon" />
                         </button>
                       </div>
                       {/* Mobile-only actions */}
-                      <div className="sm:hidden flex space-x-2">
+                      <div className="vocab-card-mobile-actions">
                         <PencilIcon className="w-4 h-4 text-slate-400" />
                       </div>
                     </div>
-                    <p className="text-red-600 font-bold text-xs sm:text-sm mb-2 uppercase tracking-wide">
-                      {item.pinyin}
-                    </p>
-                    <p className="text-slate-500 text-xs sm:text-sm line-clamp-2 leading-relaxed font-medium">
+                    <p className="vocab-card-pinyin">{item.pinyin}</p>
+                    <p className="vocab-card-meaning">
                       {item.vietnameseMeaning}
                     </p>
                   </div>
@@ -444,7 +429,7 @@ const VocabularyList: React.FC<VocabularyListProps> = ({
 
       {/* Bottom Section: Fixed Pagination */}
       {totalPages > 1 && (
-        <div className="flex-none bg-white border-t border-slate-200 py-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+        <div className="vocab-footer">
           <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8">
             <Pagination
               currentPage={page}

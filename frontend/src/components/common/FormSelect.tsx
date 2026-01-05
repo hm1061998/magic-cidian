@@ -75,13 +75,8 @@ const FormSelectCustom: React.FC<FormSelectProps> = ({
   };
 
   return (
-    <div
-      className={`flex flex-col gap-1.5 ${containerClassName}`}
-      ref={wrapperRef}
-    >
-      {label && (
-        <label className="text-sm font-bold text-slate-700 ml-1">{label}</label>
-      )}
+    <div className={`form-group ${containerClassName}`} ref={wrapperRef}>
+      {label && <label className="form-label">{label}</label>}
 
       <div className="relative">
         {/* Trigger */}
@@ -90,16 +85,8 @@ const FormSelectCustom: React.FC<FormSelectProps> = ({
           onClick={() => !disabled && setOpen(!open)}
           disabled={disabled}
           className={`
-            w-full flex items-center justify-between
-            px-4 py-2 rounded-xl border bg-white
-            ${
-              error
-                ? "border-red-500"
-                : "border-slate-200 hover:border-slate-300"
-            }
-            focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-red-500
-            disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed
-            transition-all duration-200
+            select-trigger
+            ${error ? "select-trigger-error" : ""}
             ${className}
           `}
         >
@@ -119,16 +106,9 @@ const FormSelectCustom: React.FC<FormSelectProps> = ({
 
         {/* Dropdown */}
         {open && (
-          <div
-            className="
-          absolute z-50 mt-2 w-full
-          rounded-xl border border-slate-200
-          bg-white shadow-xl overflow-hidden
-          animate-in fade-in zoom-in-95 duration-200
-        "
-          >
+          <div className="select-dropdown">
             {searchable && (
-              <div className="p-2 border-b border-slate-100 bg-slate-50/50">
+              <div className="select-search-container">
                 <div className="relative">
                   <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <input
@@ -146,17 +126,13 @@ const FormSelectCustom: React.FC<FormSelectProps> = ({
             <ul
               ref={listRef}
               onScroll={handleScroll}
-              className="max-h-60 overflow-y-auto custom-scrollbar p-1"
+              className="select-options"
             >
               {!searchable && options.length === 0 && (
-                <li className="px-4 py-3 text-sm text-slate-400 text-center italic">
-                  Không có tùy chọn
-                </li>
+                <li className="select-empty">Không có tùy chọn</li>
               )}
               {searchable && options.length === 0 && !loading && (
-                <li className="px-4 py-3 text-sm text-slate-400 text-center italic">
-                  Không tìm thấy kết quả
-                </li>
+                <li className="select-empty">Không tìm thấy kết quả</li>
               )}
               {options.map((opt) => (
                 <li
@@ -166,13 +142,8 @@ const FormSelectCustom: React.FC<FormSelectProps> = ({
                     setOpen(false);
                   }}
                   className={`
-                    px-4 py-2 text-sm cursor-pointer rounded-lg
-                    hover:bg-red-50 hover:text-red-700 transition-colors
-                    ${
-                      value === opt.value
-                        ? "bg-red-50 text-red-700 font-bold"
-                        : "text-slate-600"
-                    }
+                    select-option
+                    ${value === opt.value ? "is-selected" : ""}
                   `}
                 >
                   {opt.label}
@@ -188,9 +159,7 @@ const FormSelectCustom: React.FC<FormSelectProps> = ({
         )}
       </div>
 
-      {error && (
-        <p className="text-red-500 text-[10px] font-bold ml-1">{error}</p>
-      )}
+      {error && <p className="form-error">{error}</p>}
     </div>
   );
 };

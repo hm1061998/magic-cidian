@@ -45,14 +45,10 @@ const Drawer: React.FC<DrawerProps> = ({
   if (!shouldRender) return null;
 
   return (
-    <div
-      className={`fixed inset-0 z-50 flex justify-end ${
-        !isOpen ? "pointer-events-none" : ""
-      }`}
-    >
+    <div className={`drawer-overlay ${!isOpen ? "is-closed" : ""}`}>
       {/* Backdrop */}
       <div
-        className={`absolute inset-0 bg-slate-900/40 backdrop-blur-sm ${
+        className={`drawer-backdrop ${
           isOpen ? "animate-fade-in" : "animate-fade-out"
         }`}
         onClick={onClose}
@@ -60,27 +56,20 @@ const Drawer: React.FC<DrawerProps> = ({
 
       {/* Drawer Panel */}
       <div
-        className={`relative w-full max-w-sm bg-white shadow-2xl h-full flex flex-col border-l border-slate-100 ${
+        className={`drawer-panel ${
           isOpen ? "animate-slide-in-right" : "animate-slide-out-right"
         } ${className}`}
       >
-        <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-white">
-          <h3 className="font-bold text-lg text-slate-800">{title}</h3>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400 hover:text-slate-600"
-          >
+        <div className="drawer-header">
+          <h3 className="drawer-title">{title}</h3>
+          <button onClick={onClose} className="drawer-close-btn">
             <CloseIcon className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-5">{children}</div>
+        <div className="drawer-content">{children}</div>
 
-        {footer && (
-          <div className="p-5 border-t border-slate-100 bg-slate-50 flex gap-3">
-            {footer}
-          </div>
-        )}
+        {footer && <div className="drawer-footer">{footer}</div>}
       </div>
     </div>
   );

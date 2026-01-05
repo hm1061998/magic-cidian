@@ -42,11 +42,9 @@ const Pagination: React.FC<PaginationProps> = ({
   };
 
   return (
-    <div
-      className={`flex flex-col sm:flex-row items-center justify-center gap-4 py-4 w-full ${className}`}
-    >
+    <div className={`pagination-container ${className}`}>
       {showInfo && (
-        <div className="text-xs font-bold text-slate-400 uppercase tracking-widest sm:mr-auto">
+        <div className="pagination-info">
           Trang {currentPage} <span className="mx-1 opacity-50">/</span>{" "}
           {totalPages}
         </div>
@@ -56,10 +54,10 @@ const Pagination: React.FC<PaginationProps> = ({
         <button
           onClick={() => onPageChange(Math.max(1, currentPage - 1))}
           disabled={currentPage === 1}
-          className="p-2.5 rounded-xl border border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-red-600 hover:border-red-200 transition-all disabled:opacity-30 disabled:cursor-not-allowed group"
+          className="pagination-btn-arrow"
           aria-label="Trang trước"
         >
-          <ArrowLeftIcon className="w-4 h-4 group-active:-translate-x-1 transition-transform" />
+          <ArrowLeftIcon className="w-4 h-4" />
         </button>
 
         <div className="flex items-center gap-1">
@@ -72,10 +70,8 @@ const Pagination: React.FC<PaginationProps> = ({
               ) : (
                 <button
                   onClick={() => onPageChange(p as number)}
-                  className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black transition-all ${
-                    currentPage === p
-                      ? "bg-red-600 text-white shadow-lg shadow-red-900/20"
-                      : "text-slate-500 hover:bg-slate-100 hover:text-slate-800 border border-transparent"
+                  className={`pagination-btn-number ${
+                    currentPage === p ? "is-current" : ""
                   }`}
                 >
                   {p}
@@ -88,10 +84,10 @@ const Pagination: React.FC<PaginationProps> = ({
         <button
           onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
           disabled={currentPage === totalPages}
-          className="p-2.5 rounded-xl border border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-red-600 hover:border-red-200 transition-all disabled:opacity-30 disabled:cursor-not-allowed group"
+          className="pagination-btn-arrow"
           aria-label="Trang sau"
         >
-          <ChevronRightIcon className="w-4 h-4 group-active:translate-x-1 transition-transform" />
+          <ChevronRightIcon className="w-4 h-4" />
         </button>
       </div>
     </div>

@@ -22,6 +22,7 @@ import {
   fetchReportStats,
 } from "@/redux/adminSlice";
 import { toast } from "@/libs/Toast";
+import { LoaderIcon } from "lucide-react";
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -47,27 +48,22 @@ const AdminDashboard: React.FC = () => {
 
   if (loading && !stats)
     return (
-      <div className="flex-1 flex items-center justify-center min-h-[60vh]">
-        <div className="flex flex-col items-center gap-4">
+      <div className="loading-container">
+        <div className="loading-content">
           <SpinnerIcon className="w-12 h-12 text-red-600" />
-          <p className="text-slate-400 font-medium animate-pulse">
-            Đang nạp dữ liệu hệ thống...
-          </p>
+          <p className="loading-text">Đang nạp dữ liệu hệ thống...</p>
         </div>
       </div>
     );
 
   if (error && !stats) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-8 text-center min-h-[60vh]">
-        <div className="bg-red-50 text-red-600 p-8 rounded-4xl border border-red-100 shadow-xl shadow-red-50">
-          <FlagIcon className="w-16 h-16 mx-auto mb-4 opacity-20" />
-          <p className="font-bold text-xl mb-2 text-red-700">Lỗi kết nối</p>
-          <p className="text-sm opacity-80 mb-6">{error}</p>
-          <button
-            onClick={onRefresh}
-            className="px-10 py-3 bg-red-600 text-white rounded-2xl font-bold"
-          >
+      <div className="error-container">
+        <div className="error-card">
+          <FlagIcon className="error-icon" />
+          <p className="error-title">Lỗi kết nối</p>
+          <p className="error-desc">{error}</p>
+          <button onClick={onRefresh} className="error-retry-btn">
             Thử lại
           </button>
         </div>
@@ -76,74 +72,72 @@ const AdminDashboard: React.FC = () => {
   }
 
   return (
-    <div className="max-w-[1440px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+    <div className="dashboard-root">
       {/* Mini Top Row: Totals & Status */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="space-y-0.5">
-          <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
-            Dashboard
-          </h1>
-          <div className="flex items-center gap-2 text-slate-500 font-medium text-sm sm:text-base">
-            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+      <div className="dashboard-header">
+        <div className="space-y-0-5">
+          <h1 className="dashboard-title">Dashboard</h1>
+          <div className="dashboard-status">
+            <div className="dashboard-status-dot" />
             Hệ thống đang hoạt động ổn định
           </div>
         </div>
-        <div className="flex items-center gap-2 w-full sm:w-auto">
+        <div className="dashboard-actions">
           <button
             onClick={onRefresh}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-white text-slate-600 px-4 sm:px-5 py-2.5 rounded-2xl font-bold border border-slate-200 hover:border-slate-300 transition-all active:scale-95 text-xs sm:text-sm"
+            className={`btn-refresh ${loading ? "button-disabled" : ""}`}
           >
-            <HistoryIcon
-              className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
-            />
+            {loading ? (
+              <LoaderIcon className="dashboard-action-icon animate-spin" />
+            ) : (
+              <HistoryIcon className={`dashboard-action-icon `} />
+            )}
             Làm mới
           </button>
           <button
             onClick={() => onNavigate("/admin/idiom/insert")}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-slate-900 text-white px-4 sm:px-6 py-2.5 rounded-2xl font-bold hover:bg-black transition-all active:scale-95 text-xs sm:text-sm shadow-xl shadow-slate-200"
+            className="btn-create"
           >
-            <PlusIcon className="w-4 h-4" /> Thêm mới
+            <PlusIcon className="dashboard-action-icon" /> Thêm mới
           </button>
         </div>
       </div>
 
       {/* Main Grid Layout - Compact Bento */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6">
+      <div className="dashboard-grid">
         {/* Row 1, Col 1-8: Welcome & Strategy */}
-        <div className="lg:col-span-7 xl:col-span-8 bg-linear-to-br from-slate-900 to-slate-800 rounded-4xl p-6 sm:p-8 md:p-10 text-white relative overflow-hidden shadow-2xl min-h-[260px] sm:min-h-[300px] flex flex-col justify-center">
-          <div className="relative z-10 space-y-4 sm:space-y-5">
-            <h2 className="text-2xl sm:text-3xl md:text-3xl xl:text-4xl font-bold leading-tight">
-              Phát triển kho từ vựng.
-            </h2>
-            <p className="text-slate-400 text-base sm:text-lg max-w-lg leading-relaxed">
+        <div className="welcome-card">
+          <div className="welcome-content">
+            <h2 className="welcome-title">Phát triển kho từ vựng.</h2>
+            <p className="welcome-desc">
               Theo dõi sức khỏe nội dung và các từ khóa người dùng quan tâm để
               cập nhật dữ liệu.
             </p>
             <div className="flex flex-wrap gap-3 pt-2">
               <button
                 onClick={() => onNavigate("/admin/idiom/list")}
-                className="w-full sm:w-auto px-6 py-3 bg-white text-slate-900 rounded-xl font-black hover:bg-red-50 transition-all active:scale-95 text-sm"
+                className="welcome-btn"
               >
                 Xem kho từ điển
               </button>
             </div>
           </div>
-          <div className="absolute -right-16 -bottom-16 opacity-5 pointer-events-none hidden sm:block">
-            <ListBulletIcon className="w-64 md:w-80 xl:w-96 h-64 md:h-80 xl:h-96" />
+          <div className="welcome-bg-icon">
+            <ListBulletIcon />
           </div>
         </div>
 
         {/* Row 1, Col 9-12: Primary KPI Cluster */}
-        <div className="lg:col-span-5 xl:col-span-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
+        <div className="stats-cluster">
           <CompactStatCard
-            icon={<ListBulletIcon className="w-5 h-5 sm:w-6 sm:h-6" />}
+            icon={<ListBulletIcon className="stat-card-icon" />}
             label="Tổng từ vựng"
             value={stats?.totalIdioms || 0}
             color="red"
             onClick={() => onNavigate("/admin/idiom/list")}
           />
           <CompactStatCard
-            icon={<ChatBubbleIcon className="w-5 h-5 sm:w-6 sm:h-6" />}
+            icon={<ChatBubbleIcon className="stat-card-icon" />}
             label="Chờ duyệt"
             value={reportStats?.pending || 0}
             color="amber"
@@ -153,46 +147,38 @@ const AdminDashboard: React.FC = () => {
 
         {/* --- Masonry-style Grid for Content Health, Tracking, etc. --- */}
 
-        {/* --- Masonry-style Grid for Content Health, Tracking, etc. --- */}
-
         {/* Moderation Stats - Replaces Content Health */}
-        <div className="md:col-span-1 lg:col-span-6 xl:col-span-4">
+        <div className="dashboard-section-col-1">
           <Section
             title="Tỉ lệ duyệt"
-            icon={<CheckCircleIcon className="w-4 h-4 text-emerald-600" />}
+            icon={<CheckCircleIcon className="section-header-icon emerald" />}
           >
-            <div className="space-y-4">
-              <div className="flex items-center justify-between gap-1 sm:gap-2">
-                <div className="text-center flex-1">
-                  <div className="text-xl sm:text-2xl font-black text-emerald-600">
+            <div className="section-content">
+              <div className="mod-stats-container">
+                <div className="mod-stat-group">
+                  <div className="mod-stat-large text-emerald-600">
                     {commentStats?.approved || 0}
                   </div>
-                  <div className="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-wider">
-                    Đã duyệt
-                  </div>
+                  <div className="mod-stat-sub">Đã duyệt</div>
                 </div>
-                <div className="h-6 sm:h-8 w-px bg-slate-100" />
-                <div className="text-center flex-1">
-                  <div className="text-xl sm:text-2xl font-black text-red-600">
+                <div className="mod-stat-divider" />
+                <div className="mod-stat-group">
+                  <div className="mod-stat-large text-red-600">
                     {commentStats?.rejected || 0}
                   </div>
-                  <div className="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-wider">
-                    Từ chối
-                  </div>
+                  <div className="mod-stat-sub">Từ chối</div>
                 </div>
-                <div className="h-6 sm:h-8 w-px bg-slate-100" />
-                <div className="text-center flex-1">
-                  <div className="text-xl sm:text-2xl font-black text-amber-500">
+                <div className="mod-stat-divider" />
+                <div className="mod-stat-group">
+                  <div className="mod-stat-large text-amber-500">
                     {commentStats?.pending || 0}
                   </div>
-                  <div className="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-wider">
-                    Chờ xử lý
-                  </div>
+                  <div className="mod-stat-sub">Chờ xử lý</div>
                 </div>
               </div>
 
               {/* Mini visual bar */}
-              <div className="h-1.5 sm:h-2 w-full bg-slate-50 rounded-full overflow-hidden flex">
+              <div className="visual-bar">
                 <div
                   style={{
                     width: `${
@@ -225,12 +211,12 @@ const AdminDashboard: React.FC = () => {
         </div>
 
         {/* Level Distribution - Replaces Processing Speed */}
-        <div className="md:col-span-1 lg:col-span-6 xl:col-span-4">
+        <div className="dashboard-section-col-1">
           <Section
             title="Phân bố cấp độ"
-            icon={<BrainIcon className="w-4 h-4 text-indigo-500" />}
+            icon={<BrainIcon className="section-header-icon indigo" />}
           >
-            <div className="space-y-2.5 sm:space-y-3">
+            <div className="space-y-2-5">
               {stats?.levelStats?.slice(0, 3).map((level: any) => {
                 const percentage =
                   stats.totalIdioms > 0
@@ -246,36 +232,32 @@ const AdminDashboard: React.FC = () => {
                 );
               })}
               {(!stats?.levelStats || stats.levelStats.length === 0) && (
-                <p className="text-slate-400 text-xs italic text-center py-4">
-                  Chưa có dữ liệu cấp độ
-                </p>
+                <p className="dashboard-empty-state">Chưa có dữ liệu cấp độ</p>
               )}
             </div>
           </Section>
         </div>
 
         {/* Hot Keywords - Compact */}
-        <div className="md:col-span-2 lg:col-span-12 xl:col-span-4">
+        <div className="dashboard-section-col-2">
           <Section
             title="Tìm kiếm bị bỏ lỡ"
-            icon={<FireIcon className="w-4 h-4 text-orange-500" />}
+            icon={<FireIcon className="section-header-icon orange" />}
             action={
               <button
                 onClick={() => onNavigate("/admin/search-logs")}
-                className="text-xs font-bold text-orange-600 hover:text-orange-700 flex items-center gap-1"
+                className="section-action-btn orange"
               >
-                Tất cả <ChevronRightIcon className="w-3 h-3" />
+                Tất cả <ChevronRightIcon className="section-action-icon" />
               </button>
             }
           >
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-2 gap-2">
+            <div className="dashboard-subsection-grid hot-keywords">
               {stats?.hotKeywords?.slice(0, 4).map((item: any, idx: number) => (
                 <HotLink key={idx} text={item.query} count={item.count} />
               ))}
               {(!stats?.hotKeywords || stats.hotKeywords.length === 0) && (
-                <p className="col-span-full text-slate-400 text-xs italic py-2 text-center">
-                  Chưa có dữ liệu.
-                </p>
+                <p className="dashboard-empty-state">Chưa có dữ liệu.</p>
               )}
             </div>
           </Section>
@@ -284,22 +266,22 @@ const AdminDashboard: React.FC = () => {
         {/* Row 3 - 2 Regular Columns (Expanded) */}
 
         {/* Recent Items */}
-        <div className="lg:col-span-6">
+        <div className="dashboard-section-half">
           <Section
             title="Cập nhật gần đây"
-            icon={<HistoryIcon className="w-4 h-4 text-blue-500" />}
+            icon={<HistoryIcon className="section-header-icon blue" />}
             action={
               <button
                 onClick={() =>
                   onNavigate("/admin/idiom/list?sort=createdAt&order=DESC")
                 }
-                className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                className="section-action-btn blue"
               >
-                Xem tất cả <ChevronRightIcon className="w-3 h-3" />
+                Xem tất cả <ChevronRightIcon className="section-action-icon" />
               </button>
             }
           >
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="dashboard-subsection-grid">
               {stats?.recentIdioms?.slice(0, 4).map((idiom: any) => (
                 <RecentItem
                   key={idiom.id}
@@ -308,35 +290,33 @@ const AdminDashboard: React.FC = () => {
                 />
               ))}
               {(!stats?.recentIdioms || stats.recentIdioms.length === 0) && (
-                <p className="col-span-2 text-slate-400 text-xs italic py-4 text-center">
-                  Chưa có cập nhật mới
-                </p>
+                <p className="dashboard-empty-state">Chưa có cập nhật mới</p>
               )}
             </div>
           </Section>
         </div>
 
         {/* Reports - Compact */}
-        <div className="lg:col-span-6">
+        <div className="dashboard-section-half">
           <Section
             title="Nội dung cần rà soát"
-            icon={<FlagIcon className="w-4 h-4 text-red-600" />}
+            icon={<FlagIcon className="section-header-icon red" />}
             action={
               <button
                 onClick={() => onNavigate("/admin/reports")}
-                className="text-xs font-bold text-red-600 hover:text-red-700 flex items-center gap-1"
+                className="section-action-btn red"
               >
-                Xem tất cả <ChevronRightIcon className="w-3 h-3" />
+                Xem tất cả <ChevronRightIcon className="section-action-icon" />
               </button>
             }
           >
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="dashboard-subsection-grid">
               {reportStats?.topReported?.slice(0, 4).map((item: any) => (
                 <ReportItem key={item.id} item={item} />
               ))}
               {(!reportStats?.topReported ||
                 reportStats.topReported.length === 0) && (
-                <p className="col-span-2 text-slate-400 text-xs italic py-4 text-center">
+                <p className="dashboard-empty-state">
                   Không có nội dung rà soát.
                 </p>
               )}
@@ -351,36 +331,23 @@ const AdminDashboard: React.FC = () => {
 // --- Sub Components Adjusted for Compactness ---
 
 const CompactStatCard = ({ icon, label, value, color, onClick }: any) => {
-  const styles: any = {
-    red: "bg-red-50 text-red-600 border-red-100/50",
-    amber: "bg-amber-50 text-amber-600 border-amber-100/50",
-  };
   return (
-    <div
-      onClick={onClick}
-      className={`p-4 sm:p-6 rounded-3xl border transition-all cursor-pointer shadow-sm hover:shadow-md active:scale-[0.98] flex items-center justify-between group ${styles[color]}`}
-    >
+    <div onClick={onClick} className={`stat-card group ${color}`}>
       <div>
-        <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest opacity-60 mb-0.5 sm:mb-1">
-          {label}
-        </p>
-        <h2 className="text-2xl sm:text-3xl font-black">{value}</h2>
+        <p className="stat-label">{label}</p>
+        <h2 className="stat-value">{value}</h2>
       </div>
-      <div className="p-2 sm:p-3 bg-white rounded-xl shadow-sm group-hover:scale-110 transition-transform">
-        {icon}
-      </div>
+      <div className="stat-icon-wrapper">{icon}</div>
     </div>
   );
 };
 
 const Section = ({ title, icon, action, children }: any) => (
-  <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm h-full hover:shadow-md transition-shadow">
-    <div className="flex items-center justify-between mb-4">
-      <div className="flex items-center gap-2">
+  <div className="dashboard-card">
+    <div className="dashboard-card-header">
+      <div className="dashboard-card-title">
         {icon}
-        <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">
-          {title}
-        </h3>
+        <h3 className="dashboard-card-label">{title}</h3>
       </div>
       {action}
     </div>
@@ -389,101 +356,58 @@ const Section = ({ title, icon, action, children }: any) => (
 );
 
 const RecentItem = ({ idiom, onClick }: any) => (
-  <div
-    onClick={onClick}
-    className="flex items-center justify-between p-2.5 hover:bg-slate-50 rounded-xl cursor-pointer transition-all border border-transparent hover:border-slate-100 group"
-  >
-    <div className="flex items-center gap-3">
-      <div className="w-8 h-8 bg-slate-50 border border-slate-100 rounded-lg flex items-center justify-center font-hanzi font-bold text-slate-400 group-hover:text-red-600 transition-all text-sm">
-        {idiom.hanzi.charAt(0)}
-      </div>
-      <div>
-        <p className="font-hanzi font-bold text-slate-800 text-xs">
-          {idiom.hanzi}
-        </p>
-        <p className="text-[8px] text-slate-400 font-bold uppercase tracking-widest">
-          {idiom.pinyin}
-        </p>
+  <div onClick={onClick} className="recent-item group">
+    <div className="recent-item-content">
+      <div className="recent-avatar">{idiom.hanzi.charAt(0)}</div>
+      <div className="recent-text-group">
+        <p className="recent-text-main">{idiom.hanzi}</p>
+        <p className="recent-text-sub">{idiom.pinyin}</p>
       </div>
     </div>
-    <ChevronRightIcon className="w-3.5 h-3.5 text-slate-300 group-hover:translate-x-1" />
+    <ChevronRightIcon className="recent-icon" />
   </div>
 );
 
 const ReportItem = ({ item, onClick }: any) => (
-  <div
-    onClick={() => onClick(item)}
-    className="flex items-center justify-between p-2.5 bg-red-50/40 rounded-xl hover:bg-red-50 transition-all cursor-pointer group border border-transparent hover:border-red-100"
-  >
+  <div onClick={() => onClick(item)} className="report-item group">
     <div className="flex items-center gap-2.5">
-      <div className="w-7 h-7 bg-white text-red-600 rounded-full flex items-center justify-center font-hanzi font-bold text-[10px] shadow-sm">
-        {item.hanzi.charAt(0)}
+      <div className="report-item-avatar">{item.hanzi.charAt(0)}</div>
+      <p className="report-item-text">{item.hanzi}</p>
+    </div>
+    <div className="report-badge">
+      <span className="report-count">{item.totalreports}</span>
+      <span className="report-label">Khiếu nại</span>
+    </div>
+  </div>
+);
+
+const ProgressBar = ({ label, value, percent }: any) => {
+  const getColorClass = (label: string) => {
+    if (label.includes("Cao")) return "red";
+    if (label.includes("Trung")) return "blue";
+    return "green";
+  };
+
+  return (
+    <div className="progress-group">
+      <div className="progress-container">
+        <span className="text-slate-400">{label}</span>
+        <span className="text-slate-900">{value}</span>
       </div>
-      <p className="font-hanzi font-bold text-slate-800 text-[11px]">
-        {item.hanzi}
-      </p>
+      <div className="progress-track">
+        <div
+          className={`progress-fill ${getColorClass(label)}`}
+          style={{ width: `${percent}%` }}
+        />
+      </div>
     </div>
-    <div className="flex items-center gap-1.5 bg-white px-2 py-0.5 rounded-lg shadow-sm border border-red-100">
-      <span className="text-[11px] font-black text-red-700">
-        {item.totalreports}
-      </span>
-      <span className="text-[8px] font-black uppercase text-red-400">
-        Khiếu nại
-      </span>
-    </div>
-  </div>
-);
-
-const ProgressBar = ({ label, value, percent }: any) => (
-  <div className="space-y-1.5">
-    <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest">
-      <span className="text-slate-400">{label}</span>
-      <span className="text-slate-900">{value}</span>
-    </div>
-    <div className="h-1.5 w-full bg-slate-50 rounded-full overflow-hidden">
-      <div
-        className={`h-full transition-all duration-1000 ease-out ${
-          label.includes("Cao")
-            ? "bg-red-600"
-            : label.includes("Trung")
-            ? "bg-blue-600"
-            : "bg-emerald-600"
-        }`}
-        style={{ width: `${percent}%` }}
-      />
-    </div>
-  </div>
-);
-
-const HealthSmall = ({ value, label, warning }: any) => (
-  <div
-    className={`p-3.5 rounded-xl border text-center transition-all ${
-      warning
-        ? "bg-red-50 border-red-100 ring-2 ring-red-50"
-        : "bg-slate-50 border-slate-100"
-    }`}
-  >
-    <div
-      className={`text-xl font-black mb-0.5 ${
-        warning ? "text-red-700" : "text-slate-900"
-      }`}
-    >
-      {value}
-    </div>
-    <div className="text-[8px] font-black text-slate-400 uppercase leading-none truncate">
-      {label}
-    </div>
-  </div>
-);
+  );
+};
 
 const HotLink = ({ text, count }: any) => (
-  <div className="flex items-center justify-between p-2.5 bg-slate-50/50 rounded-xl hover:bg-slate-100 transition-colors border border-transparent hover:border-slate-100">
-    <span className="text-[11px] font-bold text-slate-700 truncate mr-2">
-      {text}
-    </span>
-    <span className="text-[9px] font-black bg-white px-1.5 py-0.5 rounded shadow-sm text-red-600 border border-red-50">
-      +{count}
-    </span>
+  <div className="hot-link">
+    <span className="hot-text">{text}</span>
+    <span className="hot-count">+{count}</span>
   </div>
 );
 

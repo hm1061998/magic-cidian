@@ -26,20 +26,15 @@ const SelectAllCheckbox: React.FC<SelectAllCheckboxProps> = ({
   }, [indeterminate]);
 
   return (
-    <div
-      className={`flex items-center gap-2 bg-white p-3 rounded-xl border border-slate-100 shadow-sm ${className}`}
-    >
+    <div className={`checkbox-card ${className}`}>
       <input
         type="checkbox"
         ref={checkboxRef}
         checked={checked}
         onChange={onChange}
-        className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-2 focus:ring-indigo-100 cursor-pointer"
+        className="checkbox-input"
       />
-      <label
-        className="text-xs sm:text-sm font-bold text-slate-600 cursor-pointer select-none"
-        onClick={onChange}
-      >
+      <label className="checkbox-label" onClick={onChange}>
         {label}{" "}
         {subLabel && (
           <span className="text-slate-400 font-normal">{subLabel}</span>

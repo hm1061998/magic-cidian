@@ -54,6 +54,7 @@ export class CommentQueryDto {
   page?: number;
 
   @IsOptional()
+  @Type(() => Number)
   @IsInt()
   @Min(1)
   limit?: number;

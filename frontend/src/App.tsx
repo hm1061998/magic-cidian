@@ -1,11 +1,5 @@
 import React from "react";
-import {
-  Routes,
-  Route,
-  useNavigate,
-  useParams,
-  useOutletContext,
-} from "react-router-dom";
+import { Routes, Route, useNavigate, useParams } from "react-router-dom";
 import Home from "@/pages/Home";
 import AdminInsert from "@/pages/Admin/AdminInsert";
 import VocabularyList from "@/pages/Admin/VocabularyList";
@@ -19,7 +13,6 @@ import Dashboard from "@/pages/Admin/Dashboard";
 import AdminComments from "@/pages/Admin/AdminComments";
 import SearchLogs from "@/pages/Admin/SearchLogs";
 import AdminReports from "@/pages/Admin/AdminReports";
-import { addToLocalHistory } from "@/services/api";
 import Auth from "@/pages/Auth";
 import RequireAuth from "@/context/RequireAuth";
 import AdminLayout from "@/layouts/AdminLayout";
@@ -27,6 +20,7 @@ import MainLayout from "@/layouts/MainLayout";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
 import { fetchCurrentUser } from "@/redux/authSlice";
+import SplashScreen from "@/components/common/SplashScreen";
 
 // Wrapper component cho trang Edit để trích xuất ID từ URL params và xử lý Back
 const AdminInsertWrapper: React.FC<{ navigate: (path: string) => void }> = ({
@@ -65,6 +59,7 @@ const AuthWrapper: React.FC = () => {
 const App: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
+  const { loading } = useSelector((state: RootState) => state.auth);
 
   React.useEffect(() => {
     document.title = `${__APP_NAME__} - Từ điển Tra cứu & Học tập Quán dụng ngữ`;
@@ -73,6 +68,10 @@ const App: React.FC = () => {
       dispatch(fetchCurrentUser());
     }
   }, [dispatch]);
+
+  if (loading) {
+    return <SplashScreen />;
+  }
 
   return (
     <>

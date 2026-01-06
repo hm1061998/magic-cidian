@@ -2,6 +2,7 @@ import React from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
+import SplashScreen from "@/components/common/SplashScreen";
 
 const RequireAuth = ({ needAdmin }: { needAdmin?: boolean }) => {
   const { user, loading, isAuthenticated } = useSelector(
@@ -9,11 +10,7 @@ const RequireAuth = ({ needAdmin }: { needAdmin?: boolean }) => {
   );
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-slate-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-700"></div>
-      </div>
-    );
+    return <SplashScreen />;
   }
 
   if (!isAuthenticated || (needAdmin && !user?.isAdmin)) {

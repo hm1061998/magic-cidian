@@ -63,12 +63,23 @@ export const exportPDF = async (
     onProgress?.(40, "Đang tải bộ phông chữ Unicode...");
 
     const fontUrl = "/assets/fonts/NotoSerifSC-400.ttf";
-    const response = await fetch(fontUrl);
-    if (!response.ok)
+    const boldFontUrl = "/assets/fonts/NotoSerifSC-700.ttf";
+
+    const [fontResponse, boldFontResponse] = await Promise.all([
+      fetch(fontUrl),
+      fetch(boldFontUrl),
+    ]);
+
+    if (!fontResponse.ok || !boldFontResponse.ok)
       throw new Error("Không thể tải phông chữ từ hệ thống (Local Assets)");
 
-    const fontBuffer = await response.arrayBuffer();
+    const [fontBuffer, boldFontBuffer] = await Promise.all([
+      fontResponse.arrayBuffer(),
+      boldFontResponse.arrayBuffer(),
+    ]);
+
     const fontBase64 = base64ArrayBuffer(fontBuffer);
+    const boldFontBase64 = base64ArrayBuffer(boldFontBuffer);
 
     onProgress?.(70, "Đang thiết lập cấu trúc PDF...");
 
@@ -79,10 +90,14 @@ export const exportPDF = async (
       putOnlyUsedFonts: true,
     });
 
-    // Register the custom font
+    // Register the custom fonts
     const fontName = "NotoSerifSC";
     doc.addFileToVFS(`${fontName}.ttf`, fontBase64);
     doc.addFont(`${fontName}.ttf`, fontName, "normal");
+
+    doc.addFileToVFS(`${fontName}-Bold.ttf`, boldFontBase64);
+    doc.addFont(`${fontName}-Bold.ttf`, fontName, "bold");
+
     doc.setFont(fontName);
 
     onProgress?.(85, "Đang tạo bảng dữ liệu...");
@@ -104,6 +119,7 @@ export const exportPDF = async (
       headStyles: {
         fillColor: [220, 38, 38], // Red-600
         textColor: 255,
+        font: fontName,
         fontStyle: "bold",
         fontSize: 10,
       },
@@ -116,7 +132,7 @@ export const exportPDF = async (
           ? pageSize.height
           : pageSize.getHeight();
 
-        doc.setFont(fontName);
+        doc.setFont(fontName, "bold");
         doc.setFontSize(16);
         doc.setTextColor(40);
         doc.text(title.toUpperCase(), 15, 15);

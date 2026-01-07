@@ -211,6 +211,33 @@ class HttpService {
       // Build full URL with params
       const url = this.buildURL(modifiedConfig.url, modifiedConfig.params);
 
+      // --- Security Check ---
+      // Block mutations (POST, PUT, PATCH, DELETE) if user is not logged in,
+      // except for authentication routes (login, register).
+      // Also block /auth/refresh if no auth_hint is present.
+      const method = (modifiedConfig.method || "GET").toUpperCase();
+      const isMutation = ["POST", "PUT", "PATCH", "DELETE"].includes(method);
+      const isAuthRoute = modifiedConfig.url.includes("/auth/");
+      const isRefresh = modifiedConfig.url.includes("/auth/refresh");
+
+      if ((isMutation && !isAuthRoute) || isRefresh) {
+        // We use dynamic import to avoid circular dependency with authSlice -> httpService
+        const { store } = await import("../../redux/store");
+        const state = store.getState();
+        const hasAuthHint =
+          typeof window !== "undefined" &&
+          localStorage.getItem("auth_hint") === "true";
+
+        if (!state.auth.isAuthenticated && (isRefresh ? !hasAuthHint : true)) {
+          return {
+            data: {} as T,
+            status: 200,
+            statusText: "OK",
+            headers: new Headers(),
+          };
+        }
+      }
+
       // Make the request
       const response = await fetch(url, {
         method: modifiedConfig.method || "GET",

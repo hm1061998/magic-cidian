@@ -21,6 +21,7 @@ import FormSelect from "@/components/common/FormSelect";
 import MultipleChoiceForm from "@/components/admin/ExerciseForm/MultipleChoiceForm";
 import MatchingForm from "@/components/admin/ExerciseForm/MatchingForm";
 import FillBlanksForm from "@/components/admin/ExerciseForm/FillBlanksForm";
+import { PlusIcon, SpinnerIcon } from "@/components/common/icons";
 
 const ExerciseForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -76,6 +77,10 @@ const ExerciseForm: React.FC = () => {
       })();
     }
   }, [id, isEdit, reset, navigate]);
+
+  const onBack = () => {
+    navigate("/admin/exercises");
+  };
 
   const onSubmit = async (data: Partial<Exercise>) => {
     try {
@@ -135,7 +140,7 @@ const ExerciseForm: React.FC = () => {
             <div className="flex items-center gap-4">
               <button
                 type="button"
-                onClick={() => navigate("/admin/exercises")}
+                onClick={onBack}
                 className="p-2 -ml-2 text-slate-400 hover:text-red-700 hover:bg-red-50 rounded-full transition-all"
               >
                 <ArrowLeftIcon size={20} />
@@ -144,14 +149,6 @@ const ExerciseForm: React.FC = () => {
                 {isEdit ? "Chỉnh sửa bài tập" : "Tạo bài tập mới"}
               </h1>
             </div>
-
-            <button
-              type="submit"
-              className="flex items-center gap-2 px-6 py-2.5 bg-red-600 text-white rounded-xl font-bold shadow-lg shadow-red-100 hover:bg-red-700 transition-all active:scale-95"
-            >
-              <SaveIcon size={18} />
-              Lưu bài tập
-            </button>
           </div>
 
           {/* Content */}
@@ -272,6 +269,34 @@ const ExerciseForm: React.FC = () => {
                   <FillBlanksForm />
                 )}
               </section>
+            </div>
+          </div>
+
+          <div className="flex-none bg-white border-t border-slate-200 py-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-10 transition-all">
+            <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 flex flex-wrap-reverse sm:flex-nowrap justify-end items-center gap-3 sm:gap-4">
+              {isEdit && (
+                <button
+                  type="button"
+                  onClick={onBack}
+                  className="flex-1 sm:flex-none px-8 py-3.5 font-black text-slate-400 hover:text-red-600 transition-all text-[10px] sm:text-xs uppercase tracking-[0.2em] outline-none"
+                >
+                  Hủy bỏ
+                </button>
+              )}
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full sm:w-auto px-10 py-4 bg-red-700 text-white rounded-2xl font-black shadow-2xl shadow-red-200 hover:bg-red-800 hover:-translate-y-1 transition-all flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-70 text-xs sm:text-sm uppercase tracking-widest"
+              >
+                {loading ? (
+                  <SpinnerIcon className="w-5 h-5 animate-spin" />
+                ) : (
+                  <>
+                    <SaveIcon size={18} />
+                    <span>Lưu bài tập</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </form>

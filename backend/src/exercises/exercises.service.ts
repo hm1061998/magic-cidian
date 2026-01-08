@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ExerciseEntity } from './entities/exercise.entity';
 import { UserExerciseHistory } from './entities/user-exercise-history.entity';
+import { ExerciseQueryDto } from './dto/exercise-query.dto';
 
 @Injectable()
 export class ExercisesService {
@@ -13,10 +14,28 @@ export class ExercisesService {
     private historyRepository: Repository<UserExerciseHistory>,
   ) {}
 
-  async findAll() {
-    return await this.exerciseRepository.find({
+  async findAll(query: ExerciseQueryDto) {
+    const { page = 1, limit = 12, type } = query;
+    const skip = (page - 1) * limit;
+
+    const whereCondition = type ? { type } : {};
+
+    const [data, total] = await this.exerciseRepository.findAndCount({
+      where: whereCondition,
       order: { createdAt: 'DESC' },
+      take: limit,
+      skip: skip,
     });
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        lastPage: Math.ceil(total / limit) || 1,
+      },
+    };
   }
 
   async findOne(id: string) {

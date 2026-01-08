@@ -22,6 +22,7 @@ import { modalService } from "@/libs/Modal";
 import { toast } from "@/libs/Toast";
 import ProcessingOverlay from "@/components/common/ProcessingOverlay";
 import ImportModal from "@/components/admin/ImportModal";
+import Pagination from "@/components/common/Pagination";
 import { UploadIcon } from "@/components/common/icons";
 
 const ExerciseManagement: React.FC = () => {
@@ -29,6 +30,15 @@ const ExerciseManagement: React.FC = () => {
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [loading, setLoading] = useState(true);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [filterType, setFilterType] = useState<ExerciseType | "ALL">("ALL");
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const ITEMS_PER_PAGE = 9;
+
+  // No client-side filtering needed anymore
+  // const filteredExercises = ...
 
   // Processing State
   const [isProcessing, setIsProcessing] = useState(false);
@@ -55,11 +65,25 @@ const ExerciseManagement: React.FC = () => {
     };
   }, [isProcessing]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterType]);
+
   const loadExercises = async () => {
     setLoading(true);
     try {
-      const data = await fetchAdminExercises();
-      setExercises(data);
+      const typeParam = filterType === "ALL" ? undefined : filterType;
+      const response = await fetchAdminExercises({
+        page: currentPage,
+        limit: ITEMS_PER_PAGE,
+        type: typeParam,
+      });
+      setExercises(response.data);
+      // @ts-ignore
+      if (response.meta) {
+        // @ts-ignore
+        setTotalPages(response.meta.lastPage);
+      }
     } catch (err) {
       toast.error("Không thể tải danh sách bài tập");
     } finally {
@@ -69,7 +93,7 @@ const ExerciseManagement: React.FC = () => {
 
   useEffect(() => {
     loadExercises();
-  }, []);
+  }, [currentPage, filterType]);
 
   const handleExportTemplate = () => {
     const templateData = [
@@ -384,6 +408,59 @@ const ExerciseManagement: React.FC = () => {
           title={processTitle}
           type="import"
         />
+
+        {/* Filter Bar */}
+        <div className="bg-white border-b border-slate-100 z-0">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+              <button
+                onClick={() => setFilterType("ALL")}
+                className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all
+                  ${
+                    filterType === "ALL"
+                      ? "bg-slate-800 text-white shadow-lg shadow-slate-200"
+                      : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                  }`}
+              >
+                Tất cả
+              </button>
+              <button
+                onClick={() => setFilterType(ExerciseType.MULTIPLE_CHOICE)}
+                className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all
+                  ${
+                    filterType === ExerciseType.MULTIPLE_CHOICE
+                      ? "bg-purple-600 text-white shadow-lg shadow-purple-200"
+                      : "bg-purple-50 text-purple-600 hover:bg-purple-100"
+                  }`}
+              >
+                Trắc nghiệm
+              </button>
+              <button
+                onClick={() => setFilterType(ExerciseType.FILL_BLANKS)}
+                className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all
+                  ${
+                    filterType === ExerciseType.FILL_BLANKS
+                      ? "bg-orange-600 text-white shadow-lg shadow-orange-200"
+                      : "bg-orange-50 text-orange-600 hover:bg-orange-100"
+                  }`}
+              >
+                Điền từ
+              </button>
+              <button
+                onClick={() => setFilterType(ExerciseType.MATCHING)}
+                className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all
+                  ${
+                    filterType === ExerciseType.MATCHING
+                      ? "bg-blue-600 text-white shadow-lg shadow-blue-200"
+                      : "bg-blue-50 text-blue-600 hover:bg-blue-100"
+                  }`}
+              >
+                Nối cặp
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {loading ? (
             <div className="flex justify-center items-center py-20">
@@ -395,10 +472,14 @@ const ExerciseManagement: React.FC = () => {
                 <BookOpenIcon className="text-slate-300" size={32} />
               </div>
               <h3 className="text-lg font-bold text-slate-800 mb-1">
-                Chưa có bài tập nào
+                {filterType === "ALL"
+                  ? "Chưa có bài tập nào"
+                  : "Không tìm thấy bài tập phù hợp"}
               </h3>
               <p className="text-slate-400 mb-6">
-                Hãy tạo bài tập đầu tiên để người dùng luyện tập
+                {filterType === "ALL"
+                  ? "Hãy tạo bài tập đầu tiên để người dùng luyện tập"
+                  : "Thử chọn bộ lọc khác hoặc tạo bài tập mới"}
               </p>
               <div className="flex justify-center gap-3">
                 <button
@@ -411,61 +492,62 @@ const ExerciseManagement: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {exercises.map((exercise) => (
-                <div
-                  key={exercise.id}
-                  className="bg-white rounded-3xl border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group overflow-hidden"
-                >
-                  <div className="p-6">
-                    <div className="flex justify-between items-start mb-4">
-                      <span
-                        className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${getBadgeColor(
-                          exercise.type
-                        )}`}
-                      >
-                        {getTypeText(exercise.type)}
-                      </span>
-                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={() =>
-                            navigate(`/admin/exercises/edit/${exercise.id}`)
-                          }
-                          className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {exercises.map((exercise) => (
+                  <div
+                    key={exercise.id}
+                    className="bg-white rounded-3xl border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group overflow-hidden"
+                  >
+                    <div className="p-6">
+                      <div className="flex justify-between items-start mb-4">
+                        <span
+                          className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${getBadgeColor(
+                            exercise.type
+                          )}`}
                         >
-                          <PencilIcon size={16} />
-                        </button>
-                        <button
-                          onClick={() =>
-                            handleDelete(exercise.id, exercise.title)
-                          }
-                          className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
-                        >
-                          <TrashIcon size={16} />
-                        </button>
-                      </div>
-                    </div>
-
-                    <h3 className="text-lg font-bold text-slate-800 mb-2 group-hover:text-red-600 transition-colors">
-                      {exercise.title}
-                    </h3>
-
-                    <p className="text-slate-500 text-sm line-clamp-2 mb-4 h-10">
-                      {exercise.description || "Không có mô tả"}
-                    </p>
-
-                    <div className="flex items-center justify-between pt-4 border-t border-slate-50">
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2Icon
-                          className="text-green-500"
-                          size={16}
-                        />
-                        <span className="text-xs font-bold text-slate-600">
-                          {exercise.points} điểm
+                          {getTypeText(exercise.type)}
                         </span>
+                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() =>
+                              navigate(`/admin/exercises/edit/${exercise.id}`)
+                            }
+                            className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
+                          >
+                            <PencilIcon size={16} />
+                          </button>
+                          <button
+                            onClick={() =>
+                              handleDelete(exercise.id, exercise.title)
+                            }
+                            className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                          >
+                            <TrashIcon size={16} />
+                          </button>
+                        </div>
                       </div>
-                      <span
-                        className={`text-xs font-bold px-2 py-0.5 rounded-lg border uppercase tracking-tighter
+
+                      <h3 className="text-lg font-bold text-slate-800 mb-2 group-hover:text-red-600 transition-colors">
+                        {exercise.title}
+                      </h3>
+
+                      <p className="text-slate-500 text-sm line-clamp-2 mb-4 h-10">
+                        {exercise.description || "Không có mô tả"}
+                      </p>
+
+                      <div className="flex items-center justify-between pt-4 border-t border-slate-50">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2Icon
+                            className="text-green-500"
+                            size={16}
+                          />
+                          <span className="text-xs font-bold text-slate-600">
+                            {exercise.points} điểm
+                          </span>
+                        </div>
+                        <span
+                          className={`text-xs font-bold px-2 py-0.5 rounded-lg border uppercase tracking-tighter
                         ${
                           exercise.difficulty === "easy"
                             ? "border-green-100 text-green-600 bg-green-50"
@@ -473,15 +555,15 @@ const ExerciseManagement: React.FC = () => {
                             ? "border-amber-100 text-amber-600 bg-amber-50"
                             : "border-red-100 text-red-600 bg-red-50"
                         }`}
-                      >
-                        {exercise.difficulty}
-                      </span>
+                        >
+                          {exercise.difficulty}
+                        </span>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="h-1.5 w-full bg-slate-100 overflow-hidden">
-                    <div
-                      className={`h-full transition-all duration-500 group-hover:w-full w-4 
+                    <div className="h-1.5 w-full bg-slate-100 overflow-hidden">
+                      <div
+                        className={`h-full transition-all duration-500 group-hover:w-full w-4 
                       ${
                         exercise.type === ExerciseType.MATCHING
                           ? "bg-blue-500"
@@ -489,14 +571,28 @@ const ExerciseManagement: React.FC = () => {
                           ? "bg-purple-500"
                           : "bg-orange-500"
                       }`}
-                    />
+                      />
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
       </div>
+
+      {/* Fixed Pagination Footer */}
+      {!loading && totalPages > 1 && (
+        <div className="flex-none bg-white border-t border-slate-200 py-4 px-6 z-10 safe-area-bottom">
+          <div className="max-w-7xl mx-auto">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

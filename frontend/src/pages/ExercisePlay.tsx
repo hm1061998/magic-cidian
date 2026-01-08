@@ -62,13 +62,20 @@ const ExercisePlay: React.FC = () => {
     const init = async () => {
       try {
         const [exercisesData, progressData] = await Promise.all([
-          fetchExercises(),
+          fetchExercises({ limit: 1000 }),
           getUserProgress(),
         ]);
 
         if (!mounted) return;
 
-        setAllExercises(exercisesData || []);
+        if (!exercisesData || exercisesData.data.length === 0) {
+          toast.info("Chưa có bài tập nào.");
+          navigate("/");
+          return;
+        }
+
+        const validExercises = exercisesData.data;
+        setAllExercises(validExercises);
         setUserProgress(progressData || []);
 
         const currentTotal = (progressData || []).reduce(
@@ -77,22 +84,16 @@ const ExercisePlay: React.FC = () => {
         );
         setTotalScore(currentTotal);
 
-        if (!exercisesData || exercisesData.length === 0) {
-          toast.info("Chưa có bài tập nào.");
-          navigate("/");
-          return;
-        }
-
         const doneCount = progressData ? progressData.length : 0;
 
-        if (doneCount > 0 && doneCount < exercisesData.length) {
+        if (doneCount > 0 && doneCount < validExercises.length) {
           setShowResumeDialog(true);
           setLoading(false);
-        } else if (doneCount >= exercisesData.length) {
+        } else if (doneCount >= validExercises.length) {
           setIsAllDone(true);
           setLoading(false);
         } else {
-          startSession(exercisesData, []);
+          startSession(validExercises, []);
         }
       } catch (err) {
         console.error(err);

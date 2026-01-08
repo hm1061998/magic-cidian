@@ -1,13 +1,36 @@
 import { http } from "./httpService";
 import { Exercise } from "@/types";
 
-export const fetchExercises = async () => {
-  const response = await http.get<Exercise[]>("/exercises");
+export interface PaginationParams {
+  page?: number;
+  limit?: number;
+  type?: string;
+  search?: string;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    lastPage: number;
+  };
+}
+
+export const fetchExercises = async (params?: PaginationParams) => {
+  const response = await http.get<PaginatedResponse<Exercise>>(
+    "/exercises",
+    params
+  );
   return response.data;
 };
 
-export const fetchAdminExercises = async () => {
-  const response = await http.get<Exercise[]>("/admin/exercises");
+export const fetchAdminExercises = async (params?: PaginationParams) => {
+  const response = await http.get<PaginatedResponse<Exercise>>(
+    "/admin/exercises",
+    params
+  );
   return response.data;
 };
 

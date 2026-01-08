@@ -112,15 +112,18 @@ export const useFlashcards = (isLoggedIn: boolean, source: "all" | "saved") => {
       if (rating === 1) {
         repetition = 0;
         interval = 0;
-        try {
-          await updateSRSProgress(currentCard.id, {
-            interval,
-            repetition,
-            efactor,
-            nextReviewDate,
-          });
-        } catch (err) {
-          console.error("SRS sync error", err);
+
+        if (isLoggedIn) {
+          try {
+            await updateSRSProgress(currentCard.id, {
+              interval,
+              repetition,
+              efactor,
+              nextReviewDate,
+            });
+          } catch (err) {
+            console.error("SRS sync error", err);
+          }
         }
 
         setSrsData((prev) => ({
@@ -148,16 +151,19 @@ export const useFlashcards = (isLoggedIn: boolean, source: "all" | "saved") => {
       repetition += 1;
       nextReviewDate += interval * 24 * 60 * 60 * 1000;
 
-      try {
-        await updateSRSProgress(currentCard.id, {
-          interval,
-          repetition,
-          efactor,
-          nextReviewDate,
-        });
-      } catch (err) {
-        console.error("SRS sync error", err);
+      if (isLoggedIn) {
+        try {
+          await updateSRSProgress(currentCard.id, {
+            interval,
+            repetition,
+            efactor,
+            nextReviewDate,
+          });
+        } catch (err) {
+          console.error("SRS sync error", err);
+        }
       }
+
       setSrsData((prev) => ({
         ...prev,
         [currentCard.hanzi]: { interval, repetition, efactor, nextReviewDate },

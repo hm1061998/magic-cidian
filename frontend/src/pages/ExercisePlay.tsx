@@ -39,6 +39,14 @@ const ExercisePlay: React.FC = () => {
   const [isAllDone, setIsAllDone] = useState(false);
   const [totalScore, setTotalScore] = useState(0);
 
+  // Lazy Loading State
+  const [currentDifficulty, setCurrentDifficulty] = useState<
+    "easy" | "medium" | "hard"
+  >("easy");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMoreInDifficulty, setHasMoreInDifficulty] = useState(true);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
+
   // Gameplay State
   const [exerciseQueue, setExerciseQueue] = useState<Exercise[]>([]);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
@@ -56,26 +64,41 @@ const ExercisePlay: React.FC = () => {
   // Fill Blanks Specific State
   const [activeBlankIndex, setActiveBlankIndex] = useState<number | null>(null);
 
+  // Fetch next batch of exercises by difficulty
+  const fetchNextBatch = async (
+    difficulty: "easy" | "medium" | "hard",
+    page: number
+  ) => {
+    try {
+      const response = await fetchExercises({
+        difficulty,
+        page,
+        limit: 10,
+      });
+
+      if (response.data.length === 0) {
+        return { exercises: [], hasMore: false };
+      }
+
+      return {
+        exercises: response.data,
+        hasMore: page < response.meta.lastPage,
+      };
+    } catch (err) {
+      console.error("Failed to fetch exercises:", err);
+      return { exercises: [], hasMore: false };
+    }
+  };
+
   // Initial Load
   useEffect(() => {
     let mounted = true;
     const init = async () => {
       try {
-        const [exercisesData, progressData] = await Promise.all([
-          fetchExercises({ limit: 1000 }),
-          getUserProgress(),
-        ]);
+        const [progressData] = await Promise.all([getUserProgress()]);
 
         if (!mounted) return;
 
-        if (!exercisesData || exercisesData.data.length === 0) {
-          toast.info("Chưa có bài tập nào.");
-          navigate("/");
-          return;
-        }
-
-        const validExercises = exercisesData.data;
-        setAllExercises(validExercises);
         setUserProgress(progressData || []);
 
         const currentTotal = (progressData || []).reduce(
@@ -84,16 +107,36 @@ const ExercisePlay: React.FC = () => {
         );
         setTotalScore(currentTotal);
 
-        const doneCount = progressData ? progressData.length : 0;
+        // Fetch first batch of easy exercises
+        const { exercises, hasMore } = await fetchNextBatch("easy", 1);
 
-        if (doneCount > 0 && doneCount < validExercises.length) {
+        if (exercises.length === 0) {
+          toast.info("Chưa có bài tập nào.");
+          navigate("/");
+          return;
+        }
+
+        setAllExercises(exercises);
+        setHasMoreInDifficulty(hasMore);
+        setCurrentPage(1);
+
+        const doneIds = new Set(
+          (progressData || []).map((p: any) => p.exerciseId)
+        );
+        const remaining = exercises.filter((ex) => !doneIds.has(ex.id));
+
+        if (remaining.length === 0 && progressData && progressData.length > 0) {
           setShowResumeDialog(true);
           setLoading(false);
-        } else if (doneCount >= validExercises.length) {
-          setIsAllDone(true);
-          setLoading(false);
+        } else if (remaining.length === 0) {
+          // Try to load more or next difficulty
+          await loadMoreExercises();
         } else {
-          startSession(validExercises, []);
+          setExerciseQueue(remaining);
+          setCurrentExerciseIndex(0);
+          setExercise(remaining[0]);
+          resetGameLocalState();
+          setLoading(false);
         }
       } catch (err) {
         console.error(err);
@@ -108,17 +151,60 @@ const ExercisePlay: React.FC = () => {
     };
   }, [navigate]);
 
-  const sortExercises = (exercises: Exercise[]) => {
-    const difficultyOrder: Record<string, number> = {
-      easy: 1,
-      medium: 2,
-      hard: 3,
-    };
-    return [...exercises].sort((a, b) => {
-      const da = difficultyOrder[a.difficulty?.toLowerCase()] || 99;
-      const db = difficultyOrder[b.difficulty?.toLowerCase()] || 99;
-      return da - db;
-    });
+  // Load more exercises (next page or next difficulty)
+  const loadMoreExercises = async () => {
+    if (isFetchingMore) return;
+
+    setIsFetchingMore(true);
+    try {
+      let nextDifficulty = currentDifficulty;
+      let nextPage = currentPage + 1;
+      let shouldFetch = hasMoreInDifficulty;
+
+      // If no more in current difficulty, move to next
+      if (!hasMoreInDifficulty) {
+        if (currentDifficulty === "easy") {
+          nextDifficulty = "medium";
+          nextPage = 1;
+          shouldFetch = true;
+        } else if (currentDifficulty === "medium") {
+          nextDifficulty = "hard";
+          nextPage = 1;
+          shouldFetch = true;
+        } else {
+          // No more exercises at all
+          setIsFetchingMore(false);
+          return;
+        }
+      }
+
+      if (shouldFetch) {
+        const { exercises, hasMore } = await fetchNextBatch(
+          nextDifficulty,
+          nextPage
+        );
+
+        if (exercises.length > 0) {
+          setAllExercises((prev) => [...prev, ...exercises]);
+
+          // Filter out already completed exercises
+          const doneIds = new Set(userProgress.map((p: any) => p.exerciseId));
+          const newExercises = exercises.filter((ex) => !doneIds.has(ex.id));
+
+          if (newExercises.length > 0) {
+            setExerciseQueue((prev) => [...prev, ...newExercises]);
+          }
+
+          setCurrentDifficulty(nextDifficulty);
+          setCurrentPage(nextPage);
+          setHasMoreInDifficulty(hasMore);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load more exercises:", err);
+    } finally {
+      setIsFetchingMore(false);
+    }
   };
 
   const startSession = (all: Exercise[], progress: any[]) => {
@@ -131,10 +217,9 @@ const ExercisePlay: React.FC = () => {
       return;
     }
 
-    const sorted = sortExercises(remaining);
-    setExerciseQueue(sorted);
+    setExerciseQueue(remaining);
     setCurrentExerciseIndex(0);
-    setExercise(sorted[0]);
+    setExercise(remaining[0]);
 
     resetGameLocalState();
     setLoading(false);
@@ -142,7 +227,18 @@ const ExercisePlay: React.FC = () => {
 
   const handleResume = () => {
     setShowResumeDialog(false);
-    startSession(allExercises, userProgress);
+    const doneIds = new Set(userProgress.map((p: any) => p.exerciseId));
+    const remaining = allExercises.filter((ex) => !doneIds.has(ex.id));
+
+    if (remaining.length > 0) {
+      setExerciseQueue(remaining);
+      setCurrentExerciseIndex(0);
+      setExercise(remaining[0]);
+      resetGameLocalState();
+      setLoading(false);
+    } else {
+      loadMoreExercises();
+    }
   };
 
   const handleRestart = async () => {
@@ -154,7 +250,23 @@ const ExercisePlay: React.FC = () => {
       setTotalScore(0);
       setShowResumeDialog(false);
       setIsAllDone(false);
-      startSession(allExercises, []);
+
+      // Reset to easy difficulty and reload
+      setCurrentDifficulty("easy");
+      setCurrentPage(1);
+      setHasMoreInDifficulty(true);
+
+      const { exercises, hasMore } = await fetchNextBatch("easy", 1);
+      setAllExercises(exercises);
+      setHasMoreInDifficulty(hasMore);
+
+      if (exercises.length > 0) {
+        setExerciseQueue(exercises);
+        setCurrentExerciseIndex(0);
+        setExercise(exercises[0]);
+        resetGameLocalState();
+      }
+      setLoading(false);
     } catch (e) {
       toast.error("Không thể làm mới tiến độ");
       setLoading(false);
@@ -236,14 +348,30 @@ const ExercisePlay: React.FC = () => {
     }
   };
 
-  const handleNextExercise = () => {
+  const handleNextExercise = async () => {
     const nextIndex = currentExerciseIndex + 1;
+
+    // Check if we need to load more exercises (when 3 or fewer remaining)
+    const remainingInQueue = exerciseQueue.length - nextIndex;
+    if (remainingInQueue <= 3 && !isFetchingMore) {
+      loadMoreExercises();
+    }
+
     if (nextIndex < exerciseQueue.length) {
       setCurrentExerciseIndex(nextIndex);
       setExercise(exerciseQueue[nextIndex]);
       resetGameLocalState();
     } else {
-      setIsAllDone(true);
+      // Wait a bit for potential loading, then check again
+      setTimeout(() => {
+        if (nextIndex < exerciseQueue.length) {
+          setCurrentExerciseIndex(nextIndex);
+          setExercise(exerciseQueue[nextIndex]);
+          resetGameLocalState();
+        } else {
+          setIsAllDone(true);
+        }
+      }, 500);
     }
   };
 

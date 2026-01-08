@@ -15,10 +15,12 @@ export class ExercisesService {
   ) {}
 
   async findAll(query: ExerciseQueryDto) {
-    const { page = 1, limit = 12, type } = query;
+    const { page = 1, limit = 12, type, difficulty } = query;
     const skip = (page - 1) * limit;
 
-    const whereCondition = type ? { type } : {};
+    const whereCondition: any = {};
+    if (type) whereCondition.type = type;
+    if (difficulty) whereCondition.difficulty = difficulty;
 
     const [data, total] = await this.exerciseRepository.findAndCount({
       where: whereCondition,

@@ -410,7 +410,7 @@ const ExerciseManagement: React.FC = () => {
         />
 
         {/* Filter Bar */}
-        <div className="bg-white border-b border-slate-100 z-0">
+        <div className="bg-white border-b border-slate-100 z-1 sticky top-0 left-0">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
             <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
               <button

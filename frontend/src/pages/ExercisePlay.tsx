@@ -52,6 +52,10 @@ const ExercisePlay: React.FC = () => {
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [exercise, setExercise] = useState<Exercise | null>(null);
 
+  // Multi-question State
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [accumulatedScore, setAccumulatedScore] = useState(0);
+
   // Exercise Interaction State
   const [userAnswers, setUserAnswers] = useState<any>({});
   const [submitted, setSubmitted] = useState(false);
@@ -63,6 +67,33 @@ const ExercisePlay: React.FC = () => {
 
   // Fill Blanks Specific State
   const [activeBlankIndex, setActiveBlankIndex] = useState<number | null>(null);
+
+  // Computed Active Question Data
+  const activeExerciseData = useMemo(() => {
+    if (!exercise) return null;
+
+    // Check if we have multiple questions in the new structure
+    const questions = exercise.questions || [];
+
+    if (questions.length > 0) {
+      const q = questions[currentQuestionIndex];
+      // Create a transient Exercise object for the current question
+      return {
+        ...exercise,
+        // Use question specific content
+        content: q.content,
+        // Allow question to override type, points if defined, else inherit
+        type: q.type || exercise.type,
+        points: q.points || exercise.points,
+        // Fake ID for unity key if needed, or keep exercise ID but might cause cache issues if same ID.
+        // Best to use question ID + exercise ID combo if question has specific ID.
+        id: q.id || `${exercise.id}_q${currentQuestionIndex}`,
+      } as Exercise;
+    }
+
+    // Fallback for legacy data (single content)
+    return exercise;
+  }, [exercise, currentQuestionIndex]);
 
   // Fetch next batch of exercises by difficulty
   const fetchNextBatch = async (
@@ -285,28 +316,32 @@ const ExercisePlay: React.FC = () => {
   };
 
   const checkAnswer = async () => {
-    if (!exercise) return;
+    const currentData = activeExerciseData;
+    if (!currentData) return;
+
     let currentScore = 0;
 
-    if (exercise.type === ExerciseType.MULTIPLE_CHOICE) {
-      if (userAnswers.selectedOptionId === exercise.content.correctOptionId) {
-        currentScore = exercise.points;
+    if (currentData.type === ExerciseType.MULTIPLE_CHOICE) {
+      if (
+        userAnswers.selectedOptionId === currentData.content.correctOptionId
+      ) {
+        currentScore = currentData.points;
       }
-    } else if (exercise.type === ExerciseType.MATCHING) {
+    } else if (currentData.type === ExerciseType.MATCHING) {
       let correctCount = 0;
       Object.entries(matches).forEach(([leftIdx, rightIdx]) => {
         if (parseInt(leftIdx) === rightIdx) correctCount++;
       });
-      if (correctCount === exercise.content.pairs.length) {
-        currentScore = exercise.points;
+      if (correctCount === currentData.content.pairs.length) {
+        currentScore = currentData.points;
       } else {
         currentScore = Math.floor(
-          (correctCount / exercise.content.pairs.length) * exercise.points
+          (correctCount / currentData.content.pairs.length) * currentData.points
         );
       }
-    } else if (exercise.type === ExerciseType.FILL_BLANKS) {
+    } else if (currentData.type === ExerciseType.FILL_BLANKS) {
       let correctCount = 0;
-      const correctAnswers = exercise.content.correctAnswers || [];
+      const correctAnswers = currentData.content.correctAnswers || [];
 
       correctAnswers.forEach((answer: any) => {
         const userAnswer = userAnswers[`blank_${answer.position}`];
@@ -316,10 +351,10 @@ const ExercisePlay: React.FC = () => {
       });
 
       if (correctCount === correctAnswers.length) {
-        currentScore = exercise.points;
+        currentScore = currentData.points;
       } else {
         currentScore = Math.floor(
-          (correctCount / correctAnswers.length) * exercise.points
+          (correctCount / correctAnswers.length) * currentData.points
         );
       }
     }
@@ -328,20 +363,7 @@ const ExercisePlay: React.FC = () => {
     setSubmitted(true);
     setActiveBlankIndex(null); // Clear focus
 
-    if (exercise.id) {
-      loadingService.show("Đang lưu tiến độ...");
-      try {
-        await saveProgress(exercise.id, currentScore);
-        setTotalScore((prev) => prev + currentScore);
-      } catch (e) {
-        console.error("Failed to save progress", e);
-        toast.error("Không thể lưu tiến độ. Vui lòng thử lại sau.");
-      } finally {
-        loadingService.hide();
-      }
-    }
-
-    if (currentScore === exercise.points) {
+    if (currentScore === currentData.points) {
       toast.success("Tuyệt vời! Bạn đã hoàn thành xuất sắc.");
     } else {
       toast.info(`Bạn đạt được ${currentScore} điểm.`);
@@ -349,29 +371,63 @@ const ExercisePlay: React.FC = () => {
   };
 
   const handleNextExercise = async () => {
-    const nextIndex = currentExerciseIndex + 1;
+    if (!exercise) return;
 
-    // Check if we need to load more exercises (when 3 or fewer remaining)
-    const remainingInQueue = exerciseQueue.length - nextIndex;
-    if (remainingInQueue <= 3 && !isFetchingMore) {
-      loadMoreExercises();
-    }
+    // 1. Accumulate Score
+    const currentTotalScore = accumulatedScore + score;
+    setAccumulatedScore(currentTotalScore);
 
-    if (nextIndex < exerciseQueue.length) {
-      setCurrentExerciseIndex(nextIndex);
-      setExercise(exerciseQueue[nextIndex]);
+    // 2. Check if there are more questions in THIS exercise
+    const questions = exercise.questions || [];
+    const hasMoreQuestions =
+      questions.length > 0 && currentQuestionIndex < questions.length - 1;
+
+    if (hasMoreQuestions) {
+      // Move to next question
+      setCurrentQuestionIndex((prev) => prev + 1);
       resetGameLocalState();
     } else {
-      // Wait a bit for potential loading, then check again
-      setTimeout(() => {
-        if (nextIndex < exerciseQueue.length) {
-          setCurrentExerciseIndex(nextIndex);
-          setExercise(exerciseQueue[nextIndex]);
-          resetGameLocalState();
-        } else {
-          setIsAllDone(true);
+      // Completed Exercise -> Save Progress
+      if (exercise.id) {
+        try {
+          // We save the TOTAL score of the session (sum of all questions)
+          await saveProgress(exercise.id, currentTotalScore);
+          setTotalScore((prev) => prev + currentTotalScore);
+        } catch (e) {
+          console.error("Failed to save progress", e);
         }
-      }, 500);
+      }
+
+      // Move to NEXT EXERCISE
+      const nextIndex = currentExerciseIndex + 1;
+
+      // Check for loading more
+      const remainingInQueue = exerciseQueue.length - nextIndex;
+      if (remainingInQueue <= 3 && !isFetchingMore) {
+        loadMoreExercises();
+      }
+
+      if (nextIndex < exerciseQueue.length) {
+        setCurrentExerciseIndex(nextIndex);
+        setExercise(exerciseQueue[nextIndex]);
+        // Reset EVERYTHING for new exercise
+        setCurrentQuestionIndex(0);
+        setAccumulatedScore(0);
+        resetGameLocalState();
+      } else {
+        // Wait a bit then check done
+        setTimeout(() => {
+          if (nextIndex < exerciseQueue.length) {
+            setCurrentExerciseIndex(nextIndex);
+            setExercise(exerciseQueue[nextIndex]);
+            setCurrentQuestionIndex(0);
+            setAccumulatedScore(0);
+            resetGameLocalState();
+          } else {
+            setIsAllDone(true);
+          }
+        }, 500);
+      }
     }
   };
 
@@ -379,17 +435,18 @@ const ExercisePlay: React.FC = () => {
     resetGameLocalState();
   };
 
-  // --- HELPERS: Check if fully answered ---
   const isFullyAnswered = useMemo(() => {
-    if (!exercise) return false;
-    if (exercise.type === ExerciseType.MULTIPLE_CHOICE) {
+    const currentData = activeExerciseData;
+    if (!currentData) return false;
+
+    if (currentData.type === ExerciseType.MULTIPLE_CHOICE) {
       return !!userAnswers.selectedOptionId;
     }
-    if (exercise.type === ExerciseType.MATCHING) {
+    if (currentData.type === ExerciseType.MATCHING) {
       // Must match all pairs
-      return Object.keys(matches).length === exercise.content.pairs.length;
+      return Object.keys(matches).length === currentData.content.pairs.length;
     }
-    if (exercise.type === ExerciseType.FILL_BLANKS) {
+    if (currentData.type === ExerciseType.FILL_BLANKS) {
       // Must fill all blanks
       const filledCount = Object.values(userAnswers).filter(
         (v: any) => v !== undefined && v !== null && v !== ""
@@ -397,11 +454,11 @@ const ExercisePlay: React.FC = () => {
 
       //lấy số lượng ký tự cần fill dựa vào '[number]' trong exercise.content.text
       const numberOfBlanks =
-        exercise.content.text.match(/\[\d+\]/g)?.length || 0;
+        currentData.content.text.match(/\[\d+\]/g)?.length || 0;
       return filledCount === numberOfBlanks;
     }
     return false;
-  }, [exercise, userAnswers, matches]);
+  }, [activeExerciseData, userAnswers, matches]);
 
   const isPerfect = score === exercise?.points;
   const isLowScore = exercise && score < exercise.points / 2;
@@ -607,6 +664,7 @@ const ExercisePlay: React.FC = () => {
   }
 
   if (!exercise) return null;
+  const currentData = activeExerciseData || exercise;
 
   return (
     <div className="flex flex-col h-screen bg-slate-50 font-inter overflow-hidden">
@@ -623,22 +681,23 @@ const ExercisePlay: React.FC = () => {
           <div className="flex flex-col items-center flex-1 mx-4">
             <div className="flex items-center gap-2 mb-1">
               <h1 className="text-xs font-black text-slate-900 uppercase tracking-widest hidden sm:block">
-                {exercise.title}
+                {currentData.title}
               </h1>
               <span
                 className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase
                     ${
-                      exercise.difficulty === "easy"
+                      currentData.difficulty === "easy"
                         ? "bg-green-100 text-green-700"
-                        : exercise.difficulty === "medium"
+                        : currentData.difficulty === "medium"
                         ? "bg-amber-100 text-amber-700"
                         : "bg-red-100 text-red-700"
                     }
                  `}
               >
-                {exercise.difficulty}
+                {currentData.difficulty}
               </span>
             </div>
+            {/* Progress Bar for Exercises Queue */}
             <div className="h-1.5 w-full max-w-[200px] bg-slate-100 rounded-full overflow-hidden relative">
               <div
                 className="absolute top-0 left-0 h-full bg-red-600 rounded-full transition-all duration-500 ease-out"
@@ -668,28 +727,31 @@ const ExercisePlay: React.FC = () => {
 
             <div className="mb-6 relative z-10">
               <h2 className="text-xl sm:text-2xl font-extrabold text-slate-800 leading-tight font-hanzi">
-                {exercise.description}
+                {currentData.description}
               </h2>
               <div className="mt-1 text-slate-400 font-medium text-xs flex items-center gap-2">
                 <LightbulbIcon size={14} />
-                <span>Câu hỏi số {currentExerciseIndex + 1}</span>
+                <span>
+                  Bài {currentExerciseIndex + 1} • Câu{" "}
+                  {currentQuestionIndex + 1}
+                </span>
               </div>
             </div>
 
             {/* Gameplay Area */}
             <div className="relative z-10">
-              {exercise.type === ExerciseType.MULTIPLE_CHOICE && (
+              {currentData.type === ExerciseType.MULTIPLE_CHOICE && (
                 <MultipleChoiceExercise
-                  exercise={exercise}
+                  exercise={currentData}
                   userAnswers={userAnswers}
                   setUserAnswers={setUserAnswers}
                   submitted={submitted}
                 />
               )}
 
-              {exercise.type === ExerciseType.MATCHING && (
+              {currentData.type === ExerciseType.MATCHING && (
                 <MatchingExercise
-                  exercise={exercise}
+                  exercise={currentData}
                   matches={matches}
                   setMatches={setMatches}
                   selectedLeft={selectedLeft}
@@ -698,9 +760,9 @@ const ExercisePlay: React.FC = () => {
                 />
               )}
 
-              {exercise.type === ExerciseType.FILL_BLANKS && (
+              {currentData.type === ExerciseType.FILL_BLANKS && (
                 <FillBlanksExercise
-                  exercise={exercise}
+                  exercise={currentData}
                   userAnswers={userAnswers}
                   setUserAnswers={setUserAnswers}
                   activeBlankIndex={activeBlankIndex}

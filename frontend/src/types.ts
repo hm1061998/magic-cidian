@@ -85,12 +85,24 @@ export enum ExerciseType {
   FILL_BLANKS = "FILL_BLANKS",
 }
 
+export interface Question {
+  id: string;
+  exerciseId: string;
+  type: ExerciseType;
+  content: any;
+  points: number;
+  order: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Exercise {
   id: string;
   title: string;
   description?: string;
   type: ExerciseType;
   content: any;
+  questions?: Question[];
   difficulty: "easy" | "medium" | "hard";
   points: number;
   createdAt: string;

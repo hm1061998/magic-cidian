@@ -3,15 +3,21 @@ import { useFormContext, useWatch } from "react-hook-form";
 import { CheckCircle2Icon, TypeIcon } from "lucide-react";
 import { Exercise, ExerciseType } from "@/types";
 
-const FillBlanksForm: React.FC = () => {
+interface FillBlanksFormProps {
+  prefix: string;
+}
+
+const FillBlanksForm: React.FC<FillBlanksFormProps> = ({ prefix }) => {
   const { register, control, setValue } = useFormContext<Partial<Exercise>>();
   const [distractorsText, setDistractorsText] = React.useState("");
 
-  const text = useWatch({ control, name: "content.text" }) || "";
+  const text = useWatch({ control, name: `${prefix}.text` as any }) || "";
   const correctAnswers =
-    (useWatch({ control, name: "content.correctAnswers" }) as any[]) || [];
+    (useWatch({ control, name: `${prefix}.correctAnswers` as any }) as any[]) ||
+    [];
   const wordBank =
-    (useWatch({ control, name: "content.wordBank" }) as string[]) || [];
+    (useWatch({ control, name: `${prefix}.wordBank` as any }) as string[]) ||
+    [];
   const selectedType = useWatch({ control, name: "type" });
 
   // Initialize distractors text once when form loads (Edit mode)
@@ -42,8 +48,8 @@ const FillBlanksForm: React.FC = () => {
 
     if (detectedBlanks.length === 0) {
       if (correctAnswers.length > 0) {
-        setValue("content.correctAnswers" as any, []);
-        setValue("content.wordBank" as any, []);
+        setValue(`${prefix}.correctAnswers` as any, []);
+        setValue(`${prefix}.wordBank` as any, []);
       }
       return;
     }
@@ -63,7 +69,7 @@ const FillBlanksForm: React.FC = () => {
       );
 
     if (structureChanged) {
-      setValue("content.correctAnswers" as any, newAnswers);
+      setValue(`${prefix}.correctAnswers` as any, newAnswers);
     }
   }, [selectedType, detectedBlanks, setValue]);
 
@@ -84,7 +90,7 @@ const FillBlanksForm: React.FC = () => {
 
     // Only update if changed
     if (JSON.stringify(newWordBank) !== JSON.stringify(wordBank)) {
-      setValue("content.wordBank" as any, newWordBank);
+      setValue(`${prefix}.wordBank` as any, newWordBank);
     }
   }, [selectedType, correctAnswers, distractorsText, setValue]);
 
@@ -106,7 +112,7 @@ const FillBlanksForm: React.FC = () => {
           </div>
         </div>
         <textarea
-          {...register("content.text" as any, {
+          {...register(`${prefix}.text` as any, {
             required: "Vui lòng nhập văn bản",
           })}
           rows={4}
@@ -161,9 +167,12 @@ const FillBlanksForm: React.FC = () => {
                 </div>
                 <div className="flex-1">
                   <input
-                    {...register(`content.correctAnswers.${idx}.word` as any, {
-                      required: "Nhập đáp án",
-                    })}
+                    {...register(
+                      `${prefix}.correctAnswers.${idx}.word` as any,
+                      {
+                        required: "Nhập đáp án",
+                      }
+                    )}
                     placeholder="Nhập từ/cụm từ đúng..."
                     className="w-full px-4 py-3 bg-green-50 border-2 border-green-200 rounded-xl focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-100 font-bold text-base text-green-900"
                   />

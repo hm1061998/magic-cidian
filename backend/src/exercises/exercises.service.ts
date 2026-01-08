@@ -1,18 +1,53 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ExerciseEntity } from './entities/exercise.entity';
+import { QuestionEntity } from './entities/question.entity';
 import { UserExerciseHistory } from './entities/user-exercise-history.entity';
 import { ExerciseQueryDto } from './dto/exercise-query.dto';
 
 @Injectable()
-export class ExercisesService {
+export class ExercisesService implements OnModuleInit {
   constructor(
     @InjectRepository(ExerciseEntity)
     private exerciseRepository: Repository<ExerciseEntity>,
+    @InjectRepository(QuestionEntity)
+    private questionRepository: Repository<QuestionEntity>,
     @InjectRepository(UserExerciseHistory)
     private historyRepository: Repository<UserExerciseHistory>,
   ) {}
+
+  async onModuleInit() {
+    await this.migrateLegacyData();
+  }
+
+  private async migrateLegacyData() {
+    const exercises = await this.exerciseRepository.find({
+      relations: ['questions'],
+    });
+
+    let migratedCount = 0;
+    for (const exercise of exercises) {
+      if (
+        exercise.content &&
+        (!exercise.questions || exercise.questions.length === 0)
+      ) {
+        // Migrate legacy content to a new question
+        const question = this.questionRepository.create({
+          exercise: exercise,
+          content: exercise.content,
+          type: exercise.type as any,
+          points: exercise.points,
+          order: 0,
+        });
+        await this.questionRepository.save(question);
+        migratedCount++;
+      }
+    }
+    if (migratedCount > 0) {
+      console.log(`Migrated ${migratedCount} exercises to new structure.`);
+    }
+  }
 
   async findAll(query: ExerciseQueryDto) {
     const { page = 1, limit = 12, type, difficulty } = query;
@@ -27,6 +62,7 @@ export class ExercisesService {
       order: { createdAt: 'DESC' },
       take: limit,
       skip: skip,
+      relations: ['questions'], // Load questions for list view if needed, or remove if too heavy
     });
 
     return {
@@ -41,14 +77,22 @@ export class ExercisesService {
   }
 
   async findOne(id: string) {
-    const exercise = await this.exerciseRepository.findOne({ where: { id } });
+    const exercise = await this.exerciseRepository.findOne({
+      where: { id },
+      relations: ['questions'],
+    });
     if (!exercise) {
       throw new NotFoundException(`Exercise with ID ${id} not found`);
+    }
+    // Sort questions by order
+    if (exercise.questions) {
+      exercise.questions.sort((a, b) => a.order - b.order);
     }
     return exercise;
   }
 
   async create(data: Partial<ExerciseEntity>) {
+    // strict handling for new structure
     const exercise = this.exerciseRepository.create(data);
     return await this.exerciseRepository.save(exercise);
   }
@@ -60,6 +104,16 @@ export class ExercisesService {
 
   async update(id: string, data: Partial<ExerciseEntity>) {
     const exercise = await this.findOne(id);
+
+    // If updating questions, we might need to handle them carefully.
+    // For now, relies on TypeORM cascade if data.questions is provided.
+    // However, merging updates to 'questions' via 'Object.assign' on the parent might not work as expected for deep updates without 'save'.
+    // But since we use repositories, let's try standard save.
+
+    // NOTE: Object.assign merge of relations can be tricky.
+    // If data.questions is present, it will re-assign the array.
+    // If the frontend sends the full array of questions (including IDs for existing ones), save() with cascade updates them.
+
     Object.assign(exercise, data);
     return await this.exerciseRepository.save(exercise);
   }

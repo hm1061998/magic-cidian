@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { useForm, FormProvider } from "react-hook-form";
+import { useForm, FormProvider, useFieldArray } from "react-hook-form";
 import {
   ArrowLeftIcon,
   SaveIcon,
   TypeIcon,
   LayersIcon,
   HelpCircleIcon,
+  TrashIcon,
+  PlusIcon,
+  Loader2 as SpinnerIcon,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -21,7 +24,88 @@ import FormSelect from "@/components/common/FormSelect";
 import MultipleChoiceForm from "@/components/admin/ExerciseForm/MultipleChoiceForm";
 import MatchingForm from "@/components/admin/ExerciseForm/MatchingForm";
 import FillBlanksForm from "@/components/admin/ExerciseForm/FillBlanksForm";
-import { PlusIcon, SpinnerIcon } from "@/components/common/icons";
+import { useFormContext } from "react-hook-form";
+
+const QuestionCard: React.FC<{ index: number; remove: any }> = ({
+  index,
+  remove,
+}) => {
+  const {
+    register,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useFormContext();
+  const type = watch(`questions.${index}.type`);
+
+  return (
+    <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-200 relative animate-pop">
+      <div className="flex justify-between items-start mb-6 border-b border-slate-50 pb-4">
+        <div className="flex gap-4 flex-1">
+          <div className="w-1/2">
+            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">
+              Loại câu hỏi
+            </label>
+            <FormSelect
+              value={type}
+              onChange={(val) => {
+                setValue(`questions.${index}.type`, val);
+              }}
+              options={[
+                {
+                  value: ExerciseType.MULTIPLE_CHOICE,
+                  label: "Trắc nghiệm ABCD",
+                },
+                { value: ExerciseType.MATCHING, label: "Nối cặp" },
+                {
+                  value: ExerciseType.FILL_BLANKS,
+                  label: "Điền vào chỗ trống",
+                },
+              ]}
+              className="w-full h-10 bg-slate-50 border-slate-200 rounded-xl font-bold text-sm"
+            />
+          </div>
+          <div className="w-24">
+            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">
+              Điểm
+            </label>
+            <input
+              type="number"
+              {...register(`questions.${index}.points`, {
+                valueAsNumber: true,
+              })}
+              className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-100 font-bold text-center text-sm"
+            />
+          </div>
+        </div>
+
+        <div className="flex gap-2 ml-4">
+          <div className="px-3 py-1 bg-slate-100 rounded-lg text-xs font-bold text-slate-500 h-fit">
+            Câu {index + 1}
+          </div>
+          <button
+            type="button"
+            onClick={() => remove(index)}
+            className="p-1.5 text-slate-300 hover:text-red-500 transition-colors"
+            title="Xóa câu hỏi này"
+          >
+            <TrashIcon size={18} />
+          </button>
+        </div>
+      </div>
+
+      {type === ExerciseType.MULTIPLE_CHOICE && (
+        <MultipleChoiceForm prefix={`questions.${index}.content`} />
+      )}
+      {type === ExerciseType.MATCHING && (
+        <MatchingForm prefix={`questions.${index}.content`} />
+      )}
+      {type === ExerciseType.FILL_BLANKS && (
+        <FillBlanksForm prefix={`questions.${index}.content`} />
+      )}
+    </div>
+  );
+};
 
 const ExerciseForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -30,23 +114,27 @@ const ExerciseForm: React.FC = () => {
 
   const methods = useForm<Partial<Exercise>>({
     defaultValues: {
-      type: ExerciseType.MULTIPLE_CHOICE,
       difficulty: "easy",
-      points: 10,
-      content: {
-        question: "",
-        options: [
-          { id: "A", text: "" },
-          { id: "B", text: "" },
-          { id: "C", text: "" },
-          { id: "D", text: "" },
-        ],
-        correctOptionId: "A",
-        pairs: [{ left: "", right: "" }],
-        text: "",
-        wordBank: [],
-        correctAnswers: [],
-      },
+      questions: [
+        {
+          type: ExerciseType.MULTIPLE_CHOICE,
+          points: 10,
+          content: {
+            question: "",
+            options: [
+              { id: "A", text: "" },
+              { id: "B", text: "" },
+              { id: "C", text: "" },
+              { id: "D", text: "" },
+            ],
+            correctOptionId: "A",
+            pairs: [{ left: "", right: "" }],
+            text: "",
+            wordBank: [],
+            correctAnswers: [],
+          },
+        },
+      ],
     },
   });
 
@@ -56,10 +144,19 @@ const ExerciseForm: React.FC = () => {
     watch,
     setValue,
     reset,
+    control,
     formState: { errors },
   } = methods;
 
-  const selectedType = watch("type");
+  const {
+    fields: questionFields,
+    append: appendQuestion,
+    remove: removeQuestion,
+  } = useFieldArray({
+    control,
+    name: "questions" as any,
+  });
+
   const [loading, setLoading] = useState(isEdit);
 
   useEffect(() => {
@@ -67,6 +164,26 @@ const ExerciseForm: React.FC = () => {
       void (async () => {
         try {
           const data = await fetchAdminExerciseById(id);
+          // Auto-migrate on frontend if backend returned content but no questions (just in case)
+          if (!data.questions || data.questions.length === 0) {
+            if (data.content) {
+              data.questions = [
+                {
+                  content: data.content,
+                  type: data.type,
+                  points: data.points || 10,
+                } as any,
+              ];
+            } else {
+              data.questions = [
+                {
+                  content: {},
+                  type: ExerciseType.MULTIPLE_CHOICE,
+                  points: 10,
+                } as any,
+              ];
+            }
+          }
           reset(data);
         } catch (err) {
           toast.error("Không thể tải thông tin bài tập");
@@ -84,26 +201,55 @@ const ExerciseForm: React.FC = () => {
 
   const onSubmit = async (data: Partial<Exercise>) => {
     try {
-      // Clean up content based on type before saving
-      const finalContent: any = {};
-      if (data.type === ExerciseType.MULTIPLE_CHOICE) {
-        finalContent.question = data.content.question;
-        finalContent.options = data.content.options.map(
-          (opt: any, idx: number) => ({
-            ...opt,
-            id: String.fromCharCode(65 + idx),
-          })
+      const questions = data.questions || [];
+      const processedQuestions = questions.map((q: any) => {
+        const rawContent = q.content || {};
+        const finalContent: any = {};
+        const qType = q.type || ExerciseType.MULTIPLE_CHOICE;
+
+        if (qType === ExerciseType.MULTIPLE_CHOICE) {
+          finalContent.question = rawContent.question;
+          finalContent.options = (rawContent.options || []).map(
+            (opt: any, idx: number) => ({
+              ...opt,
+              id: String.fromCharCode(65 + idx),
+            })
+          );
+          finalContent.correctOptionId = rawContent.correctOptionId;
+        } else if (qType === ExerciseType.MATCHING) {
+          finalContent.pairs = rawContent.pairs;
+        } else if (qType === ExerciseType.FILL_BLANKS) {
+          finalContent.text = rawContent.text;
+          finalContent.wordBank = rawContent.wordBank;
+          finalContent.correctAnswers = rawContent.correctAnswers;
+        }
+
+        return {
+          ...q,
+          type: qType,
+          content: finalContent,
+        };
+      });
+
+      const payload = { ...data, questions: processedQuestions };
+
+      // Sync top-level metadata from questions for backward compatibility
+      if (processedQuestions.length > 0) {
+        // Use the first question's type as the "main" type
+        (payload as any).type =
+          processedQuestions[0].type || ExerciseType.MULTIPLE_CHOICE;
+        // Sum points
+        (payload as any).points = processedQuestions.reduce(
+          (acc: number, q: any) => acc + (Number(q.points) || 0),
+          0
         );
-        finalContent.correctOptionId = data.content.correctOptionId;
-      } else if (data.type === ExerciseType.MATCHING) {
-        finalContent.pairs = data.content.pairs;
-      } else if (data.type === ExerciseType.FILL_BLANKS) {
-        finalContent.text = data.content.text;
-        finalContent.wordBank = data.content.wordBank;
-        finalContent.correctAnswers = data.content.correctAnswers;
+      } else {
+        (payload as any).type = ExerciseType.MULTIPLE_CHOICE;
+        (payload as any).points = 0;
       }
 
-      const payload = { ...data, content: finalContent };
+      // Remove legacy props from payload parent
+      delete (payload as any).content;
 
       if (isEdit) {
         await updateExercise(id, payload);
@@ -196,77 +342,86 @@ const ExerciseForm: React.FC = () => {
                     />
                   </div>
 
-                  <div>
+                  {/* <div>
                     <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">
-                      Dạng bài tập
+                      Độ khó
                     </label>
                     <FormSelect
-                      value={selectedType}
-                      onChange={(val) => {
-                        setValue("type", val as ExerciseType);
-                      }}
+                      value={watch("difficulty")}
+                      onChange={(val) => setValue("difficulty", val as any)}
                       options={[
-                        {
-                          value: ExerciseType.MULTIPLE_CHOICE,
-                          label: "Trắc nghiệm ABCD",
-                        },
-                        { value: ExerciseType.MATCHING, label: "Nối cặp" },
-                        {
-                          value: ExerciseType.FILL_BLANKS,
-                          label: "Điền vào chỗ trống",
-                        },
+                        { value: "easy", label: "Dễ" },
+                        { value: "medium", label: "Trung bình" },
+                        { value: "hard", label: "Khó" },
                       ]}
-                      className="w-full h-12 bg-slate-50 border-slate-200 rounded-2xl font-bold"
+                      className="w-full h-12 bg-slate-50 border-slate-200 rounded-2xl font-bold uppercase tracking-tighter"
                     />
-                  </div>
-
-                  <div className="flex gap-4">
-                    <div className="flex-1">
-                      <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">
-                        Độ khó
-                      </label>
-                      <FormSelect
-                        value={watch("difficulty")}
-                        onChange={(val) => setValue("difficulty", val as any)}
-                        options={[
-                          { value: "easy", label: "Dễ" },
-                          { value: "medium", label: "Trung bình" },
-                          { value: "hard", label: "Khó" },
-                        ]}
-                        className="w-full h-12 bg-slate-50 border-slate-200 rounded-2xl font-bold uppercase tracking-tighter"
-                      />
-                    </div>
-                    <div className="w-24">
-                      <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">
-                        Điểm
-                      </label>
-                      <input
-                        type="number"
-                        {...register("points")}
-                        className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-red-100 font-bold text-center"
-                      />
-                    </div>
-                  </div>
+                  </div> */}
                 </div>
               </section>
 
-              {/* Question Content */}
-              <section className="bg-white rounded-3xl p-8 shadow-sm border border-slate-200">
-                <div className="flex items-center gap-3 mb-8 border-b border-slate-100 pb-4">
-                  <div className="w-10 h-10 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center">
-                    <HelpCircleIcon size={20} />
-                  </div>
-                  <h2 className="text-lg font-bold text-slate-800">
-                    Nội dung câu hỏi
+              {/* Questions List */}
+              <section className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <HelpCircleIcon className="text-purple-600" size={24} />
+                    Danh sách câu hỏi ({questionFields.length})
                   </h2>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      appendQuestion({
+                        type: ExerciseType.MULTIPLE_CHOICE,
+                        points: 10,
+                        content: {
+                          question: "",
+                          options: [
+                            { id: "A", text: "" },
+                            { id: "B", text: "" },
+                            { id: "C", text: "" },
+                            { id: "D", text: "" },
+                          ],
+                          correctOptionId: "A",
+                          pairs: [],
+                          text: "",
+                          wordBank: [],
+                          correctAnswers: [],
+                        },
+                      })
+                    }
+                    className="flex items-center gap-2 px-4 py-2 bg-purple-100 text-purple-700 rounded-xl font-bold hover:bg-purple-200 transition-all text-sm"
+                  >
+                    <PlusIcon size={16} /> Thêm câu hỏi
+                  </button>
                 </div>
 
-                {selectedType === ExerciseType.MULTIPLE_CHOICE && (
-                  <MultipleChoiceForm />
-                )}
-                {selectedType === ExerciseType.MATCHING && <MatchingForm />}
-                {selectedType === ExerciseType.FILL_BLANKS && (
-                  <FillBlanksForm />
+                {questionFields.map((field, index) => (
+                  <QuestionCard
+                    key={field.id}
+                    index={index}
+                    remove={removeQuestion}
+                  />
+                ))}
+
+                {questionFields.length === 0 && (
+                  <div className="text-center py-10 bg-slate-100 rounded-3xl border-2 border-dashed border-slate-200">
+                    <p className="text-slate-400 font-bold">
+                      Chưa có câu hỏi nào
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        appendQuestion({
+                          content: {},
+                          type: ExerciseType.MULTIPLE_CHOICE,
+                          points: 10,
+                        } as any)
+                      }
+                      className="mt-3 text-purple-600 font-bold hover:underline"
+                    >
+                      Thêm câu hỏi đầu tiên
+                    </button>
+                  </div>
                 )}
               </section>
             </div>

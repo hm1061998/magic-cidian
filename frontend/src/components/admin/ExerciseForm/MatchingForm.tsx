@@ -3,7 +3,11 @@ import { useFormContext, useFieldArray } from "react-hook-form";
 import { PlusIcon, Trash2Icon, ArrowLeftIcon } from "lucide-react";
 import { Exercise } from "@/types";
 
-const MatchingForm: React.FC = () => {
+interface MatchingFormProps {
+  prefix: string;
+}
+
+const MatchingForm: React.FC<MatchingFormProps> = ({ prefix }) => {
   const { register, control } = useFormContext<Partial<Exercise>>();
   const {
     fields: pairFields,
@@ -11,7 +15,7 @@ const MatchingForm: React.FC = () => {
     remove: removePair,
   } = useFieldArray({
     control,
-    name: "content.pairs" as any,
+    name: `${prefix}.pairs` as any,
   });
 
   return (
@@ -33,7 +37,7 @@ const MatchingForm: React.FC = () => {
         <div key={field.id} className="flex gap-4 items-center animate-pop">
           <div className="flex-1">
             <input
-              {...register(`content.pairs.${index}.left` as any)}
+              {...register(`${prefix}.pairs.${index}.left` as any)}
               placeholder="Vế trái (Vd: Hanzi)"
               className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-50 font-medium"
             />
@@ -43,7 +47,7 @@ const MatchingForm: React.FC = () => {
           </div>
           <div className="flex-1">
             <input
-              {...register(`content.pairs.${index}.right` as any)}
+              {...register(`${prefix}.pairs.${index}.right` as any)}
               placeholder="Vế phải (Vd: Nghĩa)"
               className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-50 font-medium"
             />

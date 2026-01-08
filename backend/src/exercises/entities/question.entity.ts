@@ -4,34 +4,38 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
-  OneToMany,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
-import { QuestionEntity } from './question.entity';
+import { ExerciseEntity } from './exercise.entity';
 
-export enum ExerciseType {
+export enum QuestionType {
   MATCHING = 'MATCHING',
   MULTIPLE_CHOICE = 'MULTIPLE_CHOICE',
   FILL_BLANKS = 'FILL_BLANKS',
 }
 
-@Entity('exercises')
-export class ExerciseEntity {
+@Entity('questions')
+export class QuestionEntity {
   @PrimaryGeneratedColumn()
   id: string;
 
   @Column()
-  title: string;
+  exerciseId: string;
 
-  @Column({ type: 'text', nullable: true })
-  description: string;
+  @ManyToOne(() => ExerciseEntity, (exercise) => exercise.questions, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'exerciseId' })
+  exercise: ExerciseEntity;
 
   @Column({
     type: 'enum',
-    enum: ExerciseType,
+    enum: QuestionType,
   })
-  type: ExerciseType;
+  type: QuestionType;
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: 'jsonb' })
   content: any;
   /*
     MATCHING: { 
@@ -50,21 +54,15 @@ export class ExerciseEntity {
     }
   */
 
-  @Column({ default: 'easy' })
-  difficulty: string; // easy, medium, hard
-
   @Column({ default: 10 })
   points: number;
+
+  @Column({ default: 0 })
+  order: number; // Thứ tự câu hỏi trong bài tập
 
   @CreateDateColumn()
   createdAt: Date;
 
   @UpdateDateColumn()
   updatedAt: Date;
-
-  @OneToMany(() => QuestionEntity, (question) => question.exercise, {
-    cascade: true,
-    orphanedRowAction: 'delete',
-  })
-  questions: QuestionEntity[];
 }

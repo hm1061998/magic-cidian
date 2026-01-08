@@ -35,7 +35,7 @@ const MultipleChoiceForm: React.FC<MultipleChoiceFormProps> = ({ prefix }) => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {options.map((_: any, index: number) => {
+        {[0, 1, 2, 3].map((index) => {
           const label = String.fromCharCode(65 + index); // A, B, C, D
           const isCorrect = watch(`${prefix}.correctOptionId` as any) === label;
 

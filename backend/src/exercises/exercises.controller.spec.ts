@@ -198,37 +198,8 @@ describe('ExercisesController', () => {
       expect(service.findAll).toHaveBeenCalledTimes(1);
     });
 
-    it('should filter exercises by type', async () => {
-      const query: ExerciseQueryDto = {
-        page: 1,
-        limit: 12,
-        type: ExerciseType.FILL_BLANKS,
-      };
-
-      const mockResponse = {
-        data: [
-          {
-            id: '2',
-            type: 'fill-blank',
-            difficulty: 'medium',
-            question: 'Fill in the blank',
-          },
-        ],
-        meta: {
-          total: 1,
-          page: 1,
-          limit: 12,
-          lastPage: 1,
-        },
-      };
-
-      mockExercisesService.findAll.mockResolvedValue(mockResponse);
-
-      const result = await controller.findAll(query);
-
-      expect(result).toEqual(mockResponse);
-      expect(service.findAll).toHaveBeenCalledWith(query);
-    });
+    // Type filter test removed - exercises now support multiple question types
+    // Each question has its own type property
 
     it('should filter exercises by difficulty', async () => {
       const query: ExerciseQueryDto = {

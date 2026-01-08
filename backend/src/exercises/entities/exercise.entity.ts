@@ -25,36 +25,8 @@ export class ExerciseEntity {
   @Column({ type: 'text', nullable: true })
   description: string;
 
-  @Column({
-    type: 'enum',
-    enum: ExerciseType,
-  })
-  type: ExerciseType;
-
-  @Column({ type: 'jsonb', nullable: true })
-  content: any;
-  /*
-    MATCHING: { 
-      pairs: { left: string; right: string }[] 
-    }
-    MULTIPLE_CHOICE: {
-      question: string;
-      options: { id: string; text: string }[];
-      correctOptionId: string;
-      explanation?: string;
-    }
-    FILL_BLANKS: {
-      text: string; // e.g. "Tôi [0] đi học bằng [1]"
-      wordBank: string[]; // All available words (correct + distractors)
-      correctAnswers: { position: number; word: string }[]; // Mapping of position to correct word
-    }
-  */
-
   @Column({ default: 'easy' })
   difficulty: string; // easy, medium, hard
-
-  @Column({ default: 10 })
-  points: number;
 
   @CreateDateColumn()
   createdAt: Date;

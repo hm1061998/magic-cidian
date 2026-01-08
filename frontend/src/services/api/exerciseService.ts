@@ -7,6 +7,7 @@ export interface PaginationParams {
   type?: string;
   difficulty?: string;
   search?: string;
+  hasQuestions?: boolean;
 }
 
 export interface PaginatedResponse<T> {

@@ -166,11 +166,17 @@ const ExerciseForm: React.FC = () => {
           const data = await fetchAdminExerciseById(id);
           // Auto-migrate on frontend if backend returned content but no questions (just in case)
           if (!data.questions || data.questions.length === 0) {
+            let initialType = ExerciseType.MULTIPLE_CHOICE;
+            const c: any = data.content || {};
+            if (c.pairs) initialType = ExerciseType.MATCHING;
+            else if (c.text && c.wordBank)
+              initialType = ExerciseType.FILL_BLANKS;
+
             if (data.content) {
               data.questions = [
                 {
                   content: data.content,
-                  type: data.type,
+                  type: initialType,
                   points: data.points || 10,
                 } as any,
               ];
@@ -233,23 +239,21 @@ const ExerciseForm: React.FC = () => {
 
       const payload = { ...data, questions: processedQuestions };
 
-      // Sync top-level metadata from questions for backward compatibility
+      // Sum points
       if (processedQuestions.length > 0) {
-        // Use the first question's type as the "main" type
-        (payload as any).type =
-          processedQuestions[0].type || ExerciseType.MULTIPLE_CHOICE;
-        // Sum points
         (payload as any).points = processedQuestions.reduce(
           (acc: number, q: any) => acc + (Number(q.points) || 0),
           0
         );
       } else {
-        (payload as any).type = ExerciseType.MULTIPLE_CHOICE;
         (payload as any).points = 0;
       }
 
       // Remove legacy props from payload parent
       delete (payload as any).content;
+      // Also delete type if it accidentally got in there? No need if interface doesn't have it.
+      // But we can explicitely delete it.
+      delete (payload as any).type;
 
       if (isEdit) {
         await updateExercise(id, payload);

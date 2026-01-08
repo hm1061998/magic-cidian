@@ -5,6 +5,7 @@ import { ExercisesController } from './exercises.controller';
 import { ExerciseEntity } from './entities/exercise.entity';
 import { QuestionEntity } from './entities/question.entity';
 import { UserExerciseHistory } from './entities/user-exercise-history.entity';
+import { ExerciseMigrationScript } from './exercises.migration.service';
 
 import { AdminExercisesController } from './admin-exercises.controller';
 
@@ -17,7 +18,7 @@ import { AdminExercisesController } from './admin-exercises.controller';
     ]),
   ],
   controllers: [ExercisesController, AdminExercisesController],
-  providers: [ExercisesService],
+  providers: [ExercisesService, ExerciseMigrationScript],
   exports: [ExercisesService],
 })
 export class ExercisesModule {}

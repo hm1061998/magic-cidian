@@ -100,11 +100,11 @@ export interface Exercise {
   id: string;
   title: string;
   description?: string;
-  type: ExerciseType;
-  content: any;
+  type?: ExerciseType;
+  content?: any;
   questions?: Question[];
   difficulty: "easy" | "medium" | "hard";
-  points: number;
+  points?: number;
   createdAt: string;
   updatedAt: string;
 }

@@ -98,24 +98,8 @@ describe('ExercisesService', () => {
       });
     });
 
-    it('should filter by type', async () => {
-      const query: ExerciseQueryDto = {
-        page: 1,
-        limit: 12,
-        type: ExerciseType.FILL_BLANKS,
-      };
-
-      mockExerciseRepository.findAndCount.mockResolvedValue([[], 0]);
-
-      await service.findAll(query);
-
-      expect(exerciseRepository.findAndCount).toHaveBeenCalledWith({
-        where: { type: ExerciseType.FILL_BLANKS },
-        order: { createdAt: 'DESC' },
-        take: 12,
-        skip: 0,
-      });
-    });
+    // Type filter removed - exercises now support multiple question types
+    // Each question has its own type property
 
     it('should filter by difficulty', async () => {
       const query: ExerciseQueryDto = {
@@ -136,25 +120,7 @@ describe('ExercisesService', () => {
       });
     });
 
-    it('should filter by both type and difficulty', async () => {
-      const query: ExerciseQueryDto = {
-        page: 1,
-        limit: 12,
-        type: ExerciseType.MULTIPLE_CHOICE,
-        difficulty: 'medium',
-      };
-
-      mockExerciseRepository.findAndCount.mockResolvedValue([[], 0]);
-
-      await service.findAll(query);
-
-      expect(exerciseRepository.findAndCount).toHaveBeenCalledWith({
-        where: { type: ExerciseType.MULTIPLE_CHOICE, difficulty: 'medium' },
-        order: { createdAt: 'DESC' },
-        take: 12,
-        skip: 0,
-      });
-    });
+    // Combined filter test removed - type filter no longer exists
 
     it('should calculate pagination correctly', async () => {
       const query: ExerciseQueryDto = {

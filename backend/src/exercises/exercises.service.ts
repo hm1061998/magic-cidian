@@ -1,13 +1,13 @@
 import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { ExerciseEntity } from './entities/exercise.entity';
 import { QuestionEntity } from './entities/question.entity';
 import { UserExerciseHistory } from './entities/user-exercise-history.entity';
 import { ExerciseQueryDto } from './dto/exercise-query.dto';
 
 @Injectable()
-export class ExercisesService implements OnModuleInit {
+export class ExercisesService {
   constructor(
     @InjectRepository(ExerciseEntity)
     private exerciseRepository: Repository<ExerciseEntity>,
@@ -17,52 +17,57 @@ export class ExercisesService implements OnModuleInit {
     private historyRepository: Repository<UserExerciseHistory>,
   ) {}
 
-  async onModuleInit() {
-    await this.migrateLegacyData();
-  }
-
-  private async migrateLegacyData() {
-    const exercises = await this.exerciseRepository.find({
-      relations: ['questions'],
-    });
-
-    let migratedCount = 0;
-    for (const exercise of exercises) {
-      if (
-        exercise.content &&
-        (!exercise.questions || exercise.questions.length === 0)
-      ) {
-        // Migrate legacy content to a new question
-        const question = this.questionRepository.create({
-          exercise: exercise,
-          content: exercise.content,
-          type: exercise.type as any,
-          points: exercise.points,
-          order: 0,
-        });
-        await this.questionRepository.save(question);
-        migratedCount++;
-      }
-    }
-    if (migratedCount > 0) {
-      console.log(`Migrated ${migratedCount} exercises to new structure.`);
-    }
-  }
-
   async findAll(query: ExerciseQueryDto) {
-    const { page = 1, limit = 12, type, difficulty } = query;
+    const { page = 1, limit = 12, difficulty } = query;
     const skip = (page - 1) * limit;
 
-    const whereCondition: any = {};
-    if (type) whereCondition.type = type;
-    if (difficulty) whereCondition.difficulty = difficulty;
+    const queryBuilder = this.exerciseRepository
+      .createQueryBuilder('exercise')
+      .leftJoin('exercise.questions', 'questions')
+      .addSelect('COUNT(questions.id)', 'questionCount')
+      .groupBy('exercise.id')
+      .orderBy('exercise.createdAt', 'DESC')
+      .take(limit)
+      .skip(skip);
 
-    const [data, total] = await this.exerciseRepository.findAndCount({
-      where: whereCondition,
-      order: { createdAt: 'DESC' },
-      take: limit,
-      skip: skip,
-      relations: ['questions'], // Load questions for list view if needed, or remove if too heavy
+    if (difficulty) {
+      queryBuilder.andWhere('exercise.difficulty = :difficulty', {
+        difficulty,
+      });
+    }
+
+    if (query.hasQuestions === true || String(query.hasQuestions) === 'true') {
+      queryBuilder.having('COUNT(questions.id) > 0');
+    }
+
+    const { entities, raw } = await queryBuilder.getRawAndEntities();
+
+    // Get total count - need to count before HAVING filter
+    // Create a separate query for total count
+    const totalQueryBuilder = this.exerciseRepository
+      .createQueryBuilder('exercise')
+      .leftJoin('exercise.questions', 'questions')
+      .groupBy('exercise.id');
+
+    if (difficulty) {
+      totalQueryBuilder.andWhere('exercise.difficulty = :difficulty', {
+        difficulty,
+      });
+    }
+
+    if (query.hasQuestions === true || String(query.hasQuestions) === 'true') {
+      totalQueryBuilder.having('COUNT(questions.id) > 0');
+    }
+
+    const total = await totalQueryBuilder.getCount();
+
+    // Merge raw count into entities
+    const data = entities.map((entity) => {
+      const rawRow = raw.find((r) => r.exercise_id === entity.id);
+      return {
+        ...entity,
+        questionCount: rawRow ? parseInt(rawRow.questionCount, 10) : 0,
+      };
     });
 
     return {

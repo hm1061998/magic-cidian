@@ -18,7 +18,6 @@ const FillBlanksForm: React.FC<FillBlanksFormProps> = ({ prefix }) => {
   const wordBank =
     (useWatch({ control, name: `${prefix}.wordBank` as any }) as string[]) ||
     [];
-  const selectedType = useWatch({ control, name: "type" });
 
   // Initialize distractors text once when form loads (Edit mode)
   React.useEffect(() => {
@@ -34,18 +33,15 @@ const FillBlanksForm: React.FC<FillBlanksFormProps> = ({ prefix }) => {
   }, [wordBank.length === 0]); // Run once when wordBank becomes available
 
   const detectedBlanks = useMemo(() => {
-    if (selectedType !== ExerciseType.FILL_BLANKS) return [];
     const matches = text.match(/\[(\d+)\]/g);
     if (!matches) return [];
 
     const positions = matches.map((m) => parseInt(m.match(/\d+/)![0]));
     return Array.from(new Set<number>(positions)).sort((a, b) => a - b);
-  }, [selectedType, text]);
+  }, [text]);
 
   // Auto-sync correctAnswers when blanks change
   useEffect(() => {
-    if (selectedType !== ExerciseType.FILL_BLANKS) return;
-
     if (detectedBlanks.length === 0) {
       if (correctAnswers.length > 0) {
         setValue(`${prefix}.correctAnswers` as any, []);
@@ -71,12 +67,10 @@ const FillBlanksForm: React.FC<FillBlanksFormProps> = ({ prefix }) => {
     if (structureChanged) {
       setValue(`${prefix}.correctAnswers` as any, newAnswers);
     }
-  }, [selectedType, detectedBlanks, setValue]);
+  }, [detectedBlanks, setValue]);
 
   // Sync Word Bank: Combine current correctWords + distractorsText
   useEffect(() => {
-    if (selectedType !== ExerciseType.FILL_BLANKS) return;
-
     const correctWords = correctAnswers
       .map((a: any) => a.word.trim())
       .filter(Boolean);
@@ -92,7 +86,7 @@ const FillBlanksForm: React.FC<FillBlanksFormProps> = ({ prefix }) => {
     if (JSON.stringify(newWordBank) !== JSON.stringify(wordBank)) {
       setValue(`${prefix}.wordBank` as any, newWordBank);
     }
-  }, [selectedType, correctAnswers, distractorsText, setValue]);
+  }, [correctAnswers, distractorsText, setValue, wordBank]);
 
   return (
     <div className="space-y-6">

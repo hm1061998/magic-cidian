@@ -42,7 +42,7 @@ const NavItem: React.FC<NavItemProps> = ({
       end={end}
       onClick={onClick}
       className={({ isActive }) =>
-        `flex items-center justify-between px-4 py-3 rounded-xl transition-all font-medium relative ${
+        `flex items-center justify-between mx-2 px-2 py-3 rounded-xl transition-all font-medium relative ${
           isActive
             ? "bg-red-600 text-white shadow-lg shadow-red-900/20"
             : "text-slate-400 hover:bg-slate-800 hover:text-white"
@@ -54,7 +54,7 @@ const NavItem: React.FC<NavItemProps> = ({
         <span>{label}</span>
       </div>
       {badge !== undefined && badge > 0 && (
-        <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 bg-red-500 text-white text-[10px] font-black rounded-full shadow-lg absolute right-0 top-0">
+        <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 bg-red-500 text-white text-[10px] font-black rounded-full shadow-lg absolute right-2 top-[50%] translate-y-[-50%]">
           {badge > 99 ? "99+" : badge}
         </span>
       )}
@@ -192,8 +192,8 @@ const AdminLayout: React.FC = () => {
           </div>
         </div>
 
-        <div className="p-6 flex-1 overflow-y-auto custom-scrollbar-dark">
-          <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] mb-4 ml-2">
+        <div className="py-6 flex-1 overflow-y-auto custom-scrollbar-dark">
+          <p className="px-6 text-sm font-black text-slate-600 uppercase tracking-[0.2em] mb-4 ml-2">
             Hệ thống
           </p>
           <nav className="space-y-1.5">

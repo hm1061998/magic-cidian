@@ -23,6 +23,7 @@ import { loadingService } from "@/libs/Loading";
 
 import Pagination from "@/components/common/Pagination";
 import Tooltip from "@/components/common/Tooltip";
+import Table from "@/components/common/Table";
 
 interface User {
   id: string;
@@ -228,125 +229,90 @@ const UserManagement: React.FC = () => {
       </div>
 
       {/* Users Table */}
-      <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-50/50 border-b border-slate-100">
-                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                  Người dùng
-                </th>
-                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                  Vai trò
-                </th>
-                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                  Ngày tham gia
-                </th>
-                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">
-                  Thao tác
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50">
-              {loading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i} className="animate-pulse">
-                    <td colSpan={4} className="px-6 py-8">
-                      <div className="h-10 bg-slate-100 rounded-xl" />
-                    </td>
-                  </tr>
-                ))
-              ) : users.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-6 py-20 text-center">
-                    <div className="flex flex-col items-center gap-3 grayscale opacity-30">
-                      <UserIcon className="w-16 h-16" />
-                      <p className="font-bold text-slate-500">
-                        Không tìm thấy người dùng nào
-                      </p>
-                    </div>
-                  </td>
-                </tr>
+      <Table<User>
+        loading={loading}
+        data={users}
+        keyExtractor={(user) => user.id}
+        emptyImage={<UserIcon className="w-16 h-16" />}
+        emptyMessage="Không tìm thấy người dùng nào"
+        columns={[
+          {
+            header: "Người dùng",
+            cell: (user) => (
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-linear-to-br from-slate-100 to-slate-200 flex items-center justify-center text-slate-500 font-bold group-hover:from-red-500 group-hover:to-red-600 group-hover:text-white transition-all">
+                  {user.username.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <p className="font-black text-slate-800 leading-none mb-1">
+                    {user.username}
+                  </p>
+                  <p className="text-xs text-slate-400 font-medium">
+                    {user.displayName || "Chưa đặt tên hiển thị"}
+                  </p>
+                </div>
+              </div>
+            ),
+          },
+          {
+            header: "Vai trò",
+            cell: (user) =>
+              user.isAdmin ? (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-600 rounded-full text-[10px] font-black uppercase tracking-wide border border-red-100">
+                  <ShieldCheckIcon className="w-3 h-3" />
+                  Admin
+                </span>
               ) : (
-                users.map((user) => (
-                  <tr
-                    key={user.id}
-                    className="hover:bg-slate-50/50 transition-colors group"
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 text-slate-500 rounded-full text-[10px] font-black uppercase tracking-wide border border-slate-200">
+                  Thành viên
+                </span>
+              ),
+          },
+          {
+            header: "Ngày tham gia",
+            cell: (user) => (
+              <p className="text-sm font-medium text-slate-500">
+                {new Date(user.createdAt).toLocaleDateString("vi-VN")}
+              </p>
+            ),
+          },
+          {
+            header: "Thao tác",
+            className: "text-right",
+            cell: (user) => (
+              <div className="flex items-center justify-end gap-2">
+                <Tooltip content="Xóa phiên đăng nhập" position="top">
+                  <button
+                    onClick={() => handleRevokeSession(user.id, user.username)}
+                    className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-xl transition-all"
                   >
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-linear-to-br from-slate-100 to-slate-200 flex items-center justify-center text-slate-500 font-bold group-hover:from-red-500 group-hover:to-red-600 group-hover:text-white transition-all">
-                          {user.username.charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <p className="font-black text-slate-800 leading-none mb-1">
-                            {user.username}
-                          </p>
-                          <p className="text-xs text-slate-400 font-medium">
-                            {user.displayName || "Chưa đặt tên hiển thị"}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      {user.isAdmin ? (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-600 rounded-full text-[10px] font-black uppercase tracking-wide border border-red-100">
-                          <ShieldCheckIcon className="w-3 h-3" />
-                          Admin
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 text-slate-500 rounded-full text-[10px] font-black uppercase tracking-wide border border-slate-200">
-                          Thành viên
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      <p className="text-sm font-medium text-slate-500">
-                        {new Date(user.createdAt).toLocaleDateString("vi-VN")}
-                      </p>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Tooltip content="Xóa phiên đăng nhập" position="top">
-                          <button
-                            onClick={() =>
-                              handleRevokeSession(user.id, user.username)
-                            }
-                            className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-xl transition-all"
-                          >
-                            <LogoutIcon className="w-5 h-5" />
-                          </button>
-                        </Tooltip>
-                        <Tooltip content="Đặt lại mật khẩu" position="top">
-                          <button
-                            onClick={() => {
-                              setSelectedUser(user);
-                              setIsResetModalOpen(true);
-                            }}
-                            className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
-                          >
-                            <KeyIcon className="w-5 h-5" />
-                          </button>
-                        </Tooltip>
-                        <Tooltip content="Xóa tài khoản" position="top">
-                          <button
-                            onClick={() =>
-                              handleDeleteUser(user.id, user.username)
-                            }
-                            className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
-                          >
-                            <TrashIcon className="w-5 h-5" />
-                          </button>
-                        </Tooltip>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                    <LogoutIcon className="w-5 h-5" />
+                  </button>
+                </Tooltip>
+                <Tooltip content="Đặt lại mật khẩu" position="top">
+                  <button
+                    onClick={() => {
+                      setSelectedUser(user);
+                      setIsResetModalOpen(true);
+                    }}
+                    className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
+                  >
+                    <KeyIcon className="w-5 h-5" />
+                  </button>
+                </Tooltip>
+                <Tooltip content="Xóa tài khoản" position="top">
+                  <button
+                    onClick={() => handleDeleteUser(user.id, user.username)}
+                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                  >
+                    <TrashIcon className="w-5 h-5" />
+                  </button>
+                </Tooltip>
+              </div>
+            ),
+          },
+        ]}
+      />
 
       {/* Pagination component */}
       {!loading && lastPage > 1 && (

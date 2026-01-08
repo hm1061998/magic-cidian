@@ -6,23 +6,33 @@ export const fetchExercises = async () => {
   return response.data;
 };
 
+export const fetchAdminExercises = async () => {
+  const response = await http.get<Exercise[]>("/admin/exercises");
+  return response.data;
+};
+
 export const fetchExerciseById = async (id: string) => {
   const response = await http.get<Exercise>(`/exercises/${id}`);
   return response.data;
 };
 
+export const fetchAdminExerciseById = async (id: string) => {
+  const response = await http.get<Exercise>(`/admin/exercises/${id}`);
+  return response.data;
+};
+
 export const createExercise = async (data: Partial<Exercise>) => {
-  const response = await http.post<Exercise>("/exercises", data);
+  const response = await http.post<Exercise>("/admin/exercises", data);
   return response.data;
 };
 
 export const updateExercise = async (id: string, data: Partial<Exercise>) => {
-  const response = await http.patch<Exercise>(`/exercises/${id}`, data);
+  const response = await http.patch<Exercise>(`/admin/exercises/${id}`, data);
   return response.data;
 };
 
 export const deleteExercise = async (id: string) => {
-  const response = await http.delete(`/exercises/${id}`);
+  const response = await http.delete(`/admin/exercises/${id}`);
   return response.data;
 };
 

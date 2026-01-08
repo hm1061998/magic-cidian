@@ -3,16 +3,13 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
   UseGuards,
   Req,
 } from '@nestjs/common';
 import { ExercisesService } from './exercises.service';
-import { ExerciseEntity } from './entities/exercise.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { AdminGuard } from '../auth/guards/admin.guard';
 
 @Controller('exercises')
 export class ExercisesController {
@@ -53,26 +50,5 @@ export class ExercisesController {
   @UseGuards(JwtAuthGuard)
   findOne(@Param('id') id: string) {
     return this.exercisesService.findOne(id);
-  }
-
-  @Post()
-  @UseGuards(JwtAuthGuard, AdminGuard)
-  create(@Body() createExerciseDto: Partial<ExerciseEntity>) {
-    return this.exercisesService.create(createExerciseDto);
-  }
-
-  @Patch(':id')
-  @UseGuards(JwtAuthGuard, AdminGuard)
-  update(
-    @Param('id') id: string,
-    @Body() updateExerciseDto: Partial<ExerciseEntity>,
-  ) {
-    return this.exercisesService.update(id, updateExerciseDto);
-  }
-
-  @Delete(':id')
-  @UseGuards(JwtAuthGuard, AdminGuard)
-  remove(@Param('id') id: string) {
-    return this.exercisesService.remove(id);
   }
 }

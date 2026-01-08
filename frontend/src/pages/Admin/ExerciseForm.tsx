@@ -10,7 +10,7 @@ import {
 import { useNavigate, useParams } from "react-router-dom";
 import {
   createExercise,
-  fetchExerciseById,
+  fetchAdminExerciseById,
   updateExercise,
 } from "@/services/api/exerciseService";
 import { Exercise, ExerciseType } from "@/types";
@@ -66,7 +66,7 @@ const ExerciseForm: React.FC = () => {
     if (isEdit) {
       void (async () => {
         try {
-          const data = await fetchExerciseById(id);
+          const data = await fetchAdminExerciseById(id);
           reset(data);
         } catch (err) {
           toast.error("Không thể tải thông tin bài tập");

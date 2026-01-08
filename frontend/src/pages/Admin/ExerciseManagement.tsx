@@ -10,7 +10,10 @@ import {
   LayoutGridIcon,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { fetchExercises, deleteExercise } from "@/services/api/exerciseService";
+import {
+  fetchAdminExercises,
+  deleteExercise,
+} from "@/services/api/exerciseService";
 import { Exercise, ExerciseType } from "@/types";
 import { modalService } from "@/libs/Modal";
 import { toast } from "@/libs/Toast";
@@ -23,7 +26,7 @@ const ExerciseManagement: React.FC = () => {
   const loadExercises = async () => {
     setLoading(true);
     try {
-      const data = await fetchExercises();
+      const data = await fetchAdminExercises();
       setExercises(data);
     } catch (err) {
       toast.error("Không thể tải danh sách bài tập");

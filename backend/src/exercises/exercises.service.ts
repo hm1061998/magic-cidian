@@ -15,19 +15,31 @@ export class ExercisesService {
   ) {}
 
   async findAll(query: ExerciseQueryDto) {
-    const { page = 1, limit = 12, type, difficulty } = query;
+    const { page = 1, limit = 12, type, difficulty, sort } = query;
     const skip = (page - 1) * limit;
 
     const whereCondition: any = {};
     if (type) whereCondition.type = type;
     if (difficulty) whereCondition.difficulty = difficulty;
 
-    const [data, total] = await this.exerciseRepository.findAndCount({
-      where: whereCondition,
-      order: { createdAt: 'DESC' },
-      take: limit,
-      skip: skip,
-    });
+    // Build query
+    const queryBuilder = this.exerciseRepository
+      .createQueryBuilder('exercise')
+      .where(whereCondition);
+
+    // Apply sorting
+    if (sort === 'random') {
+      // Use database-specific random function
+      queryBuilder.orderBy('RANDOM()');
+    } else {
+      queryBuilder.orderBy('exercise.createdAt', 'DESC');
+    }
+
+    // Apply pagination
+    queryBuilder.skip(skip).take(limit);
+
+    // Get results
+    const [data, total] = await queryBuilder.getManyAndCount();
 
     return {
       data,

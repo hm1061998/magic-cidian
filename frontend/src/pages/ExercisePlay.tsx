@@ -26,6 +26,16 @@ import MultipleChoiceExercise from "@/components/Exercises/MultipleChoiceExercis
 import MatchingExercise from "@/components/Exercises/MatchingExercise";
 import FillBlanksExercise from "@/components/Exercises/FillBlanksExercise";
 
+// Helper function to shuffle an array
+const shuffleArray = (array: any[]) => {
+  const newArray = [...array];
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+  return newArray;
+};
+
 const ExercisePlay: React.FC = () => {
   const navigate = useNavigate();
 
@@ -74,6 +84,7 @@ const ExercisePlay: React.FC = () => {
         difficulty,
         page,
         limit: 10,
+        sort: "random",
       });
 
       if (response.data.length === 0) {
@@ -107,6 +118,29 @@ const ExercisePlay: React.FC = () => {
         );
         setTotalScore(currentTotal);
 
+        // Check if user has completed all exercises
+        // Fetch total count by getting first page with limit=1 to minimize data transfer
+        const totalCheckResponse = await fetchExercises({
+          page: 1,
+          limit: 1,
+        });
+
+        const totalExerciseCount = totalCheckResponse.meta.total;
+        const completedCount = (progressData || []).length;
+
+        // If user has completed all exercises, show completion screen immediately
+        if (totalExerciseCount > 0 && completedCount >= totalExerciseCount) {
+          // Fetch all exercises to calculate final score
+          const allExercisesResponse = await fetchExercises({
+            page: 1,
+            limit: totalExerciseCount,
+          });
+          setAllExercises(allExercisesResponse.data);
+          setIsAllDone(true);
+          setLoading(false);
+          return;
+        }
+
         // Fetch first batch of easy exercises
         const { exercises, hasMore } = await fetchNextBatch("easy", 1);
 
@@ -132,9 +166,10 @@ const ExercisePlay: React.FC = () => {
           // Try to load more or next difficulty
           await loadMoreExercises();
         } else {
-          setExerciseQueue(remaining);
+          const shuffledRemaining = shuffleArray(remaining);
+          setExerciseQueue(shuffledRemaining);
           setCurrentExerciseIndex(0);
-          setExercise(remaining[0]);
+          setExercise(shuffledRemaining[0]);
           resetGameLocalState();
           setLoading(false);
         }
@@ -185,14 +220,25 @@ const ExercisePlay: React.FC = () => {
         );
 
         if (exercises.length > 0) {
-          setAllExercises((prev) => [...prev, ...exercises]);
+          // Avoid duplicates by checking existing IDs
+          const existingIds = new Set(allExercises.map((ex) => ex.id));
+          const uniqueItems = exercises.filter((ex) => !existingIds.has(ex.id));
 
-          // Filter out already completed exercises
-          const doneIds = new Set(userProgress.map((p: any) => p.exerciseId));
-          const newExercises = exercises.filter((ex) => !doneIds.has(ex.id));
+          if (uniqueItems.length > 0) {
+            setAllExercises((prev) => [...prev, ...uniqueItems]);
 
-          if (newExercises.length > 0) {
-            setExerciseQueue((prev) => [...prev, ...newExercises]);
+            // Filter out already completed exercises
+            const doneIds = new Set(userProgress.map((p: any) => p.exerciseId));
+            const newExercises = uniqueItems.filter(
+              (ex) => !doneIds.has(ex.id)
+            );
+
+            if (newExercises.length > 0) {
+              setExerciseQueue((prev) => [
+                ...prev,
+                ...shuffleArray(newExercises),
+              ]);
+            }
           }
 
           setCurrentDifficulty(nextDifficulty);

@@ -81,7 +81,7 @@ const ExamPlay: React.FC = () => {
         data = await examPaperService.getUserExam(id);
       } else {
         // AI analyzing simulation
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        // await new Promise((resolve) => setTimeout(resolve, 1000));
         data = await examPaperService.getRecommendedExam();
       }
 

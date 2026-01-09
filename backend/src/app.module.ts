@@ -70,8 +70,12 @@ const isProd = process.env.NODE_ENV === 'production';
           ExamPaperEntity,
           ExamQuestionEntity,
         ],
-        synchronize: true, // Lưu ý: Chỉ dùng true cho môi trường Dev để tự tạo bảng
-        autoLoadEntities: true,
+        synchronize: !isProd, // Production: FALSE (use migrations). Dev: TRUE (auto sync).
+        ssl: isProd
+          ? {
+              rejectUnauthorized: false,
+            }
+          : false,
       }),
       inject: [ConfigService],
     }),

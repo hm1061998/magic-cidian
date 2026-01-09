@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   DocumentIcon as FileTextIcon,
@@ -16,6 +16,7 @@ import { loadingService } from "@/libs/Loading";
 import Pagination from "@/components/common/Pagination";
 import Tooltip from "@/components/common/Tooltip";
 import Table from "@/components/common/Table";
+import { debounce } from "lodash";
 
 const ExamPaperManagement: React.FC = () => {
   const navigate = useNavigate();
@@ -32,13 +33,13 @@ const ExamPaperManagement: React.FC = () => {
     description: "",
   });
 
-  const fetchPapers = async () => {
+  const fetchPapers = async (searchString: string, page: number) => {
     try {
       setLoading(true);
       const response: any = await examPaperService.getAll({
         page,
         limit: 10,
-        search: searchTerm.trim() || undefined,
+        search: searchString.trim() || undefined,
       });
       // Handle response structure { data: [...], meta: {...} }
       if (response && response.data) {
@@ -56,11 +57,27 @@ const ExamPaperManagement: React.FC = () => {
   };
 
   useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      fetchPapers();
-    }, 500);
-    return () => clearTimeout(delayDebounceFn);
-  }, [page, searchTerm]);
+    fetchPapers(searchTerm, page);
+  }, [page]);
+
+  const reloadData = () => {
+    setSearchTerm("");
+    setPage(1);
+    fetchPapers("", 1);
+  };
+
+  const debouncedFetch = useMemo(() => {
+    return debounce((value) => {
+      setPage(1);
+      fetchPapers(value, 1);
+    }, 500); // 500ms delay
+  }, []);
+
+  const handleSearch = (event: React.FormEvent) => {
+    event.preventDefault();
+    setSearchTerm(event.target.value);
+    debouncedFetch(event.target.value);
+  };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,7 +107,7 @@ const ExamPaperManagement: React.FC = () => {
       loadingService.show("Đang xóa...");
       await examPaperService.delete(id);
       toast.success("Đã xóa bài tập");
-      fetchPapers();
+      fetchPapers(searchTerm, page);
     } catch (error: any) {
       toast.error("Không thể xóa bài tập");
     } finally {
@@ -127,46 +144,63 @@ const ExamPaperManagement: React.FC = () => {
               </Tooltip>
             </div>
 
-            {/* Toolbar Row */}
-            <div className="flex items-center gap-3">
-              <div className="relative flex-1 group">
-                <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+            {/* Filter bar */}
+
+            <div className="flex gap-4 items-center">
+              <form className="relative flex-1 w-full group">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <SearchIcon className="h-4 w-4 text-slate-400 group-focus-within:text-red-500 transition-colors" />
+                </div>
                 <input
                   type="text"
                   placeholder="Tìm kiếm bài tập..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-12 py-2.5 sm:py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all font-medium"
+                  onChange={handleSearch}
+                  className="block w-full pl-9 pr-9 h-10 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500 transition-all font-medium"
                 />
-                {!!searchTerm && (
+                <div className="absolute inset-y-0 right-0 pr-2 flex items-center gap-1">
+                  {loading && !!searchTerm && (
+                    <RefreshIcon className="w-4 h-4 text-slate-300 animate-spin" />
+                  )}
+                  {!!searchTerm && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        reloadData();
+                      }}
+                      className="p-1 hover:bg-slate-200 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
+                      title="Xóa tìm kiếm"
+                    >
+                      <CloseIcon className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              </form>
+              <div className="flex items-center gap-2">
+                <Tooltip content="Làm mới dữ liệu">
                   <button
-                    onClick={() => setSearchTerm("")}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 p-1 hover:bg-slate-200 rounded-lg text-slate-400"
+                    onClick={() => fetchPapers(searchTerm, page)}
+                    className="p-2.5 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-colors border border-slate-200"
                   >
-                    <CloseIcon className="w-4 h-4" />
+                    <RefreshIcon
+                      className={`w-4 h-4 sm:w-5 sm:h-5 ${
+                        loading ? "animate-spin" : ""
+                      }`}
+                    />
                   </button>
-                )}
+                </Tooltip>
               </div>
-              <Tooltip content="Làm mới">
-                <button
-                  onClick={fetchPapers}
-                  className="p-2.5 sm:p-3 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-colors border border-slate-200"
-                >
-                  <RefreshIcon
-                    className={`w-5 h-5 ${loading ? "animate-spin" : ""}`}
-                  />
-                </button>
-              </Tooltip>
             </div>
           </div>
         </div>
       </div>
 
       {/* Middle Section: Scrollable List */}
-      <div className="flex-1 overflow-y-auto scroll-smooth custom-scrollbar">
-        <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6">
+      <div className="flex-1 overflow-hidden flex flex-col">
+        <div className="max-w-7xl mx-auto w-full h-full px-4 sm:px-6 lg:px-8 py-6 flex flex-col">
           {/* Table */}
           <Table<ExamPaper>
+            className="flex-1 min-h-0"
             loading={loading}
             data={papers}
             keyExtractor={(item) => item.id}

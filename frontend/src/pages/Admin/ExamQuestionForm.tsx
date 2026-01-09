@@ -9,9 +9,9 @@ import FormSelect from "@/components/common/FormSelect";
 import Input from "@/components/common/Input";
 
 // Import new modular form components
-import MultipleChoiceForm from "./QuestionForms/MultipleChoiceForm";
-import MatchingForm from "./QuestionForms/MatchingForm";
-import FillBlanksForm from "./QuestionForms/FillBlanksForm";
+import MultipleChoiceForm from "@/components/admin/QuestionForms/MultipleChoiceForm";
+import MatchingForm from "@/components/admin/QuestionForms/MatchingForm";
+import FillBlanksForm from "@/components/admin/QuestionForms/FillBlanksForm";
 
 interface ExamQuestionFormData {
   type: "MATCHING" | "MULTIPLE_CHOICE" | "FILL_BLANKS";

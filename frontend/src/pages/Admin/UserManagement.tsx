@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   UserIcon,
   PlusIcon,
@@ -21,9 +21,9 @@ import { toast } from "@/libs/Toast";
 import { modalService } from "@/libs/Modal";
 import { loadingService } from "@/libs/Loading";
 
-import Pagination from "@/components/common/Pagination";
 import Tooltip from "@/components/common/Tooltip";
 import Table from "@/components/common/Table";
+import { debounce } from "lodash";
 
 interface User {
   id: string;
@@ -74,21 +74,23 @@ const UserManagement: React.FC = () => {
     fetchUsers(searchTerm, page);
   }, [page]);
 
-  // Debounced search
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      if (page === 1) {
-        fetchUsers(searchTerm, 1);
-      } else {
-        setPage(1); // This will trigger the first useEffect
-      }
-    }, 500);
+  const reloadData = () => {
+    setSearchTerm("");
+    setPage(1);
+    fetchUsers("", 1);
+  };
 
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchTerm]);
+  const debouncedFetch = useMemo(() => {
+    return debounce((value) => {
+      setPage(1);
+      fetchUsers(value, 1);
+    }, 500); // 500ms delay
+  }, []);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSearch = (event: React.FormEvent) => {
+    event.preventDefault();
+    setSearchTerm(event.target.value);
+    debouncedFetch(event.target.value);
   };
 
   const handleCreateUser = async (e: React.FormEvent) => {
@@ -191,10 +193,7 @@ const UserManagement: React.FC = () => {
 
             {/* Filter Bar */}
             <div className="flex gap-4 items-center">
-              <form
-                onSubmit={handleSearch}
-                className="relative flex-1 w-full group"
-              >
+              <form className="relative flex-1 w-full group">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <SearchIcon className="h-4 w-4 text-slate-400 group-focus-within:text-red-500 transition-colors" />
                 </div>
@@ -202,7 +201,7 @@ const UserManagement: React.FC = () => {
                   type="text"
                   placeholder="Tìm kiếm tài khoản hoặc tên hiển thị..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={handleSearch}
                   className="block w-full pl-9 pr-9 h-10 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500 transition-all font-medium"
                 />
                 <div className="absolute inset-y-0 right-0 pr-2 flex items-center gap-1">
@@ -213,8 +212,7 @@ const UserManagement: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => {
-                        setSearchTerm("");
-                        setPage(1);
+                        reloadData();
                       }}
                       className="p-1 hover:bg-slate-200 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
                       title="Xóa tìm kiếm"
@@ -251,6 +249,9 @@ const UserManagement: React.FC = () => {
             loading={loading}
             data={users}
             keyExtractor={(user) => user.id}
+            currentPage={page}
+            totalPages={lastPage}
+            onPageChange={setPage}
             emptyImage={<UserIcon className="w-16 h-16" />}
             emptyMessage="Không tìm thấy người dùng nào"
             columns={[
@@ -335,21 +336,6 @@ const UserManagement: React.FC = () => {
           />
         </div>
       </div>
-
-      {/* Footer (Pagination) */}
-      {!loading && lastPage > 1 && (
-        <div className="flex-none bg-white border-t border-slate-200 py-3 shadow-[0_-4px_6_rgba(0,0,0,0.05)]">
-          <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-center">
-              <Pagination
-                currentPage={page}
-                totalPages={lastPage}
-                onPageChange={setPage}
-              />
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Create User Modal */}
       {isModalOpen && (
@@ -437,7 +423,7 @@ const UserManagement: React.FC = () => {
                   </button>
                   <button
                     type="submit"
-                    className="flex-[2] px-6 py-4 bg-slate-900 text-white font-black rounded-2xl hover:bg-red-600 transition-all shadow-lg active:scale-95"
+                    className="flex-2 px-6 py-4 bg-slate-900 text-white font-black rounded-2xl hover:bg-red-600 transition-all shadow-lg active:scale-95"
                   >
                     Tạo tài khoản
                   </button>
@@ -494,7 +480,7 @@ const UserManagement: React.FC = () => {
                   </button>
                   <button
                     type="submit"
-                    className="flex-[2] px-4 py-3.5 bg-amber-500 text-white font-black rounded-2xl hover:bg-amber-600 transition-all shadow-lg active:scale-95"
+                    className="flex-2 px-4 py-3.5 bg-amber-500 text-white font-black rounded-2xl hover:bg-amber-600 transition-all shadow-lg active:scale-95"
                   >
                     Cập nhật
                   </button>

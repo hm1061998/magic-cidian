@@ -232,6 +232,24 @@ const ExamPlay: React.FC = () => {
     });
   };
 
+  const handleReset = () => {
+    setStarted(false);
+    setSubmitted(false);
+    setShowResult(false);
+    setScore(0);
+    setCurrentQuestionIndex(0);
+    setAllAnswers({});
+    setCurrentAnswer({});
+    setLocalState({});
+  };
+
+  const handleOtherExam = () => {
+    handleReset();
+    setExam(null);
+    setQuestions([]);
+    fetchData();
+  };
+
   const getMatches = () => currentAnswer.matches || {};
 
   // Validation Check
@@ -323,13 +341,13 @@ const ExamPlay: React.FC = () => {
               Xem đáp án
             </button>
             <button
-              onClick={() => (window.location.href = "/exams")}
+              onClick={handleOtherExam}
               className="flex-1 py-3 bg-white border-2 border-slate-100 rounded-xl font-bold text-slate-600 hover:bg-slate-50"
             >
               Làm bài khác
             </button>
             <button
-              onClick={() => window.location.reload()}
+              onClick={handleReset}
               className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200"
             >
               Làm lại

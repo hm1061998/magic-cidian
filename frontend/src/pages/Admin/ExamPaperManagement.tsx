@@ -99,120 +99,139 @@ const ExamPaperManagement: React.FC = () => {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-black text-slate-800 flex items-center gap-3">
-            <FileTextIcon className="w-8 h-8 text-blue-600" />
-            Quản lý Bài Tập
-          </h1>
-          <p className="text-slate-500 mt-1 font-medium italic">
-            Danh sách bài tập và câu hỏi
-          </p>
+    <div className="h-full flex flex-col overflow-hidden bg-slate-50 relative">
+      {/* Top Section: Title & Actions & Filters */}
+      <div className="flex-none bg-white border-b border-slate-200 shadow-sm z-10 transition-all">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 sm:pt-4 pb-3">
+          <div className="flex flex-col gap-4">
+            {/* Title Row */}
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <h1 className="text-lg sm:text-2xl font-bold text-slate-800 flex items-center">
+                  <FileTextIcon className="w-5 h-5 sm:w-8 sm:h-8 mr-2 sm:mr-3 text-blue-600 shrink-0" />
+                  <span className="truncate">Quản lý Bài Tập</span>
+                </h1>
+                <p className="text-slate-500 text-[10px] sm:text-xs hidden sm:block pt-1">
+                  Danh sách bài tập và câu hỏi
+                </p>
+              </div>
+              <Tooltip content="Thêm bài tập mới" position="left">
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="flex items-center justify-center gap-2 bg-slate-900 hover:bg-blue-600 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-black transition-all shadow-xl shadow-slate-900/10 active:scale-95 group text-xs sm:text-sm"
+                >
+                  <PlusIcon className="w-4 h-4 sm:w-5 sm:h-5 group-hover:rotate-90 transition-transform" />
+                  <span className="hidden sm:inline">Tạo bài tập</span>
+                  <span className="sm:hidden">Thêm</span>
+                </button>
+              </Tooltip>
+            </div>
+
+            {/* Toolbar Row */}
+            <div className="flex items-center gap-3">
+              <div className="relative flex-1 group">
+                <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm bài tập..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-12 pr-12 py-2.5 sm:py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all font-medium"
+                />
+                {!!searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm("")}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 p-1 hover:bg-slate-200 rounded-lg text-slate-400"
+                  >
+                    <CloseIcon className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+              <Tooltip content="Làm mới">
+                <button
+                  onClick={fetchPapers}
+                  className="p-2.5 sm:p-3 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-colors border border-slate-200"
+                >
+                  <RefreshIcon
+                    className={`w-5 h-5 ${loading ? "animate-spin" : ""}`}
+                  />
+                </button>
+              </Tooltip>
+            </div>
+          </div>
         </div>
-        <Tooltip content="Thêm bài tập mới" position="left">
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center justify-center gap-2 bg-slate-900 hover:bg-blue-600 text-white px-6 py-3 rounded-2xl font-black transition-all shadow-xl shadow-slate-900/10 active:scale-95 group"
-          >
-            <PlusIcon className="w-5 h-5 group-hover:rotate-90 transition-transform" />
-            Tạo bài tập
-          </button>
-        </Tooltip>
       </div>
 
-      {/* Filter Bar */}
-      <div className="bg-white p-4 rounded-3xl shadow-xs border border-slate-100 flex flex-col md:flex-row gap-4 items-center">
-        <div className="relative flex-1 w-full">
-          <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Tìm kiếm bài tập..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-12 py-3 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-blue-500/20 transition-all font-medium"
+      {/* Middle Section: Scrollable List */}
+      <div className="flex-1 overflow-y-auto scroll-smooth custom-scrollbar">
+        <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6">
+          {/* Table */}
+          <Table<ExamPaper>
+            loading={loading}
+            data={papers}
+            keyExtractor={(item) => item.id}
+            emptyMessage="Chưa có bài tập nào"
+            columns={[
+              {
+                header: "Tên Bài Tập",
+                cell: (item) => (
+                  <div>
+                    <p className="font-black text-slate-800 leading-none mb-1">
+                      {item.title}
+                    </p>
+                    <p className="text-xs text-slate-400 font-medium line-clamp-1">
+                      {item.description}
+                    </p>
+                  </div>
+                ),
+              },
+              {
+                header: "Ngày tạo",
+                cell: (item) => (
+                  <span className="text-slate-500 text-sm">
+                    {new Date(item.createdAt).toLocaleDateString("vi-VN")}
+                  </span>
+                ),
+              },
+              {
+                header: "Thao tác",
+                className: "text-right",
+                cell: (item) => (
+                  <div className="flex justify-end gap-2">
+                    <Tooltip content="Quản lý câu hỏi">
+                      <button
+                        onClick={() => navigate(`/admin/exams/${item.id}`)}
+                        className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
+                      >
+                        <ListBulletIcon className="w-5 h-5" />
+                      </button>
+                    </Tooltip>
+                    <Tooltip content="Xóa">
+                      <button
+                        onClick={() => handleDelete(item.id, item.title)}
+                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                      >
+                        <TrashIcon className="w-5 h-5" />
+                      </button>
+                    </Tooltip>
+                  </div>
+                ),
+              },
+            ]}
           />
-          {!!searchTerm && (
-            <button
-              onClick={() => setSearchTerm("")}
-              className="absolute right-4 top-1/2 -translate-y-1/2 p-1 hover:bg-slate-200 rounded-lg text-slate-400"
-            >
-              <CloseIcon className="w-4 h-4" />
-            </button>
-          )}
         </div>
-        <button
-          onClick={fetchPapers}
-          className="p-3 bg-slate-100 text-slate-600 rounded-2xl hover:bg-slate-200 transition-colors"
-        >
-          <RefreshIcon className={`w-5 h-5 ${loading ? "animate-spin" : ""}`} />
-        </button>
       </div>
-
-      {/* Table */}
-      <Table<ExamPaper>
-        loading={loading}
-        data={papers}
-        keyExtractor={(item) => item.id}
-        emptyMessage="Chưa có bài tập nào"
-        columns={[
-          {
-            header: "Tên Bài Tập",
-            cell: (item) => (
-              <div>
-                <p className="font-black text-slate-800 leading-none mb-1">
-                  {item.title}
-                </p>
-                <p className="text-xs text-slate-400 font-medium line-clamp-1">
-                  {item.description}
-                </p>
-              </div>
-            ),
-          },
-          {
-            header: "Ngày tạo",
-            cell: (item) => (
-              <span className="text-slate-500 text-sm">
-                {new Date(item.createdAt).toLocaleDateString("vi-VN")}
-              </span>
-            ),
-          },
-          {
-            header: "Thao tác",
-            className: "text-right",
-            cell: (item) => (
-              <div className="flex justify-end gap-2">
-                <Tooltip content="Quản lý câu hỏi">
-                  <button
-                    onClick={() => navigate(`/admin/exams/${item.id}`)}
-                    className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
-                  >
-                    <ListBulletIcon className="w-5 h-5" />
-                  </button>
-                </Tooltip>
-                <Tooltip content="Xóa">
-                  <button
-                    onClick={() => handleDelete(item.id, item.title)}
-                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
-                  >
-                    <TrashIcon className="w-5 h-5" />
-                  </button>
-                </Tooltip>
-              </div>
-            ),
-          },
-        ]}
-      />
 
       {/* Pagination component */}
       {!loading && lastPage > 1 && (
-        <div className="flex justify-center mt-6">
-          <Pagination
-            currentPage={page}
-            totalPages={lastPage}
-            onPageChange={setPage}
-          />
+        <div className="flex-none bg-white border-t border-slate-200 py-3 shadow-[0_-4px_6_rgba(0,0,0,0.05)]">
+          <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8">
+            <Pagination
+              currentPage={page}
+              totalPages={lastPage}
+              onPageChange={setPage}
+            />
+          </div>
         </div>
       )}
 

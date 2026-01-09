@@ -77,9 +77,6 @@ const ExamQuestionForm: React.FC = () => {
   }, [isEdit, questionId, reset, navigate, id]);
 
   // Handle Type Change
-  // When type changes, we should reset content to default structure for that type
-  // We can do this by watching 'type' and effect, or simpler: handle it in the Select onChange
-
   const getDefaultContent = (selectedType: string) => {
     if (selectedType === "MULTIPLE_CHOICE") {
       return {
@@ -205,91 +202,109 @@ const ExamQuestionForm: React.FC = () => {
   };
 
   return (
-    <div className="p-4 max-w-6xl mx-auto space-y-4 font-sans h-full flex flex-col">
-      <div className="flex items-center gap-4 shrink-0">
-        <button
-          onClick={() => navigate(`/admin/exams/${id}`)}
-          className="p-2 -ml-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all"
-        >
-          <ArrowLeftIcon className="w-6 h-6" />
-        </button>
-        <div>
-          <h1 className="text-2xl font-black text-slate-800">
-            {isEdit ? "Chỉnh sửa câu hỏi" : "Thêm câu hỏi mới"}
-          </h1>
-          <p className="text-slate-500 font-medium">{paperTitle}</p>
-        </div>
-      </div>
-
+    <div className="h-full flex flex-col overflow-hidden bg-slate-50 relative">
       <FormProvider {...methods}>
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col flex-1"
+          className="flex flex-col h-full overflow-hidden"
         >
-          <div className="p-6 space-y-6 flex-1 overflow-y-auto custom-scrollbar">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <div className="md:col-span-3">
-                <label className="block text-sm font-bold text-slate-700 mb-2">
-                  Loại câu hỏi
-                </label>
-                <Controller
-                  control={control}
-                  name="type"
-                  render={({ field }) => (
-                    <FormSelect
-                      options={[
-                        {
-                          value: "MULTIPLE_CHOICE",
-                          label: "Trắc nghiệm (ABCD)",
-                        },
-                        { value: "MATCHING", label: "Nối từ" },
-                        { value: "FILL_BLANKS", label: "Điền từ" },
-                      ]}
-                      value={field.value}
-                      onChange={(val) => onTypeChange(val)}
-                    />
-                  )}
-                />
+          {/* Fixed Header */}
+          <div className="flex-none bg-white border-b border-slate-200 shadow-sm z-10 transition-all">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+              <div className="flex items-center gap-4">
+                <button
+                  type="button"
+                  onClick={() => navigate(`/admin/exams/${id}`)}
+                  className="p-2 -ml-2 text-slate-400 hover:text-red-700 hover:bg-red-50 rounded-full transition-all"
+                  title="Quay lại"
+                >
+                  <ArrowLeftIcon className="w-6 h-6" />
+                </button>
+                <div>
+                  <h1 className="text-xl sm:text-2xl font-black text-slate-800">
+                    {isEdit ? "Chỉnh sửa câu hỏi" : "Thêm câu hỏi mới"}
+                  </h1>
+                  <p className="text-slate-500 font-medium text-xs sm:text-sm mt-0.5">
+                    {paperTitle}
+                  </p>
+                </div>
               </div>
-              <div>
-                <Controller
-                  control={control}
-                  name="points"
-                  render={({ field }) => (
-                    <Input
-                      type="number"
-                      label="Điểm"
-                      {...field}
-                      onChange={(e) => field.onChange(Number(e.target.value))}
-                    />
-                  )}
-                />
-              </div>
-            </div>
-
-            <div className="border-t border-slate-100 pt-6">
-              {type === "MULTIPLE_CHOICE" && <MultipleChoiceForm />}
-              {type === "MATCHING" && <MatchingForm />}
-              {type === "FILL_BLANKS" && <FillBlanksForm />}
             </div>
           </div>
 
-          {/* Sticky Footer */}
-          <div className="sticky bottom-0 z-50 bg-white/95 backdrop-blur-sm p-4 px-6 flex justify-end gap-3 border-t border-slate-200 shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)]">
-            <button
-              type="button"
-              onClick={() => navigate(`/admin/exams/${id}`)}
-              className="px-6 py-2.5 bg-white text-slate-500 font-bold rounded-xl border border-slate-200 hover:bg-slate-50 hover:text-slate-700 transition-colors"
-            >
-              Hủy
-            </button>
-            <button
-              type="submit"
-              className="flex items-center gap-2 px-8 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-200 active:scale-95 transition-all"
-            >
-              <SaveIcon className="w-5 h-5" />
-              Lưu câu hỏi
-            </button>
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto scroll-smooth custom-scrollbar">
+            <div className="max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6">
+              <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden p-6 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                  <div className="md:col-span-3">
+                    <label className="block text-sm font-bold text-slate-700 mb-2">
+                      Loại câu hỏi
+                    </label>
+                    <Controller
+                      control={control}
+                      name="type"
+                      render={({ field }) => (
+                        <FormSelect
+                          options={[
+                            {
+                              value: "MULTIPLE_CHOICE",
+                              label: "Trắc nghiệm (ABCD)",
+                            },
+                            { value: "MATCHING", label: "Nối từ" },
+                            { value: "FILL_BLANKS", label: "Điền từ" },
+                          ]}
+                          value={field.value}
+                          onChange={(val) => onTypeChange(val)}
+                        />
+                      )}
+                    />
+                  </div>
+                  <div>
+                    <Controller
+                      control={control}
+                      name="points"
+                      render={({ field }) => (
+                        <Input
+                          type="number"
+                          label="Điểm"
+                          {...field}
+                          onChange={(e) =>
+                            field.onChange(Number(e.target.value))
+                          }
+                        />
+                      )}
+                    />
+                  </div>
+                </div>
+
+                <div className="border-t border-slate-100 pt-6">
+                  {type === "MULTIPLE_CHOICE" && <MultipleChoiceForm />}
+                  {type === "MATCHING" && <MatchingForm />}
+                  {type === "FILL_BLANKS" && <FillBlanksForm />}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Fixed Footer */}
+          <div className="flex-none bg-white border-t border-slate-200 py-4 px-6 z-20 shadow-[0_-4px_6_rgba(0,0,0,0.05)]">
+            <div className="max-w-6xl mx-auto w-full flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => navigate(`/admin/exams/${id}`)}
+                className="px-6 py-2.5 bg-white text-slate-500 font-bold rounded-xl border border-slate-200 hover:bg-slate-50 hover:text-slate-700 transition-colors"
+              >
+                Hủy
+              </button>
+              <button
+                type="submit"
+                className="flex items-center gap-2 px-8 py-2.5 bg-slate-900 text-white font-black rounded-xl hover:bg-red-600 shadow-lg shadow-slate-900/10 hover:shadow-red-200 active:scale-95 transition-all"
+              >
+                <SaveIcon className="w-5 h-5" />
+                Lưu câu hỏi
+              </button>
+            </div>
           </div>
         </form>
       </FormProvider>

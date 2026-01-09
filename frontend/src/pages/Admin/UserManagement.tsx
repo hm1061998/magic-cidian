@@ -244,9 +244,10 @@ const UserManagement: React.FC = () => {
       </div>
 
       {/* Main Content (Scrollable) */}
-      <div className="flex-1 overflow-y-auto scroll-smooth custom-scrollbar">
-        <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6">
+      <div className="flex-1 overflow-hidden flex flex-col">
+        <div className="max-w-7xl mx-auto w-full h-full px-4 sm:px-6 lg:px-8 py-6 flex flex-col">
           <Table<User>
+            className="flex-1 min-h-0"
             loading={loading}
             data={users}
             keyExtractor={(user) => user.id}

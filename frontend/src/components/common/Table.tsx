@@ -15,6 +15,7 @@ interface TableProps<T> {
   emptyImage?: ReactNode; // Optional icon/image for empty state
   emptyMessage?: string;
   onRowClick?: (item: T) => void;
+  className?: string;
 }
 
 const Table = <T,>({
@@ -25,17 +26,20 @@ const Table = <T,>({
   emptyImage,
   emptyMessage = "Không tìm thấy dữ liệu",
   onRowClick,
+  className = "",
 }: TableProps<T>) => {
   return (
-    <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
-      <div className="overflow-x-auto">
+    <div
+      className={`bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden flex flex-col ${className}`}
+    >
+      <div className="flex-1 overflow-auto custom-scrollbar relative">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-slate-50/50 border-b border-slate-100">
+            <tr className="border-b border-slate-100">
               {columns.map((col, index) => (
                 <th
                   key={index}
-                  className={`px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 ${
+                  className={`sticky top-0 z-20 px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-50/95 backdrop-blur-sm ${
                     col.className || ""
                   }`}
                 >
@@ -57,9 +61,6 @@ const Table = <T,>({
               <tr>
                 <td colSpan={columns.length} className="px-6 py-20 text-center">
                   <div className="flex flex-col items-center gap-3 grayscale opacity-30">
-                    {/* Default generic empty icon if none provided? Or just render what is passed. 
-                        If emptyImage is passed, render it. 
-                     */}
                     {emptyImage && (
                       <div className="w-16 h-16 flex items-center justify-center">
                         {emptyImage}

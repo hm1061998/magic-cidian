@@ -117,35 +117,27 @@ const ExamDetail: React.FC = () => {
       </div>
 
       {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto scroll-smooth custom-scrollbar">
-        <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6">
-          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-            <div className="p-4 sm:p-6 border-b border-slate-100 flex items-center gap-2 bg-slate-50/30">
-              <ListBulletIcon className="w-5 h-5 text-slate-400" />
-              <h3 className="font-bold text-slate-700">
-                Danh sách câu hỏi ({paper?.questions?.length || 0})
-              </h3>
-            </div>
-            <Table<ExamQuestion>
-              loading={loading}
-              data={paper?.questions || []}
-              keyExtractor={(item) => item.id}
-              emptyMessage="Chưa có câu hỏi nào. Hãy thêm câu hỏi mới!"
-              columns={[
-                {
-                  header: "STT",
-                  className: "w-16 text-center",
-                  cell: (item, index) => (
-                    <span className="font-bold text-slate-400">
-                      {index + 1}
-                    </span>
-                  ),
-                },
-                {
-                  header: "Loại câu hỏi",
-                  cell: (item) => (
-                    <span
-                      className={`px-3 py-1 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-wider
+      <div className="flex-1 overflow-hidden flex flex-col">
+        <div className="max-w-7xl mx-auto w-full h-full px-4 sm:px-6 lg:px-8 py-6 flex flex-col">
+          <Table<ExamQuestion>
+            className="flex-1 min-h-0"
+            loading={loading}
+            data={paper?.questions || []}
+            keyExtractor={(item) => item.id}
+            emptyMessage="Chưa có câu hỏi nào. Hãy thêm câu hỏi mới!"
+            columns={[
+              {
+                header: "STT",
+                className: "w-16 text-center",
+                cell: (item, index) => (
+                  <span className="font-bold text-slate-400">{index + 1}</span>
+                ),
+              },
+              {
+                header: "Loại câu hỏi",
+                cell: (item) => (
+                  <span
+                    className={`px-3 py-1 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-wider
                                     ${
                                       item.type === "MATCHING"
                                         ? "bg-purple-100 text-purple-600 border border-purple-200"
@@ -154,76 +146,75 @@ const ExamDetail: React.FC = () => {
                                         : "bg-orange-100 text-orange-600 border border-orange-200"
                                     }
                                 `}
-                    >
-                      {getTypeLabel(item.type)}
-                    </span>
-                  ),
-                },
-                {
-                  header: "Điểm",
-                  cell: (item) => (
-                    <span className="font-bold text-slate-600 bg-slate-100 px-2 py-1 rounded-lg text-xs">
-                      {item.points} điểm
-                    </span>
-                  ),
-                },
-                {
-                  header: "Nội dung tóm tắt",
-                  cell: (item) => {
-                    if (item.type === "MULTIPLE_CHOICE")
-                      return (
-                        <span
-                          className="text-slate-600 text-sm font-medium truncate max-w-xs block"
-                          title={item.content.question}
-                        >
-                          {item.content.question}
-                        </span>
-                      );
-                    if (item.type === "FILL_BLANKS")
-                      return (
-                        <span
-                          className="text-slate-600 text-sm font-medium truncate max-w-xs block"
-                          title={item.content.text}
-                        >
-                          {item.content.text}
-                        </span>
-                      );
+                  >
+                    {getTypeLabel(item.type)}
+                  </span>
+                ),
+              },
+              {
+                header: "Điểm",
+                cell: (item) => (
+                  <span className="font-bold text-slate-600 bg-slate-100 px-2 py-1 rounded-lg text-xs">
+                    {item.points} điểm
+                  </span>
+                ),
+              },
+              {
+                header: "Nội dung tóm tắt",
+                cell: (item) => {
+                  if (item.type === "MULTIPLE_CHOICE")
                     return (
-                      <span className="text-slate-400 text-sm italic">
-                        {getTypeLabel(item.type)} Content
+                      <span
+                        className="text-slate-600 text-sm font-medium truncate max-w-xs block"
+                        title={item.content.question}
+                      >
+                        {item.content.question}
                       </span>
                     );
-                  },
+                  if (item.type === "FILL_BLANKS")
+                    return (
+                      <span
+                        className="text-slate-600 text-sm font-medium truncate max-w-xs block"
+                        title={item.content.text}
+                      >
+                        {item.content.text}
+                      </span>
+                    );
+                  return (
+                    <span className="text-slate-400 text-sm italic">
+                      {getTypeLabel(item.type)} Content
+                    </span>
+                  );
                 },
-                {
-                  header: "Thao tác",
-                  className: "text-right",
-                  cell: (item) => (
-                    <div className="flex justify-end gap-2">
-                      <Tooltip content="Chỉnh sửa">
-                        <button
-                          onClick={() =>
-                            navigate(`/admin/exams/${id}/questions/${item.id}`)
-                          }
-                          className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
-                        >
-                          <PencilIcon className="w-5 h-5" />
-                        </button>
-                      </Tooltip>
-                      <Tooltip content="Xóa">
-                        <button
-                          onClick={() => handleDeleteQuestion(item.id)}
-                          className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
-                        >
-                          <TrashIcon className="w-5 h-5" />
-                        </button>
-                      </Tooltip>
-                    </div>
-                  ),
-                },
-              ]}
-            />
-          </div>
+              },
+              {
+                header: "Thao tác",
+                className: "text-right",
+                cell: (item) => (
+                  <div className="flex justify-end gap-2">
+                    <Tooltip content="Chỉnh sửa">
+                      <button
+                        onClick={() =>
+                          navigate(`/admin/exams/${id}/questions/${item.id}`)
+                        }
+                        className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
+                      >
+                        <PencilIcon className="w-5 h-5" />
+                      </button>
+                    </Tooltip>
+                    <Tooltip content="Xóa">
+                      <button
+                        onClick={() => handleDeleteQuestion(item.id)}
+                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                      >
+                        <TrashIcon className="w-5 h-5" />
+                      </button>
+                    </Tooltip>
+                  </div>
+                ),
+              },
+            ]}
+          />
         </div>
       </div>
 

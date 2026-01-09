@@ -56,7 +56,26 @@ export class ExamPapersService {
     if (paper.questions) {
       paper.questions.sort((a, b) => a.order - b.order);
     }
+
     return paper;
+  }
+
+  async recommend() {
+    // Determine a random paper that has questions
+    const papersWithQuestions = await this.examPaperRepo
+      .createQueryBuilder('examPaper')
+      .innerJoin('examPaper.questions', 'questions')
+      .select(['examPaper.id'])
+      .getMany();
+
+    if (papersWithQuestions.length === 0) {
+      throw new NotFoundException('Chưa có đề thi nào trong hệ thống.');
+    }
+
+    const randomIndex = Math.floor(Math.random() * papersWithQuestions.length);
+    const selectedId = papersWithQuestions[randomIndex].id;
+
+    return this.findOne(selectedId);
   }
 
   async update(id: string, updateExamPaperDto: UpdateExamPaperDto) {

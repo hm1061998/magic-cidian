@@ -63,6 +63,11 @@ export const examPaperService = {
     return response.data;
   },
 
+  getRecommendedExam: async () => {
+    const response = await http.get("/exam-papers/recommend");
+    return response.data;
+  },
+
   getUserExam: async (id: string) => {
     const response = await http.get(`/exam-papers/${id}`);
     return response.data;

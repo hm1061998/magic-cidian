@@ -106,7 +106,7 @@ const App: React.FC = () => {
           />
 
           <Route path="/auth" element={<AuthWrapper />} />
-
+          <Route path="/exams" element={<ExamPlay />} />
           {/* chức năng cần login */}
           <Route element={<RequireAuth />}>
             <Route
@@ -139,8 +139,6 @@ const App: React.FC = () => {
             />
             <Route path="/profile" element={<Profile />} />
             <Route path="/exercises" element={<ExercisePlay />} />
-            <Route path="/exams" element={<ExamList />} />
-            <Route path="/exams/:id" element={<ExamPlay />} />
           </Route>
 
           {/* Fallback cho các route không khớp trong User scope */}

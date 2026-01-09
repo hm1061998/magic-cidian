@@ -60,15 +60,21 @@ const ExamPlay: React.FC = () => {
   }, [currentQ, currentQuestionIndex, questions.length]);
 
   useEffect(() => {
-    if (id) {
-      fetchExam();
-    }
+    fetchData();
   }, [id]);
 
-  const fetchExam = async () => {
+  const fetchData = async () => {
     try {
       setLoading(true);
-      const data: any = await examPaperService.getUserExam(id!);
+      let data: any;
+      if (id) {
+        data = await examPaperService.getUserExam(id);
+      } else {
+        // AI analyzing simulation
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        data = await examPaperService.getRecommendedExam();
+      }
+
       setExam(data);
       // Sort questions by order
       const sortedQuestions = (data.questions || []).sort(
@@ -77,8 +83,9 @@ const ExamPlay: React.FC = () => {
       setQuestions(sortedQuestions);
     } catch (error) {
       console.error(error);
-      toast.error("Không thể tải đề thi");
-      navigate("/exams");
+      toast.error("Không tìm thấy đề thi phù hợp.");
+      // If specific ID failed, maybe go back to main list (which is now auto-recommend, so careful)
+      if (id) navigate("/exams");
     } finally {
       setLoading(false);
     }
@@ -249,10 +256,10 @@ const ExamPlay: React.FC = () => {
 
           <div className="flex gap-4">
             <button
-              onClick={() => navigate("/exams")}
+              onClick={() => (window.location.href = "/exams")}
               className="flex-1 py-3 bg-white border-2 border-slate-100 rounded-xl font-bold text-slate-600 hover:bg-slate-50"
             >
-              Danh sách đề
+              Làm đề khác
             </button>
             <button
               onClick={() => window.location.reload()}

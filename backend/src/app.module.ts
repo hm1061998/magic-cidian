@@ -30,6 +30,9 @@ import { DictionaryReportsModule } from './dictionary-reports/dictionary-reports
 import { DictionaryReportEntity } from './dictionary-reports/entities/dictionary-report.entity';
 import { ExercisesModule } from './exercises/exercises.module';
 import { ExerciseEntity } from './exercises/entities/exercise.entity';
+import { ExamPapersModule } from './exam-papers/exam-papers.module';
+import { ExamPaperEntity } from './exam-papers/entities/exam-paper.entity';
+import { ExamQuestionEntity } from './exam-papers/entities/exam-question.entity';
 import { TraceMiddleware } from './common/middleware/trace.middleware';
 import { IpBlockEntity } from './common/security/ip-block.entity';
 import { IpBlacklistGuard } from './common/guards/ip-blacklist.guard';
@@ -64,6 +67,8 @@ const isProd = process.env.NODE_ENV === 'production';
           IpBlockEntity,
           DictionaryReportEntity,
           ExerciseEntity,
+          ExamPaperEntity,
+          ExamQuestionEntity,
         ],
         synchronize: true, // Lưu ý: Chỉ dùng true cho môi trường Dev để tự tạo bảng
         autoLoadEntities: true,
@@ -77,6 +82,7 @@ const isProd = process.env.NODE_ENV === 'production';
     IdiomCommentsModule,
     DictionaryReportsModule,
     ExercisesModule,
+    ExamPapersModule,
     SecurityModule,
     ThrottlerModule.forRoot([
       {

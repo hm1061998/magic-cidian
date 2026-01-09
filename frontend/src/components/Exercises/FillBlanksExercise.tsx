@@ -21,8 +21,13 @@ const FillBlanksExercise: React.FC<FillBlanksExerciseProps> = ({
 }) => {
   // Shuffle word bank only once when exercise changes
   const shuffledWordBank = React.useMemo(() => {
-    const bank = [...(exercise.content.wordBank || [])];
-    return bank.sort(() => Math.random() - 0.5);
+    // Merge WordBank (distractors) and Correct Answers to ensure player has all words
+    const distractors = exercise.content.wordBank || [];
+    const correctWords =
+      exercise.content.correctAnswers?.map((a: any) => a.word) || [];
+    const combined = Array.from(new Set([...distractors, ...correctWords]));
+
+    return combined.sort(() => Math.random() - 0.5);
   }, [exercise.id || exercise.content.text]); // Re-shuffle if it's a new exercise
 
   // Extract blank indices from text ensuring we respect the actual IDs (e.g., [1], [2])

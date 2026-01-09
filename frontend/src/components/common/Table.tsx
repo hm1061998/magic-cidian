@@ -3,7 +3,7 @@ import React, { ReactNode } from "react";
 export interface Column<T> {
   header: ReactNode;
   accessorKey?: keyof T;
-  cell?: (item: T) => ReactNode;
+  cell?: (item: T, index: number) => ReactNode;
   className?: string; // Applied to both th and td
 }
 
@@ -70,7 +70,7 @@ const Table = <T,>({
                 </td>
               </tr>
             ) : (
-              data.map((item) => (
+              data.map((item, index) => (
                 <tr
                   key={keyExtractor(item)}
                   className={`hover:bg-slate-50/50 transition-colors group ${
@@ -84,7 +84,7 @@ const Table = <T,>({
                       className={`px-6 py-4 ${col.className || ""}`}
                     >
                       {col.cell
-                        ? col.cell(item)
+                        ? col.cell(item, index)
                         : col.accessorKey
                         ? (item[col.accessorKey] as ReactNode)
                         : null}

@@ -14,6 +14,7 @@ import {
   ChevronDownIcon,
   ExclamationIcon,
   PuzzlePieceIcon,
+  DocumentIcon,
 } from "@/components/common/icons";
 import { fetchCommentStats } from "@/services/api/commentService";
 import { getReportStats } from "@/services/api/reportService";
@@ -234,6 +235,11 @@ const AdminLayout: React.FC = () => {
               to="/admin/exercises"
               icon={<PuzzlePieceIcon />}
               label="Quản lý bài tập"
+            />
+            <NavItem
+              to="/admin/exams"
+              icon={<DocumentIcon />}
+              label="Quản lý Đề Thi"
             />
             <NavItem
               to="/admin/users"
